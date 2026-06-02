@@ -1,7 +1,8 @@
 # 🧩 New Idea — Intake Checklist
 
-Copy this block every time you bring an idea to Claude Code.
-Fill it out even roughly — blanks are fine, partial beats nothing.
+For each new idea: make a folder `design-refs/<short-idea-name>/`, copy this file
+into it as `checklist.md`, fill it out (roughly is fine), and drop images beside it.
+Then tell Claude: *"new idea — see design-refs/<short-idea-name>/"*.
 
 ```
 === NEW IDEA FOR CLAUDE CODE ===
@@ -18,7 +19,7 @@ Fill it out even roughly — blanks are fine, partial beats nothing.
    -
 
 4. REFERENCE IMAGES:
-   Saved in design-refs/  →  filenames: __________
+   In this idea's folder  →  filenames: __________
    (or "none, just text")
 
 5. LOOK & FEEL:
