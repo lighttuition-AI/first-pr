@@ -1,0 +1,11 @@
+# macOS system junk
+.DS_Store
+**/.DS_Store
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Logs & temp
+*.log
+*.tmp
