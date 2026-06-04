@@ -629,13 +629,16 @@ Widget _somaliScene() => FloatingScene(
         emojiSprite('☁️', size: 62, x: .70, y: .08, drift: .010, bob: 4, period: 12.0, phase: .3),
         emojiSprite('🐦', size: 32, x: .40, y: .12, drift: .030, faceDrift: true, bob: 10, period: 5.0, phase: .2),
         emojiSprite('🐦', size: 26, x: .58, y: .17, drift: .030, faceDrift: true, bob: 9, period: 5.4, phase: .6),
-        // Acacia tree (lower-left, canopy peeking) + aqal hut (lower centre).
+        // Acacia tree (lower-left, canopy peeking) + aqal hut (bottom centre,
+        // clear below the Arabic island so the whole dome shows).
         Sprite(child: const AcaciaTree(size: 250), x: -0.02, y: .54, bob: 4, sway: 5, rotate: .010, period: 9.0),
-        Sprite(child: const AqalHut(size: 184), x: .56, y: .66, bob: 0, sway: 2, period: 10.0),
-        // The three little sisters in wedding-style gowns (gold/pink/purple).
-        Sprite(child: const SomaliGirl(dress: Color(0xFFF2B233), hair: 'afro', size: 168), x: .08, y: .52, bob: 9, rotate: .03, period: 4.6, phase: .1),
-        Sprite(child: const SomaliGirl(dress: Color(0xFFF368A0), hair: 'puffs', size: 152), x: .41, y: .56, bob: 10, rotate: .03, period: 5.0, phase: .5),
-        Sprite(child: const SomaliGirl(dress: Color(0xFF9B5DE5), hair: 'bun', size: 146), x: .81, y: .38, bob: 9, rotate: .03, period: 4.8, phase: .8),
+        Sprite(child: const AqalHut(size: 184), x: .50, y: .77, bob: 0, sway: 2, period: 10.0),
+        // The three little sisters in wedding-style gowns (gold/pink/purple),
+        // tucked into the open gaps between the world islands so each is fully
+        // visible (faces never hidden behind a planet).
+        Sprite(child: const SomaliGirl(dress: Color(0xFFF2B233), hair: 'afro', size: 150), x: .225, y: .455, bob: 9, rotate: .03, period: 4.6, phase: .1),
+        Sprite(child: const SomaliGirl(dress: Color(0xFFF368A0), hair: 'puffs', size: 150), x: .345, y: .555, bob: 10, rotate: .03, period: 5.0, phase: .5),
+        Sprite(child: const SomaliGirl(dress: Color(0xFF9B5DE5), hair: 'bun', size: 142), x: .825, y: .425, bob: 9, rotate: .03, period: 4.8, phase: .8),
       ],
     );
 

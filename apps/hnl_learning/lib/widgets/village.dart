@@ -2,14 +2,16 @@
 // Somali Village — original hand-drawn art for the "Somali Village" skin.
 // ------------------------------------------------------------
 // All ORIGINAL shapes (not traced from any image): three cute little
-// sisters (round faces, big dreamy eyes, bridal/wedding-style gowns), an
-// aqal Soomaali (dome hut), and a savanna acacia tree.
+// sisters (round faces, big dreamy eyes, bridal/wedding-style gowns, a
+// golden tiara, and a jewelled scepter), an aqal Soomaali (dome hut), and
+// a savanna acacia tree.
 // ============================================================
 import 'package:flutter/material.dart';
 
 // ------------------------------------------------------------
-// A cute chibi "little sister": round face, big dreamy eyes, a flower
-// crown + soft veil, and a flowing wedding-style gown in [dress].
+// A cute chibi "little sister": round face, big dreamy eyes, a golden
+// tiara + soft veil, a flowing wedding-style gown in [dress], and a golden
+// scepter topped with a dress-coloured diamond.
 // ------------------------------------------------------------
 class SomaliGirl extends StatelessWidget {
   final Color dress; // gown colour (gold / pink / purple…)
@@ -53,6 +55,8 @@ class _GirlPainter extends CustomPainter {
     const ivory = Color(0xFFFBF7EF);
     final veilCol = Colors.white.withValues(alpha: .5);
     const gold = Color(0xFFF2C14E);
+    const goldHi = Color(0xFFFCE7A6);
+    const goldDeep = Color(0xFFC2922F);
     final blush = const Color(0xFFEE8E8E).withValues(alpha: .55);
     const ink = Color(0xFF3A2A22);
     const iris = Color(0xFF4A3326);
@@ -175,17 +179,102 @@ class _GirlPainter extends CustomPainter {
     canvas.drawCircle(o(.5, .40), .012 * w, f..color = skinShade);
     canvas.drawPath(Path()..moveTo(x(.43), y(.43))..quadraticBezierTo(x(.5), y(.49), x(.57), y(.43)), sp(ink, .016 * w));
 
-    // ---- Flower crown (on top of the hair) ----
-    void flower(double cx, double cy) {
-      for (final p in const [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
-        canvas.drawCircle(Offset(x(cx) + p[0] * .026 * w, y(cy) + p[1] * .026 * w), .024 * w, f..color = ivory);
-      }
-      canvas.drawCircle(o(cx, cy), .022 * w, f..color = gold);
+    // ---- A big, sparkly "diamond" gem (faceted brilliant cut) ----
+    // Tinted with the gown colour but much lighter, so it reads as a jewel
+    // that matches her dress. [cx,cy] = centre, [r] = half-width (fractions).
+    void gem(double cx, double cy, double r) {
+      final c = o(cx, cy);
+      final px = c.dx, py = c.dy, rr = r * w;
+      final light = Color.lerp(gown, Colors.white, .55)!; // lighter than dress
+      final pale = Color.lerp(gown, Colors.white, .80)!; // brightest facet
+      final mid = Color.lerp(gown, Colors.white, .32)!; // shaded facet
+      // key points: a table (top), girdle (widest), culet (bottom point)
+      final tl = Offset(px - rr * .52, py - rr * .82);
+      final tr = Offset(px + rr * .52, py - rr * .82);
+      final gl = Offset(px - rr, py - rr * .12);
+      final gr = Offset(px + rr, py - rr * .12);
+      final cg = Offset(px, py - rr * .12); // girdle centre
+      final cu = Offset(px, py + rr * 1.08); // culet
+      Path tri(Offset a, Offset b, Offset cc) =>
+          Path()..moveTo(a.dx, a.dy)..lineTo(b.dx, b.dy)..lineTo(cc.dx, cc.dy)..close();
+      // facets tile the whole gem
+      canvas.drawPath(tri(tl, tr, cg), f..color = pale); // table
+      canvas.drawPath(tri(tl, gl, cg), f..color = mid); // crown left
+      canvas.drawPath(tri(tr, gr, cg), f..color = light); // crown right
+      canvas.drawPath(tri(gl, cu, cg), f..color = mid); // pavilion left
+      canvas.drawPath(tri(gr, cu, cg), f..color = pale); // pavilion right
+      // crisp white edges + girdle line make it glassy
+      canvas.drawPath(
+        Path()
+          ..moveTo(tl.dx, tl.dy)..lineTo(tr.dx, tr.dy)..lineTo(gr.dx, gr.dy)
+          ..lineTo(cu.dx, cu.dy)..lineTo(gl.dx, gl.dy)..close(),
+        sp(Colors.white.withValues(alpha: .92), .013 * w),
+      );
+      canvas.drawLine(gl, gr, sp(Colors.white.withValues(alpha: .55), .008 * w));
+      // sparkle: a 4-point star over the table + a tiny twinkle
+      final star = sp(Colors.white, .011 * w);
+      final sx = px - rr * .18, sy = py - rr * .42, sr = rr * .42;
+      canvas.drawLine(Offset(sx - sr, sy), Offset(sx + sr, sy), star);
+      canvas.drawLine(Offset(sx, sy - sr), Offset(sx, sy + sr), star);
+      canvas.drawCircle(Offset(px + rr * .42, py + rr * .12), rr * .10, f..color = Colors.white);
     }
 
-    flower(.33, .135);
-    flower(.5, .095);
-    flower(.67, .135);
+    // ---- Golden scepter held out in her hand, topped with the diamond ----
+    {
+      const scx = .845, scy = .405; // gem centre
+      const gemR = .088;
+      // bare forearm reaching out from the bodice to the grip
+      canvas.drawLine(o(.62, .585), o(.835, .70), sp(skin, .052 * w));
+      canvas.drawCircle(o(.835, .70), .026 * w, f..color = skin); // wrist
+      // staff (gold rod with metallic shading)
+      final top = o(scx, scy + gemR * .85);
+      const botX = .872, botY = .94;
+      canvas.drawLine(top, o(botX, botY), sp(goldDeep, .032 * w)); // shadow core
+      canvas.drawLine(top, o(botX, botY), sp(gold, .022 * w)); // body
+      canvas.drawLine(o(scx - .004, .50), o(botX - .006, botY), sp(goldHi, .008 * w)); // highlight
+      canvas.drawCircle(o(botX, botY), .024 * w, f..color = gold); // pommel
+      canvas.drawCircle(o(botX, botY), .024 * w, sp(goldDeep, .006 * w));
+      // hand wrapping the rod
+      canvas.drawCircle(o(.85, .70), .05 * w, f..color = skin);
+      final fStroke = sp(skin, .02 * w);
+      for (final yy in const [.668, .70, .732]) {
+        canvas.drawLine(o(.825, yy), o(.882, yy), fStroke);
+      }
+      canvas.drawCircle(o(.822, .712), .017 * w, f..color = skinShade); // thumb
+      // gold collar (claws) cradling the gem, then the gem on top
+      canvas.drawCircle(o(scx, scy + gemR * .78), .03 * w, f..color = gold);
+      canvas.drawCircle(o(scx, scy + gemR * .78), .03 * w, sp(goldDeep, .006 * w));
+      gem(scx, scy, gemR);
+    }
+
+    // ---- Golden tiara (on top of the hair / front of the head) ----
+    {
+      // base band arcing across the forehead
+      canvas.drawPath(
+        Path()..moveTo(x(.30), y(.17))..quadraticBezierTo(x(.5), y(.075), x(.70), y(.17)),
+        sp(goldDeep, .03 * w),
+      );
+      canvas.drawPath(
+        Path()..moveTo(x(.30), y(.17))..quadraticBezierTo(x(.5), y(.075), x(.70), y(.17)),
+        sp(gold, .02 * w),
+      );
+      // three peaks (taller in the centre), each tipped with a gem dot
+      Path peak(double cx, double tipY, double half) => Path()
+        ..moveTo(x(cx - half), y(.155))
+        ..lineTo(x(cx), y(tipY))
+        ..lineTo(x(cx + half), y(.155))
+        ..close();
+      canvas.drawPath(peak(.355, .105, .035), f..color = gold);
+      canvas.drawPath(peak(.645, .105, .035), f..color = gold);
+      canvas.drawPath(peak(.5, .045, .045), f..color = gold);
+      canvas.drawPath(peak(.355, .105, .035), sp(goldDeep, .006 * w));
+      canvas.drawPath(peak(.645, .105, .035), sp(goldDeep, .006 * w));
+      canvas.drawPath(peak(.5, .045, .045), sp(goldDeep, .006 * w));
+      // side gem dots + a matching diamond crowning the centre peak
+      canvas.drawCircle(o(.355, .105), .02 * w, f..color = Color.lerp(gown, Colors.white, .6)!);
+      canvas.drawCircle(o(.645, .105), .02 * w, f..color = Color.lerp(gown, Colors.white, .6)!);
+      gem(.5, .03, .05);
+    }
   }
 
   @override
