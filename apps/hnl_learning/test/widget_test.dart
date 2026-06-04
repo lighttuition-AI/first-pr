@@ -13,6 +13,7 @@ import 'package:hnl_learning/services/vo_service.dart';
 import 'package:hnl_learning/state/app_state.dart';
 import 'package:hnl_learning/theme/tokens.dart';
 import 'package:hnl_learning/widgets/scene.dart';
+import 'package:hnl_learning/widgets/sea.dart';
 
 void main() {
   test('all 9 games present (7 mini-games + 2 Arabic-world games)', () {
@@ -184,6 +185,25 @@ void main() {
     // Sunshine/Classic stay scene-free (calm).
     expect(kSkins['sunshine']!.hasScene, isFalse);
     expect(kSkins['classic']!.hasScene, isFalse);
+  });
+
+  test('skins: Ocean look is ready with a water scene', () {
+    expect(kReadySkins, contains('ocean'));
+    final ocean = kSkins['ocean']!;
+    expect(ocean.hasScene, isTrue);
+    expect(ocean.sceneBuilder!(), isA<FloatingScene>());
+    expect(ocean.displayFont, 'quicksand'); // distinct type pairing
+  });
+
+  testWidgets('Ocean scene renders shark family + bubbles without error', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1366, 1024));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(home: Scaffold(body: kSkins['ocean']!.sceneBuilder!())),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(tester.takeException(), isNull);
+    expect(find.byType(Shark), findsNWidgets(5)); // baby + 4 grown-ups
   });
 
   testWidgets('Tweaks → Look picker lists ready looks and switches on tap', (tester) async {

@@ -34,6 +34,10 @@ class Sprite {
   /// makes the sprite "swim" across and wrap around (used for fish/sharks).
   final double drift;
 
+  /// Vertical drift in stage-fractions per second (signed; negative = rising).
+  /// Wraps like [drift] — used for bubbles floating up.
+  final double driftY;
+
   /// Flip horizontally to face the drift direction (right→left swimmers).
   final bool faceDrift;
 
@@ -48,6 +52,7 @@ class Sprite {
     this.phase = 0,
     this.opacity = 1,
     this.drift = 0,
+    this.driftY = 0,
     this.faceDrift = false,
   });
 }
@@ -138,8 +143,14 @@ class _FloatingSceneState extends State<FloatingScene> with SingleTickerProvider
       if (xf < 0) xf += 1.24;
       xf -= 0.12;
     }
+    double yf = s.y;
+    if (s.driftY != 0) {
+      yf = ((s.y + s.driftY * t) % 1.24);
+      if (yf < 0) yf += 1.24;
+      yf -= 0.12;
+    }
     final left = xf * w + dx;
-    final top = s.y * h + dy;
+    final top = yf * h + dy;
 
     Widget child = s.child;
     if (s.faceDrift && s.drift < 0) {

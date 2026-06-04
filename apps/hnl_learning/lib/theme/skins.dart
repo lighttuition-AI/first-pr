@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../widgets/scene.dart';
+import '../widgets/sea.dart';
 
 /// Parse a CSS-style hex string (#RRGGBB or #AARRGGBB) into a [Color].
 Color hex(String h) {
@@ -140,6 +141,23 @@ List<BoxShadow> _clayShadows(ShLevel l) {
       ],
   };
 }
+
+/// Glassy shadows — a faint white top sheen (glass edge) + a soft, wide,
+/// low-opacity drop so panels seem to float over translucent water.
+List<BoxShadow> _glassShadows(ShLevel l) => switch (l) {
+      ShLevel.sm => [
+          BoxShadow(color: Colors.white.withValues(alpha: .5), offset: const Offset(0, -1), blurRadius: 2),
+          BoxShadow(color: _sink(.10), offset: const Offset(0, 8), blurRadius: 22),
+        ],
+      ShLevel.md => [
+          BoxShadow(color: Colors.white.withValues(alpha: .5), offset: const Offset(0, -1), blurRadius: 3),
+          BoxShadow(color: _sink(.13), offset: const Offset(0, 16), blurRadius: 38),
+        ],
+      ShLevel.lg => [
+          BoxShadow(color: Colors.white.withValues(alpha: .5), offset: const Offset(0, -2), blurRadius: 4),
+          BoxShadow(color: _sink(.16), offset: const Offset(0, 28), blurRadius: 60),
+        ],
+    };
 
 // ------------------------------------------------------------
 // Skin — one complete look.
@@ -384,13 +402,75 @@ final _jungle = Skin(
   sceneBuilder: _jungleScene,
 );
 
+/// LOOK 3 — "Ocean": a glassy underwater world with an ORIGINAL shark family
+/// (small→large, in the shark-song colours) swimming around + rising bubbles.
+const _oceanPalette = Palette(
+  brand: Color(0xFF12A7C4), // teal
+  brandDeep: Color(0xFF0E8AA3),
+  brandSoft: Color(0xFFCBEEF4),
+  logic: Color(0xFFFF7E8B), // coral
+  logicDeep: Color(0xFFE85F6E),
+  galaxy: Color(0xFF4F8DF0), // deep blue
+  galaxyDeep: Color(0xFF3A6FD0),
+  discovery: Color(0xFF12A7C4),
+  discoveryDeep: Color(0xFF0E8AA3),
+);
+
+Widget _oceanScene() => FloatingScene(
+      sprites: const [
+        // Rising bubbles (behind the sharks).
+        Sprite(child: Bubble(size: 16), x: .15, y: .90, driftY: -.050, sway: 10, period: 4.0, phase: .1),
+        Sprite(child: Bubble(size: 22), x: .42, y: .96, driftY: -.040, sway: 14, period: 5.0, phase: .5),
+        Sprite(child: Bubble(size: 12), x: .63, y: .88, driftY: -.060, sway: 8, period: 3.5, phase: .3),
+        Sprite(child: Bubble(size: 18), x: .83, y: .97, driftY: -.045, sway: 12, period: 4.5, phase: .8),
+        Sprite(child: Bubble(size: 14), x: .92, y: .85, driftY: -.055, sway: 9, period: 4.0, phase: .2),
+        Sprite(child: Bubble(size: 20), x: .30, y: .92, driftY: -.038, sway: 13, period: 5.5, phase: .65),
+        // The shark family (small → large), swimming + facing their direction.
+        Sprite(child: Shark(color: Color(0xFFFFC83D), size: 72), x: .25, y: .46, drift: .030, faceDrift: true, bob: 10, period: 5.0), // baby — yellow
+        Sprite(child: Shark(color: Color(0xFFFF6FA5), size: 108), x: .82, y: .15, drift: -.020, faceDrift: true, bob: 8, period: 7.0), // mummy — pink
+        Sprite(child: Shark(color: Color(0xFF3F86E0), size: 132), x: .08, y: .30, drift: .022, faceDrift: true, bob: 7, period: 7.5), // daddy — blue
+        Sprite(child: Shark(color: Color(0xFF49B36B), size: 120), x: .55, y: .76, drift: .016, faceDrift: true, bob: 6, period: 8.0), // grandma — green
+        Sprite(child: Shark(color: Color(0xFFFF9A3D), size: 150), x: .72, y: .60, drift: -.014, faceDrift: true, bob: 7, period: 8.5), // grandpa — orange
+      ],
+    );
+
+final _ocean = Skin(
+  id: 'ocean',
+  label: 'Ocean',
+  tagline: 'Shark family in glassy water',
+  palette: _oceanPalette,
+  ink: const Color(0xFF143641),
+  inkSoft: const Color(0xFF3E5A66),
+  muted: const Color(0xFF89A6AF),
+  line: const Color(0xFFD7E9EE),
+  paper: const Color(0xFFE2F4F8), // pale aqua
+  card: const Color(0xFFFFFFFF),
+  cream: const Color(0xFFFFF3D6),
+  sun: const Color(0xFFFFD25E),
+  rSm: 20,
+  rMd: 30,
+  rLg: 42,
+  rXl: 58,
+  displayFont: 'quicksand',
+  bodyFont: 'nunito',
+  appBackground: const BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Color(0xFFBCE9F5), Color(0xFF86D2E8), Color(0xFF46AFD0)],
+    ),
+  ),
+  shadow: _glassShadows,
+  sceneBuilder: _oceanScene,
+);
+
 /// All skins by id.
 final Map<String, Skin> kSkins = {
-  for (final s in [_sunshine, _classic, _jungle]) s.id: s,
+  for (final s in [_sunshine, _classic, _jungle, _ocean]) s.id: s,
 };
 
 /// Ordered ids shown in the Settings → Look picker (the new default first).
-const List<String> kReadySkins = ['sunshine', 'jungle', 'classic'];
+const List<String> kReadySkins = ['sunshine', 'jungle', 'ocean', 'classic'];
 
 const String kDefaultSkin = 'sunshine';
 

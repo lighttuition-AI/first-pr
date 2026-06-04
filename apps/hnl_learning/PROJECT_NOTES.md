@@ -46,8 +46,9 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   `skin`). `AppState.setSkin(id)` swaps `activeSkin` + saves; `app.pal` now returns
   `activeSkin.palette`.
 - Shipping looks one at a time; `kReadySkins` is the ordered picker list. Shipped:
-  **Sunshine** (polished default) · **Jungle** (clay + floating monkeys/bananas) ·
-  **Classic** (original, 1:1). Planned: Aurora Glass, Crayon Pop, Moonlit Calm.
+  **Sunshine** (polished default) · **Jungle** (clay + monkeys/bananas) · **Ocean**
+  (glassy water + an original shark family swimming, `widgets/sea.dart`) ·
+  **Classic** (original, 1:1). Planned: Crayon Pop, Moonlit Calm.
 - A skin may carry an **animated scene** (`Skin.sceneBuilder` → `FloatingScene` in
   `widgets/scene.dart`): ambient drifting "characters" drawn behind the content,
   wrapped in `IgnorePointer`. Home goes transparent when `activeSkin.hasScene` so
