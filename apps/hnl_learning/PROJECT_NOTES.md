@@ -113,7 +113,7 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 cd apps/hnl_learning
 flutter pub get
 flutter analyze        # clean
-flutter test           # 10 tests (content counts, mission, multi-child, board renders)
+flutter test           # 19 tests (content, mission, multi-child, board, skins/looks)
 flutter run -d chrome  # quick web run
 # iPad simulator used during dev: "iPad Pro 13-inch (M5)"
 #   udid 9C1A4EAC-B929-46AD-912D-6D29B9704D56
