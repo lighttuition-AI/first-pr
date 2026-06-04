@@ -14,6 +14,7 @@ import 'package:hnl_learning/state/app_state.dart';
 import 'package:hnl_learning/theme/tokens.dart';
 import 'package:hnl_learning/widgets/scene.dart';
 import 'package:hnl_learning/widgets/sea.dart';
+import 'package:hnl_learning/widgets/village.dart';
 
 void main() {
   test('all 9 games present (7 mini-games + 2 Arabic-world games)', () {
@@ -219,6 +220,27 @@ void main() {
     expect(kSkins['sunshine']!.brightness, Brightness.light);
   });
 
+  test('skins: Somali Village is ready and replaces Classic in the picker', () {
+    expect(kReadySkins, contains('somali'));
+    expect(kReadySkins, isNot(contains('classic'))); // Classic was turned into it
+    final v = kSkins['somali']!;
+    expect(v.hasScene, isTrue);
+    expect(v.sceneBuilder!(), isA<FloatingScene>());
+  });
+
+  testWidgets('Somali Village scene renders 3 sisters + hut + tree', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1366, 1024));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(home: Scaffold(body: kSkins['somali']!.sceneBuilder!())),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.takeException(), isNull);
+    expect(find.byType(SomaliGirl), findsNWidgets(3));
+    expect(find.byType(AqalHut), findsOneWidget);
+    expect(find.byType(AcaciaTree), findsOneWidget);
+  });
+
   testWidgets('Ocean scene renders shark family + bubbles without error', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1366, 1024));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -249,15 +271,15 @@ void main() {
     );
     await tester.pump();
 
-    // Both ready looks show as picker cards.
+    // Ready looks show as picker cards.
     expect(find.text('Sunshine'), findsOneWidget);
-    expect(find.text('Classic'), findsOneWidget);
+    expect(find.text('Somali Village'), findsOneWidget);
 
     // Tapping a look switches the whole-app skin.
-    await tester.tap(find.text('Classic'));
+    await tester.tap(find.text('Somali Village'));
     await tester.pump();
-    expect(app.skin, 'classic');
-    expect(activeSkin.id, 'classic');
+    expect(app.skin, 'somali');
+    expect(activeSkin.id, 'somali');
 
     app.setSkin('sunshine'); // restore default
   });

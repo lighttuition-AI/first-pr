@@ -17,6 +17,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/comic.dart';
 import '../widgets/scene.dart';
 import '../widgets/sea.dart';
+import '../widgets/village.dart';
 
 /// Parse a CSS-style hex string (#RRGGBB or #AARRGGBB) into a [Color].
 Color hex(String h) {
@@ -606,13 +607,79 @@ final _moonlit = Skin(
   sceneBuilder: _moonlitScene,
 );
 
+/// LOOK 6 — "Somali Village": a warm savanna daytime scene with three cute
+/// little sisters in colourful dresses, an aqal Soomaali (dome hut) and an
+/// acacia tree. (Replaces Classic in the picker.)
+const _somaliPalette = Palette(
+  brand: Color(0xFFD9743F), // terracotta
+  brandDeep: Color(0xFFBC5C2C),
+  brandSoft: Color(0xFFF6DCC9),
+  logic: Color(0xFFE8553D), // warm red
+  logicDeep: Color(0xFFC73D29),
+  galaxy: Color(0xFF3E8FB0), // savanna sky
+  galaxyDeep: Color(0xFF2E7290),
+  discovery: Color(0xFF5CA05A), // acacia green
+  discoveryDeep: Color(0xFF45853F),
+);
+
+Widget _somaliScene() => FloatingScene(
+      sprites: [
+        // Sky.
+        emojiSprite('☀️', size: 74, x: .06, y: .07, bob: 5, rotate: .03, period: 9.0),
+        emojiSprite('☁️', size: 62, x: .70, y: .08, drift: .010, bob: 4, period: 12.0, phase: .3),
+        emojiSprite('🐦', size: 32, x: .40, y: .12, drift: .030, faceDrift: true, bob: 10, period: 5.0, phase: .2),
+        emojiSprite('🐦', size: 26, x: .58, y: .17, drift: .030, faceDrift: true, bob: 9, period: 5.4, phase: .6),
+        // Acacia tree (lower-left, canopy peeking) + aqal hut (bottom centre,
+        // clear below the Arabic island so the whole dome shows).
+        Sprite(child: const AcaciaTree(size: 250), x: -0.02, y: .54, bob: 4, sway: 5, rotate: .010, period: 9.0),
+        Sprite(child: const AqalHut(size: 184), x: .50, y: .77, bob: 0, sway: 2, period: 10.0),
+        // The three little sisters in wedding-style gowns (gold/pink/purple),
+        // tucked into the open gaps between the world islands so each is fully
+        // visible (faces never hidden behind a planet).
+        Sprite(child: const SomaliGirl(dress: Color(0xFFF2B233), hair: 'afro', size: 150), x: .225, y: .455, bob: 9, rotate: .03, period: 4.6, phase: .1),
+        Sprite(child: const SomaliGirl(dress: Color(0xFFF368A0), hair: 'puffs', size: 150), x: .345, y: .555, bob: 10, rotate: .03, period: 5.0, phase: .5),
+        Sprite(child: const SomaliGirl(dress: Color(0xFF9B5DE5), hair: 'bun', size: 142), x: .825, y: .425, bob: 9, rotate: .03, period: 4.8, phase: .8),
+      ],
+    );
+
+final _somali = Skin(
+  id: 'somali',
+  label: 'Somali Village',
+  tagline: 'Three sisters · hut & acacia',
+  palette: _somaliPalette,
+  ink: const Color(0xFF3A2E25),
+  inkSoft: const Color(0xFF6E5E50),
+  muted: const Color(0xFFA99A88),
+  line: const Color(0xFFE8DCC8),
+  paper: const Color(0xFFF6ECD8), // warm sand
+  card: const Color(0xFFFFFDF6),
+  cream: const Color(0xFFFBE6C4),
+  sun: const Color(0xFFF4B740),
+  rSm: 18,
+  rMd: 26,
+  rLg: 38,
+  rXl: 52,
+  displayFont: 'baloo',
+  bodyFont: 'nunito',
+  appBackground: const BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Color(0xFFAED7E6), Color(0xFFEBD9B0), Color(0xFFE4C98F)],
+      stops: [0.0, 0.62, 1.0],
+    ),
+  ),
+  shadow: _softShadows,
+  sceneBuilder: _somaliScene,
+);
+
 /// All skins by id.
 final Map<String, Skin> kSkins = {
-  for (final s in [_sunshine, _classic, _jungle, _ocean, _crayon, _moonlit]) s.id: s,
+  for (final s in [_sunshine, _classic, _jungle, _ocean, _crayon, _moonlit, _somali]) s.id: s,
 };
 
 /// Ordered ids shown in the Settings → Look picker (the new default first).
-const List<String> kReadySkins = ['sunshine', 'jungle', 'ocean', 'crayon', 'moonlit', 'classic'];
+const List<String> kReadySkins = ['sunshine', 'jungle', 'ocean', 'crayon', 'moonlit', 'somali'];
 
 const String kDefaultSkin = 'sunshine';
 

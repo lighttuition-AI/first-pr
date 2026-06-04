@@ -57,7 +57,18 @@ class TweaksPanel extends StatelessWidget {
                       const Spacer(),
                       GestureDetector(
                         onTap: app.toggleTweaks,
-                        child: const Icon(Icons.close_rounded, size: 32),
+                        // Tinted, bordered chip so the close is easy to spot on
+                        // every look (light tint + rim on the dark night theme).
+                        child: Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            color: C.ink.withValues(alpha: .08),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: C.ink.withValues(alpha: .25), width: 1.5),
+                          ),
+                          child: Icon(Icons.close_rounded, size: 26, color: C.ink),
+                        ),
                       ),
                     ],
                   ),

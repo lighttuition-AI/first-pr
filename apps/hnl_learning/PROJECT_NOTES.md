@@ -45,11 +45,13 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 - Switch live in **Settings (Tweaks) → Look**. Selection persists (tweaks key
   `skin`). `AppState.setSkin(id)` swaps `activeSkin` + saves; `app.pal` now returns
   `activeSkin.palette`.
-- All 5 looks shipped (`kReadySkins`): **Sunshine** (polished default) · **Jungle**
-  (clay + monkeys/bananas) · **Ocean** (glassy water + original shark family,
+- Looks (`kReadySkins`): **Sunshine** (polished default) · **Jungle** (clay +
+  monkeys/bananas) · **Ocean** (glassy water + original shark family,
   `widgets/sea.dart`) · **Crayon Pop** (neubrutalism + original hero squad,
-  `widgets/comic.dart`) · **Moonlit Calm** (cozy DARK theme + original cat-&-mouse
-  night scene) · **Classic** (original, 1:1).
+  `widgets/comic.dart`) · **Moonlit Calm** (cozy DARK + cat-&-mouse night) ·
+  **Somali Village** (warm savanna: 3 original sisters + aqal hut + acacia tree,
+  `widgets/village.dart`). Classic was turned into Somali Village (still in
+  `kSkins` for save-compat, dropped from the picker). All scene art is original.
 - `Skin.brightness` flags dark looks. `Skin.cardBorder` (a `Border?`) is honored by
   the shared card surfaces. Surface `Colors.white` fills across all screens were
   migrated to `C.card` (a no-op on light looks; required for Moonlit's dark cards).
@@ -111,7 +113,7 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 cd apps/hnl_learning
 flutter pub get
 flutter analyze        # clean
-flutter test           # 10 tests (content counts, mission, multi-child, board renders)
+flutter test           # 19 tests (content, mission, multi-child, board, skins/looks)
 flutter run -d chrome  # quick web run
 # iPad simulator used during dev: "iPad Pro 13-inch (M5)"
 #   udid 9C1A4EAC-B929-46AD-912D-6D29B9704D56
