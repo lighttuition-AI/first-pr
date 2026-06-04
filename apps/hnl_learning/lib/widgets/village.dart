@@ -18,19 +18,21 @@ class SomaliGirl extends StatelessWidget {
   final String hair; // 'afro' | 'puffs' | 'bun'
   final Color skinTone;
   final double size; // width; height is ~1.4×
+  final bool headOnly; // draw just the head (hair + face + tiara) — for the splash
   const SomaliGirl({
     super.key,
     required this.dress,
     this.hair = 'afro',
     this.skinTone = const Color(0xFFE8B98C),
     this.size = 120,
+    this.headOnly = false,
   });
 
   @override
   Widget build(BuildContext context) => SizedBox(
         width: size,
         height: size * 1.4,
-        child: CustomPaint(painter: _GirlPainter(dress, hair, skinTone)),
+        child: CustomPaint(painter: _GirlPainter(dress, hair, skinTone, headOnly)),
       );
 }
 
@@ -38,7 +40,8 @@ class _GirlPainter extends CustomPainter {
   final Color dress;
   final String hair;
   final Color skin;
-  _GirlPainter(this.dress, this.hair, this.skin);
+  final bool headOnly;
+  _GirlPainter(this.dress, this.hair, this.skin, this.headOnly);
 
   @override
   void paint(Canvas canvas, Size s) {
@@ -72,6 +75,7 @@ class _GirlPainter extends CustomPainter {
     void blob(double cx, double cy, double r, [Color? c]) =>
         canvas.drawCircle(o(cx, cy), r * w, f..color = c ?? hairCol);
 
+    if (!headOnly) {
     // ---- Veil (bridal, behind everything) ----
     canvas.drawPath(
       Path()
@@ -125,6 +129,7 @@ class _GirlPainter extends CustomPainter {
 
     // ---- Neck ----
     canvas.drawRect(Rect.fromLTRB(x(.455), y(.45), x(.545), y(.55)), f..color = skinShade);
+    }
 
     // ---- Hair (behind the face) ----
     switch (hair) {
@@ -220,7 +225,7 @@ class _GirlPainter extends CustomPainter {
     }
 
     // ---- Golden scepter held out in her hand, topped with the diamond ----
-    {
+    if (!headOnly) {
       const scx = .845, scy = .405; // gem centre
       const gemR = .088;
       // bare forearm reaching out from the bodice to the grip
@@ -279,7 +284,7 @@ class _GirlPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _GirlPainter old) =>
-      old.dress != dress || old.hair != hair || old.skin != skin;
+      old.dress != dress || old.hair != hair || old.skin != skin || old.headOnly != headOnly;
 }
 
 // ------------------------------------------------------------
