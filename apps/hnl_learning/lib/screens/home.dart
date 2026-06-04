@@ -16,6 +16,15 @@ import '../widgets/planet.dart';
 import '../widgets/robo.dart';
 import '../widgets/speech_bubble.dart';
 
+/// Island positions on the map, aligned with kWorlds order (fractions of
+/// the map area). Add a position here when a new world is added.
+const List<Offset> _worldPos = [
+  Offset(0.05, 0.30), // logic
+  Offset(0.34, 0.05), // galaxy
+  Offset(0.67, 0.10), // discovery
+  Offset(0.50, 0.42), // arabic
+];
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
   @override
@@ -56,14 +65,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 return Stack(
                   children: [
                     Positioned.fill(child: CustomPaint(painter: _MapPathPainter())),
-                    _islandAt(app, kWorlds[0], 0.13, 0.44, w, h),
-                    _islandAt(app, kWorlds[1], 0.44, 0.15, w, h),
-                    _islandAt(app, kWorlds[2], 0.77, 0.33, w, h),
+                    // World islands (positions aligned with kWorlds order).
+                    for (var i = 0; i < kWorlds.length && i < _worldPos.length; i++)
+                      _islandAt(app, kWorlds[i], _worldPos[i].dx, _worldPos[i].dy, w, h),
 
-                    // Robo guide + bubble
+                    // Robo guide + bubble (bottom-left, clear of the islands)
                     Positioned(
-                      left: w * 0.30,
-                      bottom: 30,
+                      left: w * 0.04,
+                      bottom: 16,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -74,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             voText: v.text,
                           ),
                           const SizedBox(height: 2),
-                          if (app.mascot) const Robo(size: 180, pose: 'wave'),
+                          if (app.mascot) const Robo(size: 150, pose: 'wave'),
                         ],
                       ),
                     ),
@@ -451,7 +460,18 @@ class _GameCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final topic = topicById(game.topic);
-    final planet = planetById(game.reward);
+    final isAlphabet = game.type == GameType.alphabet;
+    final subtitle = isAlphabet ? '${kArabicLetters.length} letters' : '${game.rounds.length} rounds';
+
+    Widget trailing;
+    if (isAlphabet) {
+      trailing = const Text('🔤', style: TextStyle(fontSize: 34));
+    } else if (done) {
+      trailing = Text('✓', style: AppText.display(size: 34, weight: FontWeight.w800, color: const Color(0xFF15B886)));
+    } else {
+      trailing = Planet(data: planetById(game.reward), size: 44);
+    }
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -468,14 +488,11 @@ class _GameCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(game.title, style: AppText.display(size: 28, weight: FontWeight.w700)),
-                  Text('${game.rounds.length} rounds',
-                      style: AppText.body(size: 20, weight: FontWeight.w700, color: C.muted)),
+                  Text(subtitle, style: AppText.body(size: 20, weight: FontWeight.w700, color: C.muted)),
                 ],
               ),
             ),
-            done
-                ? Text('✓', style: AppText.display(size: 34, weight: FontWeight.w800, color: const Color(0xFF15B886)))
-                : Planet(data: planet, size: 44),
+            trailing,
           ],
         ),
       ),

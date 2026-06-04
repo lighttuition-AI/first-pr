@@ -37,6 +37,7 @@ class Palette {
         'logic' => logic,
         'galaxy' => galaxy,
         'discovery' => discovery,
+        'arabic' => const Color(0xFF6E5AC8), // distinct purple
         _ => brand,
       };
 
@@ -44,6 +45,7 @@ class Palette {
         'logic' => logicDeep,
         'galaxy' => galaxyDeep,
         'discovery' => discoveryDeep,
+        'arabic' => const Color(0xFF4E3DA0),
         _ => brandDeep,
       };
 }

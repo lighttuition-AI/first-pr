@@ -85,9 +85,13 @@ class _GameHostState extends State<GameHost> {
           Positioned.fill(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(40, 140, 40, 40),
-              child: Center(
-                child: _GameBody(key: ValueKey(_roundIdx), game: widget.game, round: round, onSolved: _onSolved),
-              ),
+              child: widget.game.type == GameType.alphabet
+                  // The board fills the area and scrolls; other games center.
+                  ? const AlphabetBoard()
+                  : Center(
+                      child: _GameBody(
+                          key: ValueKey(_roundIdx), game: widget.game, round: round, onSolved: _onSolved),
+                    ),
             ),
           ),
 
@@ -130,8 +134,10 @@ class _GameHostState extends State<GameHost> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                _RoundDots(total: widget.game.rounds.length, index: _roundIdx),
+                if (widget.game.type != GameType.alphabet) ...[
+                  const SizedBox(height: 12),
+                  _RoundDots(total: widget.game.rounds.length, index: _roundIdx),
+                ],
               ],
             ),
           ),
@@ -256,7 +262,97 @@ class _GameBody extends StatelessWidget {
         return SortGame(round: round, onSolved: onSolved);
       case GameType.science:
         return ScienceGame(round: round, onSolved: onSolved);
+      case GameType.alphabet:
+        // Routed directly in GameHost (it fills/scrolls); here for completeness.
+        return const AlphabetBoard();
     }
+  }
+}
+
+// ---------------- Arabic World · game 1: alphabet board ----------------
+// A grid of the 28 Arabic letters; tap one to hear it. Every letter is a
+// recordable voice line, so a grown-up can record the real pronunciation.
+class AlphabetBoard extends StatelessWidget {
+  const AlphabetBoard({super.key});
+
+  // Soft tile backgrounds + letter inks, cycled to mimic the colorful poster.
+  static const _bgs = [
+    Color(0xFFF6ECC9), Color(0xFFB7C9A1), Color(0xFF9B8BA9),
+    Color(0xFFBAD8DC), Color(0xFFB28D6B), Color(0xFFCFE0C2),
+  ];
+  static const _inks = [
+    Color(0xFFCDA12B), Color(0xFFE84C6B), Color(0xFF1E5631),
+    Color(0xFF1B3A6B), Color(0xFF8B5A2B), Color(0xFF2E8B8B),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      // Arabic reads right-to-left: first letter (Alif) lands top-right.
+      textDirection: TextDirection.rtl,
+      child: GridView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
+          mainAxisSpacing: 18,
+          crossAxisSpacing: 18,
+          childAspectRatio: 2.4,
+        ),
+        itemCount: kArabicLetters.length,
+        itemBuilder: (context, i) => _LetterTile(
+          letter: kArabicLetters[i],
+          bg: _bgs[i % _bgs.length],
+          ink: _inks[(i * 5 + 2) % _inks.length],
+        ),
+      ),
+    );
+  }
+}
+
+class _LetterTile extends StatefulWidget {
+  final ArabicLetter letter;
+  final Color bg, ink;
+  const _LetterTile({required this.letter, required this.bg, required this.ink});
+
+  @override
+  State<_LetterTile> createState() => _LetterTileState();
+}
+
+class _LetterTileState extends State<_LetterTile> {
+  bool _down = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final speaking = context.watch<VoService>().isActive(widget.letter.id);
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _down = true),
+      onTapUp: (_) => setState(() => _down = false),
+      onTapCancel: () => setState(() => _down = false),
+      onTap: () => context.read<VoService>().play(widget.letter.id, widget.letter.name),
+      child: AnimatedScale(
+        scale: _down ? 0.94 : 1,
+        duration: const Duration(milliseconds: 110),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: widget.bg,
+            borderRadius: BorderRadius.circular(R.md),
+            boxShadow: Sh.sm,
+            border: Border.all(
+              color: speaking ? widget.ink : Colors.transparent,
+              width: 4,
+            ),
+          ),
+          // System font (not google_fonts) so the Arabic glyph renders.
+          child: Text(
+            widget.letter.glyph,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 66, fontWeight: FontWeight.w700, color: widget.ink),
+          ),
+        ),
+      ),
+    );
   }
 }
 

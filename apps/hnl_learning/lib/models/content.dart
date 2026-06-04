@@ -54,6 +54,8 @@ const List<World> kWorlds = [
       'Count the stars, match shapes, complete cosmic patterns.'),
   World('discovery', 'Discovery World', 'Memory, letters & science', '🌍',
       'Flip cards, meet letters, and discover how the world works.'),
+  World('arabic', 'Arabic World', 'Letters, words & sounds', '📜',
+      'Meet the Arabic letters, hear each sound, and explore the language.'),
 ];
 
 class PlanetData {
@@ -113,7 +115,7 @@ const List<OnboardingStep> kOnboarding = [
 ];
 
 // ---------------- Games ----------------
-enum GameType { pick, count, pattern, memory, letter, sort, science }
+enum GameType { pick, count, pattern, memory, letter, sort, science, alphabet }
 
 class PickOption {
   final String emoji;
@@ -197,8 +199,13 @@ class Game {
   final String id, title, world, topic, reward;
   final GameType type;
   final List<Round> rounds;
+
+  /// Whether this game can be pulled into a Daily Mission. Explore-style
+  /// games with no win condition (e.g. the alphabet board) set this false.
+  final bool mission;
+
   const Game(this.id, this.type, this.world, this.topic, this.title, this.reward,
-      this.rounds);
+      this.rounds, {this.mission = true});
 }
 
 final List<Game> kGames = [
@@ -259,6 +266,52 @@ final List<Game> kGames = [
     Round(id: 'sc1', factVo: 'Did you know? The Sun is a giant star, and it gives us light and warmth every day!', fact: 'The Sun is a giant star! ☀️', factEmoji: '☀️', qVo: 'Now, which one gives us light in the daytime? Tap it!', prompt: 'Which gives us daytime light?', bg: Color(0xFFFFF7E8), options: [PickOption('☀️', correct: true), PickOption('🌙'), PickOption('⭐')]),
     Round(id: 'sc2', factVo: 'Bees are tiny helpers! They visit flowers and help new plants grow.', fact: 'Bees help flowers grow! 🐝', factEmoji: '🐝', qVo: 'Which little helper visits flowers? Tap it!', prompt: 'Who visits flowers?', bg: Color(0xFFEFF6EE), options: [PickOption('🐝', correct: true), PickOption('🐙'), PickOption('🦖')]),
   ]),
+  // 8 — ARABIC WORLD · game 1: the alphabet board (tap a letter to hear it).
+  // Explore-only (no win condition) so it never joins a Daily Mission.
+  Game('arabic-alphabet', GameType.alphabet, 'arabic', 'letters', 'Arabic Letters', '', [
+    Round(id: 'ar-board', vo: 'Tap each letter to hear its sound!', bg: Color(0xFF21386E)),
+  ], mission: false),
+];
+
+/// One Arabic letter slot: the glyph + a stable VO id. The default spoken
+/// text is the letter's name (TTS stand-in); a grown-up can record the real
+/// pronunciation per letter in the Voiceover Studio.
+class ArabicLetter {
+  final String id; // e.g. 'ar-alif'
+  final String glyph; // 'أ'
+  final String name; // 'Alif' — TTS default + Studio label
+  const ArabicLetter(this.id, this.glyph, this.name);
+}
+
+const List<ArabicLetter> kArabicLetters = [
+  ArabicLetter('ar-alif', 'أ', 'Alif'),
+  ArabicLetter('ar-baa', 'ب', 'Baa'),
+  ArabicLetter('ar-taa', 'ت', 'Taa'),
+  ArabicLetter('ar-thaa', 'ث', 'Thaa'),
+  ArabicLetter('ar-jiim', 'ج', 'Jiim'),
+  ArabicLetter('ar-haa', 'ح', 'Haa'),
+  ArabicLetter('ar-khaa', 'خ', 'Khaa'),
+  ArabicLetter('ar-daal', 'د', 'Daal'),
+  ArabicLetter('ar-dhaal', 'ذ', 'Dhaal'),
+  ArabicLetter('ar-raa', 'ر', 'Raa'),
+  ArabicLetter('ar-zaay', 'ز', 'Zaay'),
+  ArabicLetter('ar-siin', 'س', 'Siin'),
+  ArabicLetter('ar-shiin', 'ش', 'Shiin'),
+  ArabicLetter('ar-saad', 'ص', 'Saad'),
+  ArabicLetter('ar-daad', 'ض', 'Daad'),
+  ArabicLetter('ar-taa2', 'ط', 'Taa (heavy)'),
+  ArabicLetter('ar-thaa2', 'ظ', 'Dhaa (heavy)'),
+  ArabicLetter('ar-ayn', 'ع', 'Ayn'),
+  ArabicLetter('ar-ghayn', 'غ', 'Ghayn'),
+  ArabicLetter('ar-faa', 'ف', 'Faa'),
+  ArabicLetter('ar-qaaf', 'ق', 'Qaaf'),
+  ArabicLetter('ar-kaaf', 'ك', 'Kaaf'),
+  ArabicLetter('ar-laam', 'ل', 'Laam'),
+  ArabicLetter('ar-miim', 'م', 'Miim'),
+  ArabicLetter('ar-nuun', 'ن', 'Nuun'),
+  ArabicLetter('ar-haa2', 'هـ', 'Haa (soft)'),
+  ArabicLetter('ar-waaw', 'و', 'Waaw'),
+  ArabicLetter('ar-yaa', 'ي', 'Yaa'),
 ];
 
 Game gameById(String id) => kGames.firstWhere((g) => g.id == id);
@@ -307,7 +360,8 @@ class VoGroup {
   const VoGroup(this.group, this.lines);
 }
 
-/// Build the full registry the Voiceover Studio lists (45 lines, 12 groups).
+/// Build the full registry the Voiceover Studio lists. Every spoken line in
+/// the app — including each Arabic letter — is here so it can be re-recorded.
 List<VoGroup> buildVoRegistry() {
   final groups = <VoGroup>[];
   groups.add(VoGroup('Onboarding', [
@@ -323,6 +377,13 @@ List<VoGroup> buildVoRegistry() {
       if (r.vo != null) lines.add(VoLineData(r.id, r.vo!, g.title));
       if (r.factVo != null) lines.add(VoLineData('${r.id}-fact', r.factVo!, '${g.title} · fact'));
       if (r.qVo != null) lines.add(VoLineData('${r.id}-q', r.qVo!, '${g.title} · question'));
+    }
+    // The alphabet board's spoken content is its 28 letters — each is its
+    // own recordable line, in addition to the board's instruction.
+    if (g.type == GameType.alphabet) {
+      for (final l in kArabicLetters) {
+        lines.add(VoLineData(l.id, l.name, 'Arabic letter · ${l.glyph}'));
+      }
     }
     groups.add(VoGroup(g.title, lines));
   }
