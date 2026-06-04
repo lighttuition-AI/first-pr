@@ -83,13 +83,14 @@ class Stage extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(38),
-        child: SizedBox(
+        child: const SizedBox(
           width: kStageW,
           height: kStageH,
           // Material provides a proper DefaultTextStyle so Text never falls
-          // back to the debug yellow-underline style, plus the paper bg.
-          child: const Material(
-            color: C.paper,
+          // back to the debug yellow-underline style. It's transparent so the
+          // active skin's background (painted in _StageContent) shows through.
+          child: Material(
+            color: Colors.transparent,
             child: _StageContent(),
           ),
         ),
@@ -106,6 +107,9 @@ class _StageContent extends StatelessWidget {
     final app = context.watch<AppState>();
     return Stack(
       children: [
+        // Active skin's full-stage background, behind every screen.
+        Positioned.fill(child: DecoratedBox(decoration: activeSkin.appBackground)),
+
         // Routed screen with a cross-fade + slight scale.
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 400),

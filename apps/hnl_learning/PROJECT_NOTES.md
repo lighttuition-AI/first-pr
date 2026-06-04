@@ -36,9 +36,26 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   Parent dashboard "Children" card.
 - Settings/Tweaks gear is behind the 1-2-3-4 child-lock gate.
 
+## Looks (visual themes / "skins")
+- The whole app is reskinnable. `theme/skins.dart` defines a `Skin` (palette +
+  neutrals + radii + shadow language + type pairing + full-stage background) and
+  holds **every Look as data** — this is the single tidy home for them. A global
+  `activeSkin` drives the design tokens, so switching a Look reskins all screens
+  with **no per-screen changes**.
+- Switch live in **Settings (Tweaks) → Look**. Selection persists (tweaks key
+  `skin`). `AppState.setSkin(id)` swaps `activeSkin` + saves; `app.pal` now returns
+  `activeSkin.palette`.
+- Shipping looks one at a time; `kReadySkins` is the ordered picker list. Shipped:
+  **Sunshine** (polished default) + **Classic** (original look, 1:1). Planned:
+  Soft Clay, Aurora Glass, Crayon Pop, Moonlit Calm.
+- The old per-palette/font Tweaks controls were folded into Looks. `palette`/`font`
+  fields remain in the save for back-compat but no longer drive rendering.
+
 ## Architecture quick map (lib/)
-- `theme/tokens.dart` — colors, type scale (Baloo 2 + Nunito via google_fonts),
-  radii, shadows, palettes, stage size (1366×1024).
+- `theme/skins.dart` — the `Skin` class, all Looks, `activeSkin` + `setActiveSkin`.
+- `theme/tokens.dart` — `C`/`R`/`Sh`/`AppText`: thin skin-aware views over
+  `activeSkin` (re-exports skins.dart). `C.inkA()` stays dark on every skin
+  (shadows/scrims); stage size (1366×1024) + `kTap` live here.
 - `models/content.dart` — ALL content: topics, avatars, worlds, planets,
   onboarding, the 9 games + rounds, VO lines + `buildVoRegistry()`, Arabic
   letters (`kArabicLetters`).

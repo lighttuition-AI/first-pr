@@ -162,7 +162,7 @@ class _HomeHeader extends StatelessWidget {
                   const SizedBox(width: 12),
                   Text('${app.age ?? 5}', style: AppText.display(size: 34, weight: FontWeight.w800)),
                   const SizedBox(width: 6),
-                  const Icon(Icons.expand_more_rounded, color: C.muted),
+                  Icon(Icons.expand_more_rounded, color: C.muted),
                 ],
               ),
             ),
@@ -294,10 +294,10 @@ class _MissionCard extends StatelessWidget {
         padding: const EdgeInsets.all(26),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(R.lg),
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFFFD96B), C.sun],
+            colors: [const Color(0xFFFFD96B), C.sun],
           ),
           boxShadow: Sh.md,
         ),
@@ -389,10 +389,10 @@ class _WorldSheetState extends State<WorldSheet> with SingleTickerProviderStateM
               width: kStageW,
               constraints: const BoxConstraints(maxHeight: 760),
               padding: const EdgeInsets.fromLTRB(60, 40, 60, 50),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: C.paper,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(R.xl)),
-                boxShadow: [BoxShadow(color: Color(0x33000000), blurRadius: 40)],
+                boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 40)],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,

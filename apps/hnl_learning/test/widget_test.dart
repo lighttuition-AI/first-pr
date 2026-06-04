@@ -7,9 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:hnl_learning/models/content.dart';
 import 'package:hnl_learning/screens/game.dart';
+import 'package:hnl_learning/screens/tweaks.dart';
 import 'package:hnl_learning/services/image_service.dart';
 import 'package:hnl_learning/services/vo_service.dart';
 import 'package:hnl_learning/state/app_state.dart';
+import 'package:hnl_learning/theme/tokens.dart';
 
 void main() {
   test('all 9 games present (7 mini-games + 2 Arabic-world games)', () {
@@ -146,5 +148,62 @@ void main() {
     await tester.pump(const Duration(milliseconds: 700)); // let the intro VO timer fire
     expect(tester.takeException(), isNull);
     expect(find.text('Pick a colour'), findsOneWidget);
+  });
+
+  test('skins: Sunshine is the default look and setSkin swaps it', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final app = AppState(prefs);
+
+    // Fresh install defaults to the polished "Sunshine" look.
+    expect(app.skin, 'sunshine');
+    expect(activeSkin.id, 'sunshine');
+    final sunshinePaper = C.paper;
+
+    // Switching to Classic swaps the global skin and the tokens follow.
+    app.setSkin('classic');
+    expect(app.skin, 'classic');
+    expect(activeSkin.id, 'classic');
+    expect(C.paper, isNot(sunshinePaper));
+    expect(app.pal, activeSkin.palette); // accents come from the active skin
+
+    // It persists: a new AppState from the same prefs restores the look.
+    final reopened = AppState(prefs);
+    expect(reopened.skin, 'classic');
+    expect(activeSkin.id, 'classic');
+
+    app.setSkin('sunshine'); // restore default for any later tests
+  });
+
+  testWidgets('Tweaks → Look picker lists ready looks and switches on tap', (tester) async {
+    // Render at the real stage size the panel is designed for (1366×1024).
+    await tester.binding.setSurfaceSize(const Size(1366, 1024));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final app = AppState(prefs);
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: app),
+          ChangeNotifierProvider.value(value: VoService(prefs)),
+          ChangeNotifierProvider.value(value: ImageService(prefs)),
+        ],
+        child: const MaterialApp(home: Scaffold(body: TweaksPanel())),
+      ),
+    );
+    await tester.pump();
+
+    // Both ready looks show as picker cards.
+    expect(find.text('Sunshine'), findsOneWidget);
+    expect(find.text('Classic'), findsOneWidget);
+
+    // Tapping a look switches the whole-app skin.
+    await tester.tap(find.text('Classic'));
+    await tester.pump();
+    expect(app.skin, 'classic');
+    expect(activeSkin.id, 'classic');
+
+    app.setSkin('sunshine'); // restore default
   });
 }

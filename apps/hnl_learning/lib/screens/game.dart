@@ -474,7 +474,7 @@ class _TraceGameState extends State<TraceGame> {
                     const SizedBox(width: 14),
                     Text(_letter.name, style: AppText.display(size: 28, weight: FontWeight.w700)),
                     const SizedBox(width: 10),
-                    const Icon(Icons.volume_up_rounded, color: C.inkSoft),
+                    Icon(Icons.volume_up_rounded, color: C.inkSoft),
                   ],
                 ),
               ),
@@ -1333,7 +1333,7 @@ class _ScienceGameState extends State<ScienceGame> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.volume_up_rounded, color: C.inkSoft),
+                      Icon(Icons.volume_up_rounded, color: C.inkSoft),
                       const SizedBox(width: 8),
                       Text('Hear it', style: AppText.body(size: 24, weight: FontWeight.w700, color: C.inkSoft)),
                     ],
