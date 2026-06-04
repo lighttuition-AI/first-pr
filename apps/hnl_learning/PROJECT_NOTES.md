@@ -46,8 +46,14 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   `skin`). `AppState.setSkin(id)` swaps `activeSkin` + saves; `app.pal` now returns
   `activeSkin.palette`.
 - Shipping looks one at a time; `kReadySkins` is the ordered picker list. Shipped:
-  **Sunshine** (polished default) + **Classic** (original look, 1:1). Planned:
-  Soft Clay, Aurora Glass, Crayon Pop, Moonlit Calm.
+  **Sunshine** (polished default) · **Jungle** (clay + floating monkeys/bananas) ·
+  **Classic** (original, 1:1). Planned: Aurora Glass, Crayon Pop, Moonlit Calm.
+- A skin may carry an **animated scene** (`Skin.sceneBuilder` → `FloatingScene` in
+  `widgets/scene.dart`): ambient drifting "characters" drawn behind the content,
+  wrapped in `IgnorePointer`. Home goes transparent when `activeSkin.hasScene` so
+  the scene shows on the hub. **IP note:** themed scenes use *original* characters
+  (generic animals/shapes), never copyrighted ones (no Pinkfong Baby Shark art,
+  Teen Titans, or Tom & Jerry) — App-Store-safe.
 - The old per-palette/font Tweaks controls were folded into Looks. `palette`/`font`
   fields remain in the save for back-compat but no longer drive rendering.
 

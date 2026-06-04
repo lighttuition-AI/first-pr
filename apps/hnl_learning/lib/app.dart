@@ -110,6 +110,9 @@ class _StageContent extends StatelessWidget {
         // Active skin's full-stage background, behind every screen.
         Positioned.fill(child: DecoratedBox(decoration: activeSkin.appBackground)),
 
+        // Ambient animated characters (skin-provided), behind the content.
+        if (activeSkin.hasScene) Positioned.fill(child: activeSkin.sceneBuilder!()),
+
         // Routed screen with a cross-fade + slight scale.
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 400),
