@@ -14,6 +14,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../widgets/comic.dart';
 import '../widgets/scene.dart';
 import '../widgets/sea.dart';
 
@@ -157,6 +158,14 @@ List<BoxShadow> _glassShadows(ShLevel l) => switch (l) {
           BoxShadow(color: Colors.white.withValues(alpha: .5), offset: const Offset(0, -2), blurRadius: 4),
           BoxShadow(color: _sink(.16), offset: const Offset(0, 28), blurRadius: 60),
         ],
+    };
+
+/// Hard "block" shadows — a single solid dark offset, no blur. The sticker /
+/// comic-panel look of neubrutalism (pairs with a thick ink card border).
+List<BoxShadow> _blockShadows(ShLevel l) => switch (l) {
+      ShLevel.sm => [BoxShadow(color: _sink(.9), offset: const Offset(4, 5))],
+      ShLevel.md => [BoxShadow(color: _sink(.9), offset: const Offset(6, 7))],
+      ShLevel.lg => [BoxShadow(color: _sink(.9), offset: const Offset(9, 11))],
     };
 
 // ------------------------------------------------------------
@@ -464,13 +473,73 @@ final _ocean = Skin(
   sceneBuilder: _oceanScene,
 );
 
+/// LOOK 4 — "Crayon Pop": bold, friendly neubrutalism (thick ink borders + hard
+/// block shadows, saturated primaries on cream) with an ORIGINAL hero squad and
+/// comic POW/ZAP bursts floating around.
+const _crayonInk = Color(0xFF1B2330);
+const _crayonPalette = Palette(
+  brand: Color(0xFFEF4444), // hero red
+  brandDeep: Color(0xFFC62F2F),
+  brandSoft: Color(0xFFFFD9D5),
+  logic: Color(0xFFF59E0B), // sunflower
+  logicDeep: Color(0xFFD97706),
+  galaxy: Color(0xFF2563EB), // cobalt
+  galaxyDeep: Color(0xFF1D4ED8),
+  discovery: Color(0xFF16A34A), // grass
+  discoveryDeep: Color(0xFF128A3E),
+);
+
+Widget _heroScene() => FloatingScene(
+      sprites: [
+        // Hero squad (varied) floating.
+        emojiSprite('🦸‍♂️', size: 86, x: .11, y: .14, bob: 18, sway: 10, rotate: .05, period: 6.0, phase: .1),
+        emojiSprite('🦸🏾‍♀️', size: 80, x: .86, y: .20, bob: 16, sway: 9, rotate: .05, period: 6.6, phase: .5),
+        emojiSprite('🦸🏽‍♂️', size: 74, x: .55, y: .82, bob: 14, sway: 8, rotate: .04, period: 7.0, phase: .3),
+        emojiSprite('🦸🏿‍♀️', size: 70, x: .24, y: .70, bob: 15, rotate: .05, period: 6.3, phase: .8),
+        // Comic action bursts.
+        Sprite(child: const ComicBurst(text: 'POW!', color: Color(0xFFEF4444), size: 96), x: .70, y: .10, bob: 12, rotate: .10, period: 5.0, phase: .2),
+        Sprite(child: const ComicBurst(text: 'ZAP!', color: Color(0xFF2563EB), size: 78, ), x: .40, y: .24, bob: 14, rotate: .12, period: 4.6, phase: .6),
+        Sprite(child: const ComicBurst(text: 'BAM!', color: Color(0xFFFACC15), size: 86), x: .83, y: .56, bob: 13, rotate: .11, period: 5.4, phase: .9),
+        Sprite(child: const ComicBurst(text: 'WOW!', color: Color(0xFF16A34A), size: 72), x: .15, y: .42, bob: 12, rotate: .10, period: 4.9, phase: .35),
+        // Sparkles.
+        emojiSprite('⭐', size: 34, x: .62, y: .70, bob: 10, rotate: .5, period: 4.0, phase: .15),
+        emojiSprite('✨', size: 40, x: .33, y: .12, bob: 12, rotate: .4, period: 4.4, phase: .7),
+        emojiSprite('💥', size: 38, x: .92, y: .38, bob: 11, rotate: .3, period: 4.2, phase: .45),
+      ],
+    );
+
+final _crayon = Skin(
+  id: 'crayon',
+  label: 'Crayon Pop',
+  tagline: 'Bold comic heroes & POW!',
+  palette: _crayonPalette,
+  ink: _crayonInk,
+  inkSoft: const Color(0xFF4A5568),
+  muted: const Color(0xFF8A93A3),
+  line: const Color(0xFFE7E2D4),
+  paper: const Color(0xFFFFF4E0), // comic cream
+  card: const Color(0xFFFFFFFF),
+  cream: const Color(0xFFFFE9A8),
+  sun: const Color(0xFFFACC15),
+  rSm: 10,
+  rMd: 16,
+  rLg: 22,
+  rXl: 30,
+  displayFont: 'baloo',
+  bodyFont: 'nunito',
+  appBackground: const BoxDecoration(color: Color(0xFFFFF4E0)),
+  shadow: _blockShadows,
+  cardBorder: const Border.fromBorderSide(BorderSide(color: _crayonInk, width: 3)),
+  sceneBuilder: _heroScene,
+);
+
 /// All skins by id.
 final Map<String, Skin> kSkins = {
-  for (final s in [_sunshine, _classic, _jungle, _ocean]) s.id: s,
+  for (final s in [_sunshine, _classic, _jungle, _ocean, _crayon]) s.id: s,
 };
 
 /// Ordered ids shown in the Settings → Look picker (the new default first).
-const List<String> kReadySkins = ['sunshine', 'jungle', 'ocean', 'classic'];
+const List<String> kReadySkins = ['sunshine', 'jungle', 'ocean', 'crayon', 'classic'];
 
 const String kDefaultSkin = 'sunshine';
 

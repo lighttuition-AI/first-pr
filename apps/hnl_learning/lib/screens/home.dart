@@ -152,9 +152,10 @@ class _HomeHeader extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: C.card,
                 borderRadius: BorderRadius.circular(R.pill),
                 boxShadow: Sh.sm,
+                border: activeSkin.cardBorder,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -236,6 +237,7 @@ class _IslandState extends State<_Island> with SingleTickerProviderStateMixin {
               BoxShadow(color: wd, offset: const Offset(0, 12)),
               BoxShadow(color: wd.withValues(alpha: .4), offset: const Offset(0, 22), blurRadius: 34),
             ],
+            border: activeSkin.cardBorder,
           ),
           child: Center(
             child: FittedBox(
@@ -304,6 +306,7 @@ class _MissionCard extends StatelessWidget {
             colors: [const Color(0xFFFFD96B), C.sun],
           ),
           boxShadow: Sh.md,
+          border: activeSkin.cardBorder,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,7 +490,11 @@ class _GameCard extends StatelessWidget {
       child: Container(
         width: 290,
         padding: const EdgeInsets.all(22),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.sm),
+        decoration: BoxDecoration(
+            color: C.card,
+            borderRadius: BorderRadius.circular(R.lg),
+            boxShadow: Sh.sm,
+            border: activeSkin.cardBorder),
         child: Row(
           children: [
             Img(topic.emoji, size: 52),

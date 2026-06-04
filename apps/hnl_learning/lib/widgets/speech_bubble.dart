@@ -30,9 +30,10 @@ class SpeechBubble extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 560),
       padding: const EdgeInsets.fromLTRB(22, 22, 30, 22),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: C.card,
         borderRadius: BorderRadius.circular(34),
         boxShadow: Sh.md,
+        border: activeSkin.cardBorder,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

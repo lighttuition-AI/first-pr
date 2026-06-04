@@ -195,6 +195,17 @@ void main() {
     expect(ocean.displayFont, 'quicksand'); // distinct type pairing
   });
 
+  test('skins: Crayon Pop look is ready (ink borders + hero scene)', () {
+    expect(kReadySkins, contains('crayon'));
+    final crayon = kSkins['crayon']!;
+    expect(crayon.hasScene, isTrue);
+    expect(crayon.cardBorder, isNotNull); // neubrutalist outline
+    expect(crayon.sceneBuilder!(), isA<FloatingScene>());
+    // The calm/standard looks carry no card border.
+    expect(kSkins['sunshine']!.cardBorder, isNull);
+    expect(kSkins['ocean']!.cardBorder, isNull);
+  });
+
   testWidgets('Ocean scene renders shark family + bubbles without error', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1366, 1024));
     addTearDown(() => tester.binding.setSurfaceSize(null));
