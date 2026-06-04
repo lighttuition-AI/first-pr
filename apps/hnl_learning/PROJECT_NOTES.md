@@ -29,6 +29,15 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   it; 28 letters recordable in the VO Studio); game 2 = letter tracing (finger
   drag over a hollow guide, 8-colour palette, ◀/▶, Clear, "Done!" + "Traced
   N/28"; finishing all 28 → confetti + a big uploaded GIF).
+- **Animals** (5th island, 🦒): tap → an interactive continent map (7 original
+  blob landmasses). Tap a continent → a shuffled quiz of up to 20 animals from
+  that continent's pool (`models/animals.dart`); each shows a picture (emoji
+  default; uploadable real photo in Img slot `animal-<id>`) + **English** /
+  **Somali** buttons that announce the name (EN via TTS; SO plays the family's
+  recording or attempts Somali TTS — record inline with the mic). Next → confetti
+  → next; finishing serves fresh animals next visit (per-child `animalsSeen`).
+- **Launch splash** (`widgets/splash.dart`): the three Somali sisters' faces +
+  playful accents, shown on cold start then cross-fades into the app.
 - **GIF Studio** (Settings / Tweaks, gated): upload celebration GIFs; one plays
   on full-alphabet completion (falls back to Robo if none).
 - **Multiple child profiles**: each child has its own profile + isolated
@@ -113,7 +122,7 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 cd apps/hnl_learning
 flutter pub get
 flutter analyze        # clean
-flutter test           # 19 tests (content, mission, multi-child, board, skins/looks)
+flutter test           # 24 tests (content, mission, multi-child, board, skins, icons, animals)
 flutter run -d chrome  # quick web run
 # iPad simulator used during dev: "iPad Pro 13-inch (M5)"
 #   udid 9C1A4EAC-B929-46AD-912D-6D29B9704D56

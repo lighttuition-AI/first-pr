@@ -57,6 +57,7 @@ class Palette {
         'galaxy' => galaxy,
         'discovery' => discovery,
         'arabic' => const Color(0xFF6E5AC8), // distinct purple
+        'animals' => const Color(0xFFE2A33A), // savanna gold
         _ => brand,
       };
 
@@ -65,6 +66,7 @@ class Palette {
         'galaxy' => galaxyDeep,
         'discovery' => discoveryDeep,
         'arabic' => const Color(0xFF4E3DA0),
+        'animals' => const Color(0xFFBE7F22),
         _ => brandDeep,
       };
 }

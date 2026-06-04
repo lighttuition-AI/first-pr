@@ -21,6 +21,8 @@ import 'screens/picture_studio.dart';
 import 'screens/gif_studio.dart';
 import 'screens/child_switcher.dart';
 import 'screens/tweaks.dart';
+import 'screens/continents.dart';
+import 'screens/animal_quiz.dart';
 import 'widgets/splash.dart';
 
 class HnlApp extends StatelessWidget {
@@ -228,6 +230,10 @@ class _StageContent extends StatelessWidget {
         return const BreakScreen();
       case 'rewards':
         return const RewardsScreen();
+      case 'continents':
+        return const ContinentMapScreen();
+      case 'animal-quiz':
+        return const AnimalQuizScreen();
       case 'gate':
         return const GateScreen();
       case 'parent':

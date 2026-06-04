@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/animals.dart';
 import '../models/content.dart';
 import '../services/vo_service.dart';
 import '../state/app_state.dart';
@@ -20,10 +21,11 @@ import '../widgets/speech_bubble.dart';
 /// Island positions on the map, aligned with kWorlds order (fractions of
 /// the map area). Add a position here when a new world is added.
 const List<Offset> _worldPos = [
-  Offset(0.05, 0.30), // logic
+  Offset(0.05, 0.34), // logic
   Offset(0.34, 0.05), // galaxy
   Offset(0.67, 0.10), // discovery
   Offset(0.50, 0.42), // arabic
+  Offset(0.05, 0.02), // animals (top-left, above Logic Lab)
 ];
 
 class HomeScreen extends StatefulWidget {
@@ -137,8 +139,10 @@ class _HomeScreenState extends State<HomeScreen> {
       top: h * ty,
       child: _Island(
         world: world,
-        count: gamesInWorld(world.id).length + 1,
-        onTap: () => setState(() => _world = world),
+        count: world.id == 'animals' ? kContinents.length : gamesInWorld(world.id).length + 1,
+        onTap: world.id == 'animals'
+            ? app.openContinents
+            : () => setState(() => _world = world),
       ),
     );
   }

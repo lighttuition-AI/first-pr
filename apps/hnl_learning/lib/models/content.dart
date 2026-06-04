@@ -56,6 +56,8 @@ const List<World> kWorlds = [
       'Flip cards, meet letters, and discover how the world works.'),
   World('arabic', 'Arabic World', 'Letters, words & sounds', '📜',
       'Meet the Arabic letters, hear each sound, and explore the language.'),
+  World('animals', 'Animals', 'Continents & creatures', '🦒',
+      'Hop around the world and meet amazing animals from every continent!'),
 ];
 
 class PlanetData {

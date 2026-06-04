@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:hnl_learning/models/animals.dart';
 import 'package:hnl_learning/models/content.dart';
 import 'package:hnl_learning/screens/game.dart';
 import 'package:hnl_learning/screens/tweaks.dart';
@@ -78,6 +79,50 @@ void main() {
     final rewards = kGames.map((g) => g.reward).where((r) => r.isNotEmpty).toList();
     expect(rewards.length, 7);
     expect(rewards.toSet().length, rewards.length);
+  });
+
+  test('Animals: the island world exists with a giraffe icon', () {
+    final animals = kWorlds.firstWhere((w) => w.id == 'animals');
+    expect(animals.emoji, '🦒');
+    expect(kWorlds.length, 5);
+  });
+
+  test('Animals: 7 continents, non-empty pools, unique animal ids', () {
+    expect(kContinents.length, 7);
+    final ids = <String>[];
+    for (final c in kContinents) {
+      expect(c.pool, isNotEmpty, reason: '${c.id} should have animals');
+      for (final a in c.pool) {
+        expect(a.en, isNotEmpty);
+        expect(a.so, isNotEmpty);
+        expect(a.emoji, isNotEmpty);
+        ids.add(a.id);
+      }
+    }
+    expect(ids.toSet().length, ids.length, reason: 'animal ids must be unique');
+  });
+
+  test('Animals: a continent quiz serves a shuffled session and reshuffles', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final app = AppState(prefs);
+
+    app.startContinent('africa');
+    final africa = continentById('africa');
+    final expected = africa.pool.length.clamp(0, AppState.kAnimalsPerSession);
+    expect(app.currentContinent?.id, 'africa');
+    expect(app.animalQueue.length, expected);
+    expect(app.screen, 'animal-quiz');
+
+    // Walk to the end of the session.
+    for (var i = 0; i < expected - 1; i++) {
+      expect(app.nextAnimal(), isTrue);
+    }
+    expect(app.nextAnimal(), isFalse); // finished
+
+    // A second visit reshuffles (pool smaller than 2×20 → seen resets).
+    app.startContinent('africa');
+    expect(app.animalQueue.length, expected);
   });
 
   test('mission builds a 3–4 game queue from chosen topics', () async {
