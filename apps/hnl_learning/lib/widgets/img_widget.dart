@@ -48,7 +48,10 @@ class Img extends StatelessWidget {
 
     // No forced line-height: emoji glyphs are taller than `height: 1.0`,
     // which would clip them and trigger per-emoji overflow stripes.
-    final text = Text(glyph, style: TextStyle(fontSize: size), textAlign: TextAlign.center);
+    // Tint with the skin's ink so text glyphs (numbers/letters) stay legible
+    // on dark looks; colour emoji ignore the tint and render full-colour.
+    final text = Text(glyph,
+        style: TextStyle(fontSize: size, color: C.ink), textAlign: TextAlign.center);
     return fill ? Center(child: text) : text;
   }
 }

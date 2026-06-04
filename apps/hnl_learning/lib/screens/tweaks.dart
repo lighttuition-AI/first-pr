@@ -18,7 +18,9 @@ class TweaksButton extends StatelessWidget {
         width: 60,
         height: 60,
         decoration: BoxDecoration(color: C.ink, shape: BoxShape.circle, boxShadow: Sh.md),
-        child: const Icon(Icons.tune_rounded, color: Colors.white, size: 30),
+        // Icon uses paper (the bg colour) so it always contrasts with the ink
+        // circle — light icon on dark looks, dark icon on the night look.
+        child: Icon(Icons.tune_rounded, color: C.paper, size: 30),
       ),
     );
   }
