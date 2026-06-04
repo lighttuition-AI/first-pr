@@ -237,9 +237,10 @@ class AppState extends ChangeNotifier {
   // Session / mission
   // ------------------------------------------------------------
   List<String> missionGames() {
-    var pool = kGames.where((g) => topics.contains(g.topic)).toList();
+    final eligible = kGames.where((g) => g.mission).toList();
+    var pool = eligible.where((g) => topics.contains(g.topic)).toList();
     if (pool.length < 3) {
-      pool = [...pool, ...kGames.where((g) => !pool.contains(g))];
+      pool = [...pool, ...eligible.where((g) => !pool.contains(g))];
     }
     final seen = <String>{};
     final out = <String>[];

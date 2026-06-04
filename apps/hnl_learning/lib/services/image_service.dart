@@ -125,6 +125,8 @@ List<String> _gameTokens(Game g) {
       case GameType.science:
         out.add(r.factEmoji ?? '');
         out.addAll(r.options.map((o) => o.emoji));
+      case GameType.alphabet:
+        break; // Arabic letters are text glyphs, not editable image slots.
     }
   }
   return out;
