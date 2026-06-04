@@ -12,19 +12,20 @@ import 'package:hnl_learning/services/vo_service.dart';
 import 'package:hnl_learning/state/app_state.dart';
 
 void main() {
-  test('all 8 games are present (7 mini-games + Arabic alphabet)', () {
-    expect(kGames.length, 8);
-    expect(kGames.map((g) => g.type).toSet().length, 8);
-    // The alphabet board is explore-only (never joins a mission).
+  test('all 9 games present (7 mini-games + 2 Arabic-world games)', () {
+    expect(kGames.length, 9);
+    expect(kGames.map((g) => g.type).toSet().length, 9);
+    // The Arabic-world games are explore-only (never join a mission).
     expect(kGames.firstWhere((g) => g.type == GameType.alphabet).mission, isFalse);
+    expect(kGames.firstWhere((g) => g.type == GameType.trace).mission, isFalse);
   });
 
-  test('voiceover registry: 13 groups, every line id unique', () {
+  test('voiceover registry: 14 groups, every line id unique', () {
     final groups = buildVoRegistry();
-    expect(groups.length, 13);
-    // 45 original lines + the Arabic group (1 instruction + 28 letters).
+    expect(groups.length, 14);
+    // 45 original + Arabic group (1 instruction + 28 letters) + trace instruction.
     final total = groups.fold<int>(0, (sum, g) => sum + g.lines.length);
-    expect(total, 45 + 1 + kArabicLetters.length);
+    expect(total, 45 + 1 + kArabicLetters.length + 1);
     final ids = groups.expand((g) => g.lines.map((l) => l.id)).toList();
     expect(ids.toSet().length, ids.length);
   });
@@ -93,5 +94,33 @@ void main() {
     expect(tester.takeException(), isNull);
     // First letter (Alif) sits top-right of the RTL grid and is on-screen.
     expect(find.text('أ'), findsOneWidget);
+  });
+
+  testWidgets('Letter tracing renders guide + colour palette without overflow', (tester) async {
+    // Render at the real stage size the game always gets (1366×1024).
+    await tester.binding.setSurfaceSize(const Size(1366, 1024));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: AppState(prefs)),
+          ChangeNotifierProvider.value(value: VoService(prefs)),
+          ChangeNotifierProvider.value(value: ImageService(prefs)),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: Padding(
+              padding: EdgeInsets.fromLTRB(40, 140, 40, 40),
+              child: TraceGame(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 700)); // let the intro VO timer fire
+    expect(tester.takeException(), isNull);
+    expect(find.text('Pick a colour'), findsOneWidget);
   });
 }

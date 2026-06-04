@@ -115,7 +115,7 @@ const List<OnboardingStep> kOnboarding = [
 ];
 
 // ---------------- Games ----------------
-enum GameType { pick, count, pattern, memory, letter, sort, science, alphabet }
+enum GameType { pick, count, pattern, memory, letter, sort, science, alphabet, trace }
 
 class PickOption {
   final String emoji;
@@ -270,6 +270,10 @@ final List<Game> kGames = [
   // Explore-only (no win condition) so it never joins a Daily Mission.
   Game('arabic-alphabet', GameType.alphabet, 'arabic', 'letters', 'Arabic Letters', '', [
     Round(id: 'ar-board', vo: 'Tap each letter to hear its sound!', bg: Color(0xFF21386E)),
+  ], mission: false),
+  // 9 — ARABIC WORLD · game 2: trace each letter with a finger (pick a color).
+  Game('arabic-trace', GameType.trace, 'arabic', 'letters', 'Letter Tracing', '', [
+    Round(id: 'ar-trace', vo: 'Pick a colour, then trace the letter with your finger!', bg: Color(0xFFFCEEDD)),
   ], mission: false),
 ];
 
