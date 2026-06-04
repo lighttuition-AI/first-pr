@@ -52,7 +52,14 @@ class _AgeScreenState extends State<AgeScreen> with _AutoVo {
       color: C.paper,
       child: Column(
         children: [
-          SetupHeader(index: 0, total: 3, onBack: () => app.go('onb-${kOnboarding.length - 1}')),
+          SetupHeader(
+              index: 0,
+              total: 3,
+              // Extra children come from "Add a child" → back returns home;
+              // the very first child comes from onboarding.
+              onBack: app.children.length > 1
+                  ? () => app.go('home')
+                  : () => app.go('onb-${kOnboarding.length - 1}')),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

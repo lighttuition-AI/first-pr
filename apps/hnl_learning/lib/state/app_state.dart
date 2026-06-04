@@ -26,6 +26,69 @@ class Session {
       Session(queue, index ?? this.index, mode, started);
 }
 
+/// One child's profile + their own progress. The app supports many children
+/// (switch between them from the home profile chip).
+class Child {
+  int? age;
+  List<String> topics;
+  String? avatar; // avatar id
+  String? photo; // base64-encoded photo
+  int stars;
+  List<String> planets;
+  int streak;
+  int timeToday;
+  Map<String, int> skillXp;
+
+  Child({
+    this.age,
+    List<String>? topics,
+    this.avatar,
+    this.photo,
+    this.stars = 0,
+    List<String>? planets,
+    this.streak = 1,
+    this.timeToday = 0,
+    Map<String, int>? skillXp,
+  })  : topics = topics ?? [],
+        planets = planets ?? [],
+        skillXp = skillXp ?? {};
+
+  bool get isSetUp => age != null;
+
+  Uint8List? get photoBytes {
+    if (photo == null) return null;
+    try {
+      return base64Decode(photo!);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Map<String, dynamic> toJson() => {
+        'age': age,
+        'topics': topics,
+        'avatar': avatar,
+        'photo': photo,
+        'stars': stars,
+        'planets': planets,
+        'streak': streak,
+        'timeToday': timeToday,
+        'skillXp': skillXp,
+      };
+
+  factory Child.fromJson(Map<String, dynamic> d) => Child(
+        age: d['age'] as int?,
+        topics: (d['topics'] as List?)?.cast<String>(),
+        avatar: d['avatar'] as String?,
+        photo: d['photo'] as String?,
+        stars: d['stars'] as int? ?? 0,
+        planets: (d['planets'] as List?)?.cast<String>(),
+        streak: d['streak'] as int? ?? 1,
+        timeToday: d['timeToday'] as int? ?? 0,
+        skillXp: (d['skillXp'] as Map?)?.map((k, v) => MapEntry(k as String, v as int)),
+      );
+}
+
 class AppState extends ChangeNotifier {
   AppState(this._prefs) {
     _load();
@@ -39,28 +102,28 @@ class AppState extends ChangeNotifier {
   // ---- routing ----
   String screen = 'onb-0';
 
-  // ---- profile ----
-  int? age;
-  List<String> topics = [];
-  String? avatar;
-  String? photo; // base64-encoded photo chosen via image_picker
+  // ---- children (profiles + per-child progress) ----
+  List<Child> children = [Child()];
+  int activeIndex = 0;
 
-  /// Decoded profile photo bytes, if a photo was chosen.
-  Uint8List? get photoBytes {
-    if (photo == null) return null;
-    try {
-      return base64Decode(photo!);
-    } catch (_) {
-      return null;
-    }
+  Child get child {
+    if (children.isEmpty) children = [Child()];
+    if (activeIndex < 0 || activeIndex >= children.length) activeIndex = 0;
+    return children[activeIndex];
   }
 
-  // ---- progress ----
-  int stars = 0;
-  List<String> planets = [];
-  int streak = 1;
-  int timeToday = 0;
-  Map<String, int> skillXp = {};
+  // Active-child accessors (the rest of the app reads these unchanged).
+  int? get age => child.age;
+  List<String> get topics => child.topics;
+  set topics(List<String> v) => child.topics = v; // used by tests/setup
+  String? get avatar => child.avatar;
+  String? get photo => child.photo;
+  Uint8List? get photoBytes => child.photoBytes;
+  int get stars => child.stars;
+  List<String> get planets => child.planets;
+  int get streak => child.streak;
+  int get timeToday => child.timeToday;
+  Map<String, int> get skillXp => child.skillXp;
 
   // ---- tweaks ----
   String palette = 'meadow';
@@ -78,10 +141,50 @@ class AppState extends ChangeNotifier {
   bool showPictures = false;
   bool showGif = false;
   bool showTweaks = false;
+  bool showChildMenu = false; // profile-chip dropdown to switch children
 
   // Child-lock gate guarding the settings/Tweaks panel.
   bool showGate = false;
   VoidCallback? gateAction;
+
+  // ------------------------------------------------------------
+  // Children: switch / add / remove
+  // ------------------------------------------------------------
+  void openChildMenu() {
+    showChildMenu = true;
+    notifyListeners();
+  }
+
+  void closeChildMenu() {
+    showChildMenu = false;
+    notifyListeners();
+  }
+
+  void setActiveChild(int i) {
+    if (i < 0 || i >= children.length) return;
+    activeIndex = i;
+    showChildMenu = false;
+    session = null;
+    // Resume setup if this child isn't finished, else go to their home.
+    go(child.isSetUp ? 'home' : 'age');
+  }
+
+  /// Begin onboarding a new child: append a fresh profile, make it active,
+  /// and jump into the child-setup flow.
+  void addChild() {
+    children.add(Child());
+    activeIndex = children.length - 1;
+    showChildMenu = false;
+    session = null;
+    go('age');
+  }
+
+  void removeChild(int i) {
+    if (children.length <= 1 || i < 0 || i >= children.length) return;
+    children.removeAt(i);
+    if (activeIndex >= children.length) activeIndex = children.length - 1;
+    _changed();
+  }
 
   /// Show the 1-2-3-4 child-lock; run [onUnlock] only when it's passed.
   void requireParent(VoidCallback onUnlock) {
@@ -147,16 +250,31 @@ class AppState extends ChangeNotifier {
     if (raw == null) return;
     try {
       final d = jsonDecode(raw) as Map<String, dynamic>;
-      final p = (d['profile'] as Map?) ?? {};
-      age = p['age'] as int?;
-      topics = (p['topics'] as List?)?.cast<String>() ?? [];
-      avatar = p['avatar'] as String?;
-      photo = p['photo'] as String?;
-      stars = d['stars'] as int? ?? 0;
-      planets = (d['planets'] as List?)?.cast<String>() ?? [];
-      streak = d['streak'] as int? ?? 1;
-      timeToday = d['timeToday'] as int? ?? 0;
-      skillXp = (d['skillXp'] as Map?)?.map((k, v) => MapEntry(k as String, v as int)) ?? {};
+
+      if (d['children'] is List) {
+        // New multi-child format.
+        children = [for (final c in (d['children'] as List)) Child.fromJson(c as Map<String, dynamic>)];
+        if (children.isEmpty) children = [Child()];
+        activeIndex = (d['activeIndex'] as int?)?.clamp(0, children.length - 1) ?? 0;
+      } else {
+        // Migrate the old single-profile save into one child.
+        final p = (d['profile'] as Map?) ?? {};
+        children = [
+          Child(
+            age: p['age'] as int?,
+            topics: (p['topics'] as List?)?.cast<String>(),
+            avatar: p['avatar'] as String?,
+            photo: p['photo'] as String?,
+            stars: d['stars'] as int? ?? 0,
+            planets: (d['planets'] as List?)?.cast<String>(),
+            streak: d['streak'] as int? ?? 1,
+            timeToday: d['timeToday'] as int? ?? 0,
+            skillXp: (d['skillXp'] as Map?)?.map((k, v) => MapEntry(k as String, v as int)),
+          )
+        ];
+        activeIndex = 0;
+      }
+
       final t = (d['tweaks'] as Map?) ?? {};
       palette = t['palette'] as String? ?? 'meadow';
       font = t['font'] as String? ?? 'baloo';
@@ -164,23 +282,20 @@ class AppState extends ChangeNotifier {
       celebration = t['celebration'] as String? ?? 'big';
       sessionLen = t['sessionLen'] as int? ?? 15;
       sound = t['sound'] as bool? ?? true;
+
       final s = d['screen'] as String?;
       if (s != null && !s.startsWith('game')) {
         screen = s;
       } else {
-        screen = age != null ? 'home' : 'onb-0';
+        screen = child.isSetUp ? 'home' : 'onb-0';
       }
     } catch (_) {/* corrupt save — start fresh */}
   }
 
   void _save() {
     final data = {
-      'profile': {'age': age, 'topics': topics, 'avatar': avatar, 'photo': photo},
-      'stars': stars,
-      'planets': planets,
-      'streak': streak,
-      'timeToday': timeToday,
-      'skillXp': skillXp,
+      'children': [for (final c in children) c.toJson()],
+      'activeIndex': activeIndex,
       'tweaks': {
         'palette': palette,
         'font': font,
@@ -212,26 +327,25 @@ class AppState extends ChangeNotifier {
   // Profile mutations
   // ------------------------------------------------------------
   void setAge(int a) {
-    age = a;
+    child.age = a;
     _changed();
   }
 
   void toggleTopic(String id) {
-    topics = topics.contains(id)
-        ? (List.of(topics)..remove(id))
-        : (List.of(topics)..add(id));
+    final t = child.topics;
+    child.topics = t.contains(id) ? (List.of(t)..remove(id)) : (List.of(t)..add(id));
     _changed();
   }
 
   void setAvatar(String id) {
-    avatar = id;
-    photo = null;
+    child.avatar = id;
+    child.photo = null;
     _changed();
   }
 
-  void setPhoto(String path) {
-    photo = path;
-    avatar = null;
+  void setPhoto(String base64) {
+    child.photo = base64;
+    child.avatar = null;
     _changed();
   }
 
@@ -273,15 +387,16 @@ class AppState extends ChangeNotifier {
   }
 
   void award({String? planetId, int gainStars = 0, String? topic}) {
-    if (gainStars != 0) stars += gainStars;
-    if (planetId != null && !planets.contains(planetId)) planets.add(planetId);
-    if (topic != null) skillXp[topic] = (skillXp[topic] ?? 0) + 1;
+    final c = child;
+    if (gainStars != 0) c.stars += gainStars;
+    if (planetId != null && !c.planets.contains(planetId)) c.planets.add(planetId);
+    if (topic != null) c.skillXp[topic] = (c.skillXp[topic] ?? 0) + 1;
     _changed();
   }
 
   /// Advance to the next game in the queue, or end the session.
   void finishGame([int mins = 1]) {
-    timeToday += mins;
+    child.timeToday += mins;
     final s = session;
     if (s == null) {
       go('home');
@@ -297,15 +412,8 @@ class AppState extends ChangeNotifier {
   }
 
   void resetAll() {
-    age = null;
-    topics = [];
-    avatar = null;
-    photo = null;
-    stars = 0;
-    planets = [];
-    streak = 1;
-    timeToday = 0;
-    skillXp = {};
+    children = [Child()];
+    activeIndex = 0;
     session = null;
     go('onb-0');
   }

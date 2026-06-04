@@ -73,6 +73,30 @@ void main() {
     expect(app.skillXp['logic'], 1);
   });
 
+  test('multiple children have separate, isolated progress', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final app = AppState(prefs);
+    expect(app.children.length, 1);
+
+    app.setAge(5);
+    app.award(planetId: 'p1', gainStars: 8);
+    expect(app.stars, 8);
+
+    app.addChild(); // child 2 becomes active
+    expect(app.children.length, 2);
+    expect(app.stars, 0); // fresh, isolated progress
+    app.award(gainStars: 3);
+    expect(app.stars, 3);
+
+    app.setActiveChild(0); // back to child 1
+    expect(app.stars, 8);
+    expect(app.planets, contains('p1'));
+
+    app.removeChild(1);
+    expect(app.children.length, 1);
+  });
+
   testWidgets('Arabic alphabet board renders glyphs with no overflow', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
