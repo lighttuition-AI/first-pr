@@ -117,8 +117,9 @@ class _BootSplashGateState extends State<_BootSplashGate> {
   @override
   void initState() {
     super.initState();
-    // Hold the splash briefly, then fade it away to reveal the app.
-    Future.delayed(const Duration(milliseconds: 1900), () {
+    // Hold the splash while the harp + the three sisters' names play, then
+    // fade it away to reveal the app.
+    Future.delayed(const Duration(milliseconds: 5600), () {
       if (mounted) setState(() => _opacity = 0);
     });
   }

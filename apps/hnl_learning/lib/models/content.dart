@@ -350,6 +350,15 @@ final Map<String, VoLineData> kRewardVo = {
         'Planet · ${p.name}'),
 };
 
+/// The launch-splash sister names — spoken in order over the harp. Stretched
+/// defaults (extra letters); re-recordable in the Studio under "Splash screen".
+/// Each carries the TTS speech-rate used for its default stretch (1 = least).
+const List<VoLineData> kSplashVo = [
+  VoLineData('splash-name-1', 'Nimoo', 'Splash · sister 1'),
+  VoLineData('splash-name-2', 'Ladannn', 'Splash · sister 2'),
+  VoLineData('splash-name-3', 'Hiboooo', 'Splash · sister 3'),
+];
+
 /// Short spoken reactions Robo gives during play (every one editable).
 const List<VoLineData> kFeedbackVo = [
   VoLineData('vo-fb-toomany', 'Ooh, too many! Take some out.', 'Counting · too many'),
@@ -370,6 +379,7 @@ class VoGroup {
 /// the app — including each Arabic letter — is here so it can be re-recorded.
 List<VoGroup> buildVoRegistry() {
   final groups = <VoGroup>[];
+  groups.add(VoGroup('Splash screen', List.of(kSplashVo)));
   groups.add(VoGroup('Onboarding', [
     for (final o in kOnboarding) VoLineData('vo-onb-${o.id}', o.vo, 'Onboarding ${o.step}'),
   ]));
