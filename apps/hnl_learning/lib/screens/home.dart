@@ -222,34 +222,46 @@ class _IslandState extends State<_Island> with SingleTickerProviderStateMixin {
               BoxShadow(color: wd.withValues(alpha: .4), offset: const Offset(0, 22), blurRadius: 34),
             ],
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Img(widget.world.emoji, size: 84),
-              const SizedBox(height: 6),
-              Text(widget.world.name,
-                  textAlign: TextAlign.center,
-                  style: AppText.display(size: 30, weight: FontWeight.w800, color: Colors.white)),
-              Text(widget.world.tagline,
-                  textAlign: TextAlign.center,
-                  style: AppText.body(size: 19, weight: FontWeight.w700, color: Colors.white.withValues(alpha: .92))),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(widget.count, (i) {
-                  final locked = i == widget.count - 1;
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: locked ? Colors.white.withValues(alpha: .35) : Colors.white,
+          child: Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: SizedBox(
+                width: 214,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Img(widget.world.emoji, size: 64),
+                    const SizedBox(height: 4),
+                    Text(widget.world.name,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        style: AppText.display(size: 26, weight: FontWeight.w800, color: Colors.white)),
+                    Text(widget.world.tagline,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.body(size: 16, weight: FontWeight.w700, color: Colors.white.withValues(alpha: .92))),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(widget.count, (i) {
+                        final locked = i == widget.count - 1;
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          width: 11,
+                          height: 11,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: locked ? Colors.white.withValues(alpha: .35) : Colors.white,
+                          ),
+                        );
+                      }),
                     ),
-                  );
-                }),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
         ),
       ),

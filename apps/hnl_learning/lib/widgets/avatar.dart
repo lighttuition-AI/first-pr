@@ -29,14 +29,14 @@ class Avatar extends StatefulWidget {
 }
 
 class _AvatarState extends State<Avatar> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1400),
-  );
+  // Assigned in initState so a non-bouncing avatar still has a real controller
+  // to dispose (avoids creating a Ticker during teardown).
+  late final AnimationController _c;
 
   @override
   void initState() {
     super.initState();
+    _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400));
     if (widget.bouncing) _c.repeat(reverse: true);
   }
 

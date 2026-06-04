@@ -52,21 +52,24 @@ class SetupHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(40, 30, 40, 0),
       child: Row(
         children: [
-          if (onBack != null)
-            IconCircle(Icons.arrow_back_rounded, onTap: onBack)
-          else
-            const SizedBox(width: kTap),
-          const Spacer(),
-          const Logo(small: true),
-          const Spacer(),
           SizedBox(
-            width: kTap,
+            width: 170,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: onBack != null
+                  ? IconCircle(Icons.arrow_back_rounded, onTap: onBack)
+                  : const SizedBox(width: kTap),
+            ),
+          ),
+          const Expanded(child: Center(child: Logo(small: true))),
+          SizedBox(
+            width: 170,
             child: total > 0
                 ? Align(
                     alignment: Alignment.centerRight,
                     child: ProgressDots(total: total, index: index),
                   )
-                : null,
+                : const SizedBox.shrink(),
           ),
         ],
       ),

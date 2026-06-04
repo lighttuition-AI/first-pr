@@ -55,8 +55,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Left — Robo + overlapping bubble
-                  SizedBox(
-                    width: 460,
+                  Expanded(
+                    flex: 4,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -67,15 +67,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           voText: data.vo,
                         ),
                         const SizedBox(height: 4),
-                        if (app.mascot) const Robo(size: 300, pose: 'wave'),
+                        if (app.mascot) const Robo(size: 260, pose: 'wave'),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 30),
+                  const SizedBox(width: 24),
                   // Right — promise card
                   Expanded(
+                    flex: 5,
                     child: Container(
-                      padding: const EdgeInsets.all(58),
+                      padding: const EdgeInsets.all(48),
                       decoration: BoxDecoration(
                         color: C.card,
                         borderRadius: BorderRadius.circular(R.lg),
@@ -86,11 +87,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('STEP ${data.step} · FOR GROWN-UPS', style: AppText.kicker),
-                          const SizedBox(height: 12),
-                          Text(data.title, style: AppText.h1),
-                          const SizedBox(height: 30),
+                          const SizedBox(height: 10),
+                          Text(data.title,
+                              style: AppText.display(size: 52, weight: FontWeight.w800, height: 1.05)),
+                          const SizedBox(height: 24),
                           for (final p in data.promises) _PromiseRow(p),
-                          const SizedBox(height: 38),
+                          const SizedBox(height: 26),
                           KidButton(
                             large: true,
                             onTap: () => app.go(last ? 'age' : 'onb-${widget.index + 1}'),
@@ -124,18 +126,18 @@ class _PromiseRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
         color: C.inkA(.04),
         borderRadius: BorderRadius.circular(R.md),
       ),
       child: Row(
         children: [
-          Text(p.emoji, style: const TextStyle(fontSize: 34)),
-          const SizedBox(width: 18),
+          Text(p.emoji, style: const TextStyle(fontSize: 30)),
+          const SizedBox(width: 16),
           Expanded(
-            child: Text(p.text, style: AppText.display(size: 30, weight: FontWeight.w700)),
+            child: Text(p.text, style: AppText.display(size: 27, weight: FontWeight.w700)),
           ),
         ],
       ),
