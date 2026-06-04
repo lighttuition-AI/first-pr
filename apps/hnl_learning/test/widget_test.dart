@@ -12,6 +12,7 @@ import 'package:hnl_learning/services/image_service.dart';
 import 'package:hnl_learning/services/vo_service.dart';
 import 'package:hnl_learning/state/app_state.dart';
 import 'package:hnl_learning/theme/tokens.dart';
+import 'package:hnl_learning/widgets/game_icons.dart';
 import 'package:hnl_learning/widgets/scene.dart';
 import 'package:hnl_learning/widgets/sea.dart';
 import 'package:hnl_learning/widgets/village.dart';
@@ -23,6 +24,26 @@ void main() {
     // The Arabic-world games are explore-only (never join a mission).
     expect(kGames.firstWhere((g) => g.type == GameType.alphabet).mission, isFalse);
     expect(kGames.firstWhere((g) => g.type == GameType.trace).mission, isFalse);
+  });
+
+  test('every game has a bespoke custom icon (no fallback emoji)', () {
+    for (final g in kGames) {
+      expect(customGameIcon(g.id), isNotNull, reason: '${g.id} should have a custom icon');
+    }
+  });
+
+  testWidgets('all custom game icons render with no overflow', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Wrap(
+            children: [for (final g in kGames) customGameIcon(g.id, size: 52)!],
+          ),
+        ),
+      ),
+    ));
+    expect(tester.takeException(), isNull);
+    expect(find.byType(IconTile), findsNWidgets(kGames.length));
   });
 
   test('voiceover registry: 14 groups, every line id unique', () {

@@ -10,6 +10,7 @@ import '../theme/tokens.dart';
 import '../widgets/avatar.dart';
 import '../widgets/branding.dart';
 import '../widgets/common.dart';
+import '../widgets/game_icons.dart';
 import '../widgets/img_widget.dart';
 import '../widgets/kid_button.dart';
 import '../widgets/planet.dart';
@@ -480,10 +481,10 @@ class _GameCard extends StatelessWidget {
     switch (game.type) {
       case GameType.alphabet:
         subtitle = '${kArabicLetters.length} letters';
-        trailing = const Text('🔤', style: TextStyle(fontSize: 34));
+        trailing = customGameTrailing(game.id) ?? const Text('🔤', style: TextStyle(fontSize: 34));
       case GameType.trace:
         subtitle = 'Trace & colour';
-        trailing = const Text('✏️', style: TextStyle(fontSize: 34));
+        trailing = customGameTrailing(game.id) ?? const Text('✏️', style: TextStyle(fontSize: 34));
       default:
         subtitle = '${game.rounds.length} rounds';
         trailing = done
@@ -503,7 +504,7 @@ class _GameCard extends StatelessWidget {
             border: activeSkin.cardBorder),
         child: Row(
           children: [
-            Img(topic.emoji, size: 52),
+            customGameIcon(game.id, size: 52) ?? Img(topic.emoji, size: 52),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
