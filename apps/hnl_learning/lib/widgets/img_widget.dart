@@ -46,7 +46,9 @@ class Img extends StatelessWidget {
       );
     }
 
-    final text = Text(glyph, style: TextStyle(fontSize: size, height: 1.0));
+    // No forced line-height: emoji glyphs are taller than `height: 1.0`,
+    // which would clip them and trigger per-emoji overflow stripes.
+    final text = Text(glyph, style: TextStyle(fontSize: size), textAlign: TextAlign.center);
     return fill ? Center(child: text) : text;
   }
 }

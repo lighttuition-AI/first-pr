@@ -22,7 +22,7 @@ dependencies:
   # Audio-first voiceover: default "robot" voice via TTS,
   # plus record-your-own-voice studio with playback.
   flutter_tts: ^4.2.0
-  record: ^5.1.2
+  record: ^6.1.1
   audioplayers: ^6.1.0
 
   # Picture Studio: upload your own art from the device gallery.

@@ -6,6 +6,7 @@
 // ============================================================
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/content.dart';
@@ -294,10 +295,21 @@ class FxController extends ChangeNotifier {
   void fire({int? score, String intensity = 'big'}) {
     final e = CelebrateEvent(++_seq, score, intensity);
     bursts.add(e);
-    notifyListeners();
+    _notifySafe();
     Future.delayed(const Duration(milliseconds: 2600), () {
       bursts.removeWhere((b) => b.id == e.id);
-      notifyListeners();
+      _notifySafe();
     });
+  }
+
+  /// Notify listeners without crashing when fire() is called from a
+  /// widget's build/initState (e.g. a screen that celebrates on entry).
+  void _notifySafe() {
+    final phase = SchedulerBinding.instance.schedulerPhase;
+    if (phase == SchedulerPhase.persistentCallbacks) {
+      SchedulerBinding.instance.addPostFrameCallback((_) => notifyListeners());
+    } else {
+      notifyListeners();
+    }
   }
 }

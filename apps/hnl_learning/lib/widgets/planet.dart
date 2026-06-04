@@ -25,9 +25,17 @@ class Planet extends StatefulWidget {
 }
 
 class _PlanetState extends State<Planet> with SingleTickerProviderStateMixin {
-  late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(seconds: 9))
-        ..repeat();
+  // Assigned in initState (not a lazy field initializer) so a non-spinning
+  // planet still has a real controller to dispose — avoids creating a Ticker
+  // during teardown, which touches a deactivated context.
+  late final AnimationController _c;
+
+  @override
+  void initState() {
+    super.initState();
+    _c = AnimationController(vsync: this, duration: const Duration(seconds: 9));
+    if (widget.spin) _c.repeat();
+  }
 
   @override
   void dispose() {

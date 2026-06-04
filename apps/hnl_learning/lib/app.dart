@@ -84,7 +84,9 @@ class Stage extends StatelessWidget {
         child: SizedBox(
           width: kStageW,
           height: kStageH,
-          child: const ColoredBox(
+          // Material provides a proper DefaultTextStyle so Text never falls
+          // back to the debug yellow-underline style, plus the paper bg.
+          child: const Material(
             color: C.paper,
             child: _StageContent(),
           ),
