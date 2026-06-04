@@ -78,6 +78,23 @@ class AppState extends ChangeNotifier {
   bool showPictures = false;
   bool showTweaks = false;
 
+  // Child-lock gate guarding the settings/Tweaks panel.
+  bool showGate = false;
+  VoidCallback? gateAction;
+
+  /// Show the 1-2-3-4 child-lock; run [onUnlock] only when it's passed.
+  void requireParent(VoidCallback onUnlock) {
+    gateAction = onUnlock;
+    showGate = true;
+    notifyListeners();
+  }
+
+  void closeGate() {
+    showGate = false;
+    gateAction = null;
+    notifyListeners();
+  }
+
   void openVoiceStudio() {
     showVoice = true;
     notifyListeners();
@@ -100,6 +117,11 @@ class AppState extends ChangeNotifier {
 
   void toggleTweaks() {
     showTweaks = !showTweaks;
+    notifyListeners();
+  }
+
+  void openTweaks() {
+    showTweaks = true;
     notifyListeners();
   }
 

@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>HNL Learning uses the microphone so a grown-up can record their own voice for the app's instructions in the Voiceover Studio.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>HNL Learning lets a grown-up choose pictures from the photo library to use as the app's own artwork in the Picture Studio.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

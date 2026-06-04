@@ -12,7 +12,8 @@ class TweaksButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = context.read<AppState>();
     return GestureDetector(
-      onTap: app.toggleTweaks,
+      // Settings are for grown-ups — gate behind the 1-2-3-4 child lock.
+      onTap: () => app.requireParent(app.openTweaks),
       child: Container(
         width: 60,
         height: 60,
