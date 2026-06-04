@@ -14,6 +14,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../widgets/scene.dart';
+
 /// Parse a CSS-style hex string (#RRGGBB or #AARRGGBB) into a [Color].
 Color hex(String h) {
   var s = h.replaceAll('#', '').trim();
@@ -119,6 +121,26 @@ List<BoxShadow> _classicShadows(ShLevel l) => switch (l) {
         ],
     };
 
+/// Puffy "claymorphism" shadows — a soft light highlight (top-left) plus a
+/// soft dark drop (bottom-right) makes surfaces look inflated and tactile.
+List<BoxShadow> _clayShadows(ShLevel l) {
+  final hi = Colors.white.withValues(alpha: .7);
+  return switch (l) {
+    ShLevel.sm => [
+        BoxShadow(color: hi, offset: const Offset(-4, -4), blurRadius: 8),
+        BoxShadow(color: _sink(.12), offset: const Offset(5, 8), blurRadius: 16),
+      ],
+    ShLevel.md => [
+        BoxShadow(color: hi, offset: const Offset(-6, -6), blurRadius: 14),
+        BoxShadow(color: _sink(.16), offset: const Offset(8, 13), blurRadius: 26),
+      ],
+    ShLevel.lg => [
+        BoxShadow(color: hi, offset: const Offset(-9, -9), blurRadius: 20),
+        BoxShadow(color: _sink(.20), offset: const Offset(12, 20), blurRadius: 40),
+      ],
+  };
+}
+
 // ------------------------------------------------------------
 // Skin — one complete look.
 // ------------------------------------------------------------
@@ -150,6 +172,11 @@ class Skin {
   /// Light vs dark — drives system contrast choices.
   final Brightness brightness;
 
+  /// Optional ambient animated scene (floating characters) drawn behind the
+  /// app's content. Null = no scene. See [FloatingScene].
+  final Widget Function()? sceneBuilder;
+  bool get hasScene => sceneBuilder != null;
+
   final List<BoxShadow> Function(ShLevel) shadowFn;
   List<BoxShadow> shadow(ShLevel l) => shadowFn(l);
 
@@ -178,6 +205,7 @@ class Skin {
     this.cardOpacity = 1,
     this.blurCards = false,
     this.brightness = Brightness.light,
+    this.sceneBuilder,
   }) : shadowFn = shadow;
 
   /// Swatches shown on the picker card.
@@ -293,13 +321,76 @@ final _classic = Skin(
   shadow: _classicShadows,
 );
 
+/// LOOK 2 — "Jungle": soft claymorphism in jungle pastels, with monkeys &
+/// bananas (plus a palm tree with monkeys on it) drifting behind the app.
+const _junglePalette = Palette(
+  brand: Color(0xFF5BB97D), // leaf green
+  brandDeep: Color(0xFF3E9A60),
+  brandSoft: Color(0xFFD9F0DD),
+  logic: Color(0xFFFF8A5C), // mango
+  logicDeep: Color(0xFFE76F43),
+  galaxy: Color(0xFF6FB1E6), // sky
+  galaxyDeep: Color(0xFF4E92C9),
+  discovery: Color(0xFF5BB97D),
+  discoveryDeep: Color(0xFF3E9A60),
+);
+
+Widget _jungleScene() => FloatingScene(
+      sprites: [
+        // Palm tree + monkeys "on the tree" (bottom-left).
+        emojiSprite('🌴', size: 168, x: -0.012, y: 0.57, bob: 0, sway: 6, rotate: .015, period: 9),
+        emojiSprite('🐒', size: 64, x: 0.045, y: 0.49, bob: 6, rotate: .05, period: 5, phase: .1),
+        emojiSprite('🙈', size: 56, x: 0.10, y: 0.71, bob: 8, rotate: .04, period: 6, phase: .5),
+        // Floating monkeys.
+        emojiSprite('🐵', size: 62, x: 0.90, y: 0.15, bob: 18, sway: 10, rotate: .06, period: 7, phase: .2),
+        emojiSprite('🐒', size: 50, x: 0.30, y: 0.09, bob: 16, rotate: .05, period: 6.5, phase: .7),
+        emojiSprite('🙊', size: 48, x: 0.80, y: 0.80, bob: 14, sway: 8, rotate: .05, period: 6, phase: .35),
+        // Floating bananas (gentle spin).
+        emojiSprite('🍌', size: 46, x: 0.20, y: 0.24, bob: 16, rotate: .35, period: 5.5, phase: .15),
+        emojiSprite('🍌', size: 40, x: 0.63, y: 0.10, bob: 14, rotate: .30, period: 6.2, phase: .6),
+        emojiSprite('🍌', size: 52, x: 0.86, y: 0.42, bob: 18, rotate: .40, period: 5.0, phase: .9),
+        emojiSprite('🍌', size: 38, x: 0.46, y: 0.80, bob: 13, rotate: .32, period: 6.8, phase: .25),
+        emojiSprite('🍌', size: 44, x: 0.72, y: 0.62, bob: 15, rotate: .36, period: 5.7, phase: .45),
+      ],
+    );
+
+final _jungle = Skin(
+  id: 'jungle',
+  label: 'Jungle',
+  tagline: 'Monkeys, bananas & soft clay',
+  palette: _junglePalette,
+  ink: const Color(0xFF3B4A39),
+  inkSoft: const Color(0xFF6A7A66),
+  muted: const Color(0xFFA6B2A0),
+  line: const Color(0xFFE4EBDC),
+  paper: const Color(0xFFF1F6E8), // soft leaf cream
+  card: const Color(0xFFFFFFFF),
+  cream: const Color(0xFFFFF1CE),
+  sun: const Color(0xFFFFC83D), // banana
+  rSm: 22,
+  rMd: 32,
+  rLg: 46,
+  rXl: 64,
+  displayFont: 'baloo',
+  bodyFont: 'nunito',
+  appBackground: const BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Color(0xFFE9F4D6), Color(0xFFF6F1DE)],
+    ),
+  ),
+  shadow: _clayShadows,
+  sceneBuilder: _jungleScene,
+);
+
 /// All skins by id.
 final Map<String, Skin> kSkins = {
-  for (final s in [_sunshine, _classic]) s.id: s,
+  for (final s in [_sunshine, _classic, _jungle]) s.id: s,
 };
 
 /// Ordered ids shown in the Settings → Look picker (the new default first).
-const List<String> kReadySkins = ['sunshine', 'classic'];
+const List<String> kReadySkins = ['sunshine', 'jungle', 'classic'];
 
 const String kDefaultSkin = 'sunshine';
 

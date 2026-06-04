@@ -48,13 +48,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final app = context.watch<AppState>();
     final v = kScreenVo['home']!;
     final body = DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: RadialGradient(
-          center: const Alignment(0, -0.9),
-          radius: 1.2,
-          colors: [app.pal.brandSoft.withValues(alpha: .7), C.paper],
-        ),
-      ),
+      // When the skin has an animated scene, stay transparent so its
+      // characters (drawn behind the content) show through on the hub.
+      decoration: activeSkin.hasScene
+          ? const BoxDecoration()
+          : BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(0, -0.9),
+                radius: 1.2,
+                colors: [app.pal.brandSoft.withValues(alpha: .7), C.paper],
+              ),
+            ),
       child: Column(
         children: [
           const _HomeHeader(),

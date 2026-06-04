@@ -12,6 +12,7 @@ import 'package:hnl_learning/services/image_service.dart';
 import 'package:hnl_learning/services/vo_service.dart';
 import 'package:hnl_learning/state/app_state.dart';
 import 'package:hnl_learning/theme/tokens.dart';
+import 'package:hnl_learning/widgets/scene.dart';
 
 void main() {
   test('all 9 games present (7 mini-games + 2 Arabic-world games)', () {
@@ -173,6 +174,16 @@ void main() {
     expect(activeSkin.id, 'classic');
 
     app.setSkin('sunshine'); // restore default for any later tests
+  });
+
+  test('skins: Jungle look is ready and carries an animated scene', () {
+    expect(kReadySkins, contains('jungle'));
+    final jungle = kSkins['jungle']!;
+    expect(jungle.hasScene, isTrue);
+    expect(jungle.sceneBuilder!(), isA<FloatingScene>());
+    // Sunshine/Classic stay scene-free (calm).
+    expect(kSkins['sunshine']!.hasScene, isFalse);
+    expect(kSkins['classic']!.hasScene, isFalse);
   });
 
   testWidgets('Tweaks → Look picker lists ready looks and switches on tap', (tester) async {
