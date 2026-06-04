@@ -8,6 +8,7 @@ import '../models/content.dart';
 import '../services/vo_service.dart';
 import '../state/app_state.dart';
 import '../theme/tokens.dart';
+import '../widgets/avatar.dart';
 import '../widgets/common.dart';
 import '../widgets/img_widget.dart';
 import '../widgets/kid_button.dart';
@@ -203,6 +204,8 @@ class _ParentScreenState extends State<ParentScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
+                      _childrenCard(app),
+                      const SizedBox(height: 24),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -280,6 +283,88 @@ class _ParentScreenState extends State<ParentScreen> {
           ),
         ),
       );
+
+  Widget _childrenCard(AppState app) => Container(
+        padding: const EdgeInsets.all(30),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Kicker('Profiles'),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Text('Children', style: AppText.display(size: 32, weight: FontWeight.w700)),
+                const Spacer(),
+                KidButton(
+                  small: true,
+                  onTap: app.addChild,
+                  child: const Row(mainAxisSize: MainAxisSize.min, children: [Text('➕ '), Text('Add a child')]),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            for (var i = 0; i < app.children.length; i++) _childManageRow(app, i, app.children[i]),
+          ],
+        ),
+      );
+
+  Widget _childManageRow(AppState app, int i, Child c) {
+    final active = i == app.activeIndex;
+    final av = c.avatar != null ? kAvatars.firstWhere((a) => a.id == c.avatar, orElse: () => kAvatars[0]) : kAvatars[0];
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: active ? app.pal.brandSoft : C.paper,
+        borderRadius: BorderRadius.circular(R.md),
+        border: Border.all(color: C.line),
+      ),
+      child: Row(
+        children: [
+          if (c.photoBytes != null)
+            ClipOval(child: Image.memory(c.photoBytes!, width: 52, height: 52, fit: BoxFit.cover))
+          else
+            Avatar(data: av, size: 52),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Child ${i + 1}', style: AppText.display(size: 24, weight: FontWeight.w700)),
+                Text(
+                  c.isSetUp ? 'Age ${c.age} · ${c.planets.length} planets · ${c.stars} stars' : 'Setup not finished',
+                  style: AppText.body(size: 18, weight: FontWeight.w700, color: C.muted),
+                ),
+              ],
+            ),
+          ),
+          if (active)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(color: app.pal.brand, borderRadius: BorderRadius.circular(R.pill)),
+              child: Text('Playing', style: AppText.body(size: 18, weight: FontWeight.w800, color: Colors.white)),
+            )
+          else
+            KidButton(small: true, variant: BtnVariant.ghost, onTap: () => app.setActiveChild(i), child: const Text('Switch')),
+          if (app.children.length > 1) ...[
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => app.removeChild(i),
+              child: Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                child: const Icon(Icons.delete_outline_rounded, size: 24, color: Color(0xFFE0573D)),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
   Widget _card(String kicker, String title, Widget child) => Container(
         padding: const EdgeInsets.all(30),

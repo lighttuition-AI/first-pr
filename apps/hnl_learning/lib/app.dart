@@ -19,6 +19,7 @@ import 'screens/parent.dart';
 import 'screens/voice_studio.dart';
 import 'screens/picture_studio.dart';
 import 'screens/gif_studio.dart';
+import 'screens/child_switcher.dart';
 import 'screens/tweaks.dart';
 
 class HnlApp extends StatelessWidget {
@@ -134,6 +135,9 @@ class _StageContent extends StatelessWidget {
         if (app.showVoice) const Positioned.fill(child: VoiceStudio()),
         if (app.showPictures) const Positioned.fill(child: PictureStudio()),
         if (app.showGif) const Positioned.fill(child: GifStudio()),
+
+        // Profile dropdown: switch between children.
+        if (app.showChildMenu) const Positioned.fill(child: ChildSwitcher()),
 
         // Child-lock gate guarding the settings/Tweaks panel.
         if (app.showGate)

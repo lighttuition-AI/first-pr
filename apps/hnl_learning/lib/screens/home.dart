@@ -144,9 +144,9 @@ class _HomeHeader extends StatelessWidget {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => app.go('gate'),
+            onTap: app.openChildMenu,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(8, 8, 22, 8),
+              padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(R.pill),
@@ -161,6 +161,8 @@ class _HomeHeader extends StatelessWidget {
                     Avatar(data: av, size: 64),
                   const SizedBox(width: 12),
                   Text('${app.age ?? 5}', style: AppText.display(size: 34, weight: FontWeight.w800)),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.expand_more_rounded, color: C.muted),
                 ],
               ),
             ),
