@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/content.dart';
+import '../services/gif_service.dart';
 import '../services/vo_service.dart';
 import '../state/app_state.dart';
 import '../theme/tokens.dart';
@@ -386,6 +387,8 @@ class _TraceGameState extends State<TraceGame> {
   Color _color = _palette[0];
   final List<_Stroke> _strokes = [];
   _Stroke? _current;
+  final Set<int> _traced = {};
+  bool _celebrating = false;
 
   ArabicLetter get _letter => kArabicLetters[_idx];
 
@@ -411,9 +414,47 @@ class _TraceGameState extends State<TraceGame> {
     _playLetter();
   }
 
+  /// Mark the current letter traced. When all 28 are done → celebrate.
+  void _markDone() {
+    if (_strokes.isEmpty) return;
+    setState(() => _traced.add(_idx));
+    if (_traced.length >= kArabicLetters.length) {
+      context.read<FxController>().fire(intensity: context.read<AppState>().celebration);
+      setState(() => _celebrating = true);
+    } else {
+      _nextUntraced();
+    }
+  }
+
+  void _nextUntraced() {
+    for (var step = 1; step <= kArabicLetters.length; step++) {
+      final n = (_idx + step) % kArabicLetters.length;
+      if (!_traced.contains(n)) {
+        setState(() {
+          _idx = n;
+          _strokes.clear();
+          _current = null;
+        });
+        _playLetter();
+        return;
+      }
+    }
+  }
+
+  void _restart() {
+    setState(() {
+      _celebrating = false;
+      _traced.clear();
+      _idx = 0;
+      _strokes.clear();
+      _current = null;
+    });
+    _playLetter();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final content = Column(
       children: [
         // Letter name + speaker + prev/next
         Row(
@@ -510,7 +551,17 @@ class _TraceGameState extends State<TraceGame> {
                   ),
                   const SizedBox(height: 30),
                   KidButton(
+                    onTap: _strokes.isEmpty ? null : _markDone,
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Text(_traced.contains(_idx) ? '✓ Traced' : 'Done!'),
+                      const SizedBox(width: 10),
+                      const Icon(Icons.check_rounded),
+                    ]),
+                  ),
+                  const SizedBox(height: 14),
+                  KidButton(
                     variant: BtnVariant.ghost,
+                    small: true,
                     onTap: _strokes.isEmpty ? null : () => setState(() => _strokes.clear()),
                     child: const Row(mainAxisSize: MainAxisSize.min, children: [
                       Icon(Icons.refresh_rounded),
@@ -518,12 +569,70 @@ class _TraceGameState extends State<TraceGame> {
                       Text('Clear'),
                     ]),
                   ),
+                  const SizedBox(height: 18),
+                  Text('Traced ${_traced.length} / ${kArabicLetters.length}',
+                      style: AppText.body(size: 22, weight: FontWeight.w800, color: C.muted)),
                 ],
               ),
             ],
           ),
         ),
       ],
+    );
+
+    return Stack(
+      children: [
+        content,
+        if (_celebrating) Positioned.fill(child: _TraceComplete(onDone: _restart)),
+      ],
+    );
+  }
+}
+
+// Full-alphabet completion: a big uploaded GIF (or Robo) + a replay button.
+// Confetti is fired separately via the FxController.
+class _TraceComplete extends StatelessWidget {
+  final VoidCallback onDone;
+  const _TraceComplete({required this.onDone});
+
+  @override
+  Widget build(BuildContext context) {
+    final gif = context.watch<GifService>().randomGif();
+    final app = context.watch<AppState>();
+    return ColoredBox(
+      color: C.inkA(.55),
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(50, 40, 50, 40),
+          decoration: BoxDecoration(color: C.paper, borderRadius: BorderRadius.circular(R.xl), boxShadow: Sh.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('You traced every letter! 🎉',
+                  textAlign: TextAlign.center,
+                  style: AppText.display(size: 46, weight: FontWeight.w800)),
+              const SizedBox(height: 20),
+              if (gif != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(R.lg),
+                  child: Image.memory(gif, width: 540, height: 380, fit: BoxFit.contain, gaplessPlayback: true),
+                )
+              else if (app.mascot)
+                const Robo(size: 200, pose: 'cheer'),
+              const SizedBox(height: 26),
+              KidButton(
+                large: true,
+                onTap: onDone,
+                child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                  Text('Yay! Again'),
+                  SizedBox(width: 12),
+                  Icon(Icons.refresh_rounded),
+                ]),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

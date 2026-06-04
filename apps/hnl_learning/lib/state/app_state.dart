@@ -76,6 +76,7 @@ class AppState extends ChangeNotifier {
   // ---- transient overlay UI (Studios + Tweaks panel) ----
   bool showVoice = false;
   bool showPictures = false;
+  bool showGif = false;
   bool showTweaks = false;
 
   // Child-lock gate guarding the settings/Tweaks panel.
@@ -112,6 +113,16 @@ class AppState extends ChangeNotifier {
 
   void closePictureStudio() {
     showPictures = false;
+    notifyListeners();
+  }
+
+  void openGifStudio() {
+    showGif = true;
+    notifyListeners();
+  }
+
+  void closeGifStudio() {
+    showGif = false;
     notifyListeners();
   }
 

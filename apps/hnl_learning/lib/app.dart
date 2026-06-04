@@ -18,6 +18,7 @@ import 'screens/rewards.dart';
 import 'screens/parent.dart';
 import 'screens/voice_studio.dart';
 import 'screens/picture_studio.dart';
+import 'screens/gif_studio.dart';
 import 'screens/tweaks.dart';
 
 class HnlApp extends StatelessWidget {
@@ -129,9 +130,10 @@ class _StageContent extends StatelessWidget {
         const Positioned(right: 22, bottom: 22, child: TweaksButton()),
         if (app.showTweaks) const Positioned.fill(child: TweaksPanel()),
 
-        // The two creative-control Studios.
+        // The creative-control Studios.
         if (app.showVoice) const Positioned.fill(child: VoiceStudio()),
         if (app.showPictures) const Positioned.fill(child: PictureStudio()),
+        if (app.showGif) const Positioned.fill(child: GifStudio()),
 
         // Child-lock gate guarding the settings/Tweaks panel.
         if (app.showGate)
