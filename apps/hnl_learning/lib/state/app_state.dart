@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../models/animals.dart';
 import '../models/content.dart';
 import '../theme/tokens.dart';
 import '../services/vo_service.dart';
@@ -39,6 +40,10 @@ class Child {
   int timeToday;
   Map<String, int> skillXp;
 
+  /// Per-continent animal ids the child has already been quizzed on, so each
+  /// visit serves fresh animals (reshuffles when a continent is exhausted).
+  Map<String, List<String>> animalsSeen;
+
   Child({
     this.age,
     List<String>? topics,
@@ -49,9 +54,11 @@ class Child {
     this.streak = 1,
     this.timeToday = 0,
     Map<String, int>? skillXp,
+    Map<String, List<String>>? animalsSeen,
   })  : topics = topics ?? [],
         planets = planets ?? [],
-        skillXp = skillXp ?? {};
+        skillXp = skillXp ?? {},
+        animalsSeen = animalsSeen ?? {};
 
   bool get isSetUp => age != null;
 
@@ -74,6 +81,7 @@ class Child {
         'streak': streak,
         'timeToday': timeToday,
         'skillXp': skillXp,
+        'animalsSeen': animalsSeen,
       };
 
   factory Child.fromJson(Map<String, dynamic> d) => Child(
@@ -86,6 +94,8 @@ class Child {
         streak: d['streak'] as int? ?? 1,
         timeToday: d['timeToday'] as int? ?? 0,
         skillXp: (d['skillXp'] as Map?)?.map((k, v) => MapEntry(k as String, v as int)),
+        animalsSeen: (d['animalsSeen'] as Map?)
+            ?.map((k, v) => MapEntry(k as String, (v as List).cast<String>())),
       );
 }
 
@@ -392,6 +402,56 @@ class AppState extends ChangeNotifier {
   void startGame(String id) {
     session = Session([id], 0, 'single', DateTime.now().millisecondsSinceEpoch);
     go('game');
+  }
+
+  // ------------------------------------------------------------
+  // Animals island — continent → a shuffled 20-animal quiz session
+  // ------------------------------------------------------------
+  static const int kAnimalsPerSession = 20;
+
+  Continent? currentContinent;
+  List<Animal> animalQueue = [];
+  int animalIndex = 0;
+
+  Animal? get currentAnimal =>
+      (animalIndex >= 0 && animalIndex < animalQueue.length) ? animalQueue[animalIndex] : null;
+
+  /// Open the continent map.
+  void openContinents() => go('continents');
+
+  /// Build a fresh quiz for [continentId]: up to 20 animals the child hasn't
+  /// seen yet; once a continent is exhausted the "seen" set resets (reshuffle).
+  void startContinent(String continentId) {
+    final c = continentById(continentId);
+    final seen = child.animalsSeen[continentId] ?? <String>[];
+    var remaining = c.pool.where((a) => !seen.contains(a.id)).toList();
+    if (remaining.length < kAnimalsPerSession && remaining.length < c.pool.length) {
+      // Not enough fresh ones left → reshuffle the whole pool.
+      child.animalsSeen[continentId] = [];
+      remaining = List.of(c.pool);
+    }
+    remaining.shuffle();
+    final take = remaining.take(kAnimalsPerSession).toList();
+    child.animalsSeen[continentId] = [
+      ...(child.animalsSeen[continentId] ?? []),
+      ...take.map((a) => a.id),
+    ];
+
+    currentContinent = c;
+    animalQueue = take;
+    animalIndex = 0;
+    _save();
+    go('animal-quiz');
+  }
+
+  /// Advance to the next animal; returns false when the session is finished.
+  bool nextAnimal() {
+    if (animalIndex < animalQueue.length - 1) {
+      animalIndex++;
+      notifyListeners();
+      return true;
+    }
+    return false;
   }
 
   void startMission() {

@@ -78,7 +78,10 @@ class VoService extends ChangeNotifier {
   }
 
   /// Play line [id]; prefer the user's recording, else speak [text].
-  Future<void> play(String id, String? text) async {
+  /// [lang] sets the TTS voice for this utterance (e.g. 'so-SO' for Somali);
+  /// if the device lacks that voice the TTS simply no-ops and the recording
+  /// (once made in the Studio / inline) is what plays.
+  Future<void> play(String id, String? text, {String lang = 'en-US'}) async {
     await stop();
     if (!_enabled) return;
     _setActive(id);
@@ -92,6 +95,7 @@ class VoService extends ChangeNotifier {
     }
     if (text != null && text.isNotEmpty) {
       try {
+        await _tts.setLanguage(lang);
         await _tts.speak(text);
         return;
       } catch (_) {}
