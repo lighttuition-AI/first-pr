@@ -18,7 +18,14 @@ const _target = 6;
 
 // ---------------- Gate ----------------
 class GateScreen extends StatefulWidget {
-  const GateScreen({super.key});
+  /// What to do once 1-2-3-4 is entered correctly.
+  /// Defaults to opening the parent dashboard.
+  final VoidCallback? onUnlock;
+
+  /// Close (X) action. Defaults to returning to the home map.
+  final VoidCallback? onClose;
+
+  const GateScreen({super.key, this.onUnlock, this.onClose});
   @override
   State<GateScreen> createState() => _GateScreenState();
 }
@@ -41,8 +48,9 @@ class _GateScreenState extends State<GateScreen> {
     if (n == _next) {
       if (_next == 4) {
         context.read<FxController>().fire(intensity: 'gentle');
+        final unlock = widget.onUnlock ?? () => context.read<AppState>().go('parent');
         Future.delayed(const Duration(milliseconds: 400), () {
-          if (mounted) context.read<AppState>().go('parent');
+          if (mounted) unlock();
         });
       }
       setState(() => _next = _next + 1);
@@ -59,7 +67,7 @@ class _GateScreenState extends State<GateScreen> {
       color: C.cream,
       child: Stack(
         children: [
-          Positioned(top: 30, left: 40, child: IconCircle(Icons.close_rounded, onTap: () => app.go('home'))),
+          Positioned(top: 30, left: 40, child: IconCircle(Icons.close_rounded, onTap: widget.onClose ?? () => app.go('home'))),
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,

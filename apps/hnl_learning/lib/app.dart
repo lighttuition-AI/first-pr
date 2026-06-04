@@ -132,6 +132,19 @@ class _StageContent extends StatelessWidget {
         // The two creative-control Studios.
         if (app.showVoice) const Positioned.fill(child: VoiceStudio()),
         if (app.showPictures) const Positioned.fill(child: PictureStudio()),
+
+        // Child-lock gate guarding the settings/Tweaks panel.
+        if (app.showGate)
+          Positioned.fill(
+            child: GateScreen(
+              onUnlock: () {
+                final action = app.gateAction;
+                app.closeGate();
+                action?.call();
+              },
+              onClose: app.closeGate,
+            ),
+          ),
       ],
     );
   }
