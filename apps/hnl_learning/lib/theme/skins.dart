@@ -168,6 +168,14 @@ List<BoxShadow> _blockShadows(ShLevel l) => switch (l) {
       ShLevel.lg => [BoxShadow(color: _sink(.9), offset: const Offset(9, 11))],
     };
 
+/// Soft "glow" shadows for dark surfaces — a deeper, diffuse drop so an
+/// elevated dark card still separates from a dark background.
+List<BoxShadow> _glowShadows(ShLevel l) => switch (l) {
+      ShLevel.sm => [BoxShadow(color: _sink(.35), offset: const Offset(0, 6), blurRadius: 18)],
+      ShLevel.md => [BoxShadow(color: _sink(.45), offset: const Offset(0, 12), blurRadius: 30)],
+      ShLevel.lg => [BoxShadow(color: _sink(.50), offset: const Offset(0, 20), blurRadius: 48)],
+    };
+
 // ------------------------------------------------------------
 // Skin — one complete look.
 // ------------------------------------------------------------
@@ -533,13 +541,78 @@ final _crayon = Skin(
   sceneBuilder: _heroScene,
 );
 
+/// LOOK 5 — "Moonlit Calm": a cozy dark/night theme (low-stimulus, easy on the
+/// eyes for evening play) with an ORIGINAL cat-&-mouse chase under the moon.
+const _moonlitPalette = Palette(
+  brand: Color(0xFF8B7BE8), // periwinkle
+  brandDeep: Color(0xFF6E5DD0),
+  brandSoft: Color(0xFF2E2C50), // dark tint (used sparingly on dark)
+  logic: Color(0xFFFF8A7A), // soft coral
+  logicDeep: Color(0xFFE86F5F),
+  galaxy: Color(0xFF56B6E8), // moonlit blue
+  galaxyDeep: Color(0xFF3D93C9),
+  discovery: Color(0xFF6FCF97), // soft green
+  discoveryDeep: Color(0xFF4FB078),
+);
+
+Widget _moonlitScene() => FloatingScene(
+      sprites: [
+        // Night sky.
+        emojiSprite('🌙', size: 96, x: .86, y: .07, bob: 6, rotate: .02, period: 9.0),
+        emojiSprite('⭐', size: 30, x: .12, y: .12, bob: 8, rotate: .40, period: 5.0, phase: .1),
+        emojiSprite('✨', size: 36, x: .31, y: .20, bob: 9, rotate: .50, period: 4.5, phase: .5),
+        emojiSprite('💫', size: 32, x: .62, y: .15, bob: 8, rotate: .40, period: 5.2, phase: .7),
+        emojiSprite('⭐', size: 24, x: .47, y: .30, bob: 7, rotate: .50, period: 4.8, phase: .3),
+        emojiSprite('✨', size: 26, x: .92, y: .40, bob: 8, rotate: .40, period: 5.0, phase: .9),
+        // The chase — mouse runs ahead, cat gives chase (left→right, low).
+        emojiSprite('🧀', size: 46, x: .68, y: .60, bob: 12, rotate: .15, period: 5.5, phase: .4),
+        emojiSprite('🧀', size: 36, x: .38, y: .54, bob: 10, rotate: .20, period: 6.0, phase: .8),
+        emojiSprite('🐭', size: 58, x: .22, y: .78, drift: .045, faceDrift: true, bob: 11, period: 3.0),
+        emojiSprite('🐱', size: 80, x: .05, y: .79, drift: .045, faceDrift: true, bob: 9, period: 3.2),
+        emojiSprite('🐾', size: 30, x: .55, y: .70, bob: 6, rotate: .10, period: 6.0, phase: .2, opacity: .75),
+      ],
+    );
+
+final _moonlit = Skin(
+  id: 'moonlit',
+  label: 'Moonlit Calm',
+  tagline: 'Cozy night · cat & mouse',
+  palette: _moonlitPalette,
+  ink: const Color(0xFFEAECF5), // light text
+  inkSoft: const Color(0xFFAEB6CC),
+  muted: const Color(0xFF7E86A0),
+  line: const Color(0xFF33384F),
+  paper: const Color(0xFF171A2E), // deep indigo
+  card: const Color(0xFF23263F), // elevated dark surface
+  cream: const Color(0xFF2D2A40),
+  sun: const Color(0xFFFFC23C),
+  rSm: 20,
+  rMd: 30,
+  rLg: 42,
+  rXl: 56,
+  displayFont: 'baloo',
+  bodyFont: 'nunito',
+  appBackground: const BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [Color(0xFF20243F), Color(0xFF13142A)],
+    ),
+  ),
+  shadow: _glowShadows,
+  brightness: Brightness.dark,
+  // A faint light rim helps dark cards separate softly from the night bg.
+  cardBorder: const Border.fromBorderSide(BorderSide(color: Color(0x1FFFFFFF), width: 1.5)),
+  sceneBuilder: _moonlitScene,
+);
+
 /// All skins by id.
 final Map<String, Skin> kSkins = {
-  for (final s in [_sunshine, _classic, _jungle, _ocean, _crayon]) s.id: s,
+  for (final s in [_sunshine, _classic, _jungle, _ocean, _crayon, _moonlit]) s.id: s,
 };
 
 /// Ordered ids shown in the Settings → Look picker (the new default first).
-const List<String> kReadySkins = ['sunshine', 'jungle', 'ocean', 'crayon', 'classic'];
+const List<String> kReadySkins = ['sunshine', 'jungle', 'ocean', 'crayon', 'moonlit', 'classic'];
 
 const String kDefaultSkin = 'sunshine';
 

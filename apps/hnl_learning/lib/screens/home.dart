@@ -68,7 +68,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 final w = box.maxWidth, h = box.maxHeight;
                 return Stack(
                   children: [
-                    Positioned.fill(child: CustomPaint(painter: _MapPathPainter())),
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: _MapPathPainter(activeSkin.brightness == Brightness.dark
+                            ? Colors.white.withValues(alpha: .22)
+                            : C.inkA(.16)),
+                      ),
+                    ),
                     // World islands (positions aligned with kWorlds order).
                     for (var i = 0; i < kWorlds.length && i < _worldPos.length; i++)
                       _islandAt(app, kWorlds[i], _worldPos[i].dx, _worldPos[i].dy, w, h),
@@ -329,7 +335,7 @@ class _MissionCard extends StatelessWidget {
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 12),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.pill)),
+              decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.pill)),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -551,6 +557,9 @@ class _LockedCard extends StatelessWidget {
 }
 
 class _MapPathPainter extends CustomPainter {
+  final Color color;
+  _MapPathPainter(this.color);
+
   @override
   void paint(Canvas canvas, Size size) {
     final sx = size.width / 1366, sy = size.height / 820;
@@ -559,7 +568,7 @@ class _MapPathPainter extends CustomPainter {
       ..moveTo(p(250, 560).dx, p(250, 560).dy)
       ..cubicTo(p(430, 520).dx, p(430, 520).dy, p(500, 280).dx, p(500, 280).dy, p(690, 260).dx, p(690, 260).dy)
       ..cubicTo(p(880, 240).dx, p(880, 240).dy, p(980, 340).dx, p(980, 340).dy, p(1110, 400).dx, p(1110, 400).dy);
-    final dot = Paint()..color = C.inkA(.16);
+    final dot = Paint()..color = color;
     for (final m in path.computeMetrics()) {
       double d = 0;
       while (d < m.length) {
@@ -571,5 +580,5 @@ class _MapPathPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _MapPathPainter old) => old.color != color;
 }

@@ -51,7 +51,7 @@ class _KidButtonState extends State<KidButton> {
         deep = pal.logicDeep;
         fg = Colors.white;
       case BtnVariant.ghost:
-        bg = Colors.white;
+        bg = C.card;
         deep = C.line;
         fg = widget.danger ? const Color(0xFFE0573D) : C.ink;
     }

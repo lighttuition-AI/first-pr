@@ -72,7 +72,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.pill), boxShadow: Sh.sm),
+                      decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.pill), boxShadow: Sh.sm),
                       child: Text('${owned.length}/${kPlanets.length}',
                           style: AppText.display(size: 28, weight: FontWeight.w800)),
                     ),
@@ -128,7 +128,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
         width: 210,
         height: 210,
         decoration: BoxDecoration(
-          color: owned ? Colors.white : C.inkA(.03),
+          color: owned ? C.card : C.inkA(.03),
           borderRadius: BorderRadius.circular(R.lg),
           boxShadow: owned ? Sh.sm : null,
           border: owned ? null : Border.all(color: C.line, width: 2),

@@ -41,9 +41,9 @@ class TweaksPanel extends StatelessWidget {
             width: 420,
             height: double.infinity,
             padding: const EdgeInsets.all(30),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              boxShadow: [BoxShadow(color: Color(0x33000000), blurRadius: 40)],
+            decoration: BoxDecoration(
+              color: C.card,
+              boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 40)],
             ),
             child: SingleChildScrollView(
               child: Column(

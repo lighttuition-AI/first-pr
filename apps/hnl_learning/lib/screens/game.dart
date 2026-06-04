@@ -125,7 +125,7 @@ class _GameHostState extends State<GameHost> {
                     if (mission) ...[const _MissionTimer(), const SizedBox(width: 18)],
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.pill), boxShadow: Sh.sm),
+                      decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.pill), boxShadow: Sh.sm),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -217,7 +217,7 @@ class _MissionTimerState extends State<_MissionTimer> {
     final pct = _total == 0 ? 0.0 : (1 - _left / _total);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.pill), boxShadow: Sh.sm),
+      decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.pill), boxShadow: Sh.sm),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -466,7 +466,7 @@ class _TraceGameState extends State<TraceGame> {
               onTap: () => context.read<VoService>().play(_letter.id, _letter.name),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.pill), boxShadow: Sh.sm),
+                decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.pill), boxShadow: Sh.sm),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -494,7 +494,7 @@ class _TraceGameState extends State<TraceGame> {
                 width: _canvas,
                 height: _canvas,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: C.card,
                   borderRadius: BorderRadius.circular(R.lg),
                   boxShadow: Sh.md,
                 ),
@@ -739,7 +739,7 @@ class _TapCardState extends State<TapCard> with SingleTickerProviderStateMixin {
       duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: C.card,
         borderRadius: BorderRadius.circular(R.lg),
         boxShadow: _ring ? [BoxShadow(color: pal.brand.withValues(alpha: .5), blurRadius: 24, spreadRadius: 2)] : Sh.sm,
         border: Border.all(color: _ring ? pal.brand : Colors.transparent, width: 5),
@@ -861,7 +861,7 @@ class _CountGameState extends State<CountGame> {
               height: 230,
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: C.card,
                 borderRadius: BorderRadius.circular(R.lg),
                 boxShadow: Sh.md,
                 border: Border.all(color: cand.isNotEmpty ? context.watch<AppState>().pal.brand : C.line, width: 3),
@@ -979,7 +979,7 @@ class _PatternGameState extends State<PatternGame> {
                       height: 110,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: _done ? Colors.white : C.inkA(.03),
+                        color: _done ? C.card : C.inkA(.03),
                         borderRadius: BorderRadius.circular(R.md),
                         border: Border.all(
                           color: cand.isNotEmpty ? pal.brand : C.muted,
@@ -1025,7 +1025,7 @@ class _PatternGameState extends State<PatternGame> {
         height: 110,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: C.card,
           borderRadius: BorderRadius.circular(R.md),
           boxShadow: dragging ? Sh.md : Sh.sm,
         ),
@@ -1123,7 +1123,7 @@ class _MemoryGameState extends State<MemoryGame> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(R.md),
           gradient: up ? null : LinearGradient(colors: [pal.galaxy, pal.galaxyDeep], begin: Alignment.topLeft, end: Alignment.bottomRight),
-          color: up ? Colors.white : null,
+          color: up ? C.card : null,
           boxShadow: Sh.sm,
           border: matched ? Border.all(color: const Color(0xFF15B886), width: 4) : null,
         ),
@@ -1247,7 +1247,7 @@ class _SortGameState extends State<SortGame> {
                   constraints: const BoxConstraints(minHeight: 230),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: C.card,
                     borderRadius: BorderRadius.circular(R.lg),
                     boxShadow: Sh.sm,
                     border: Border.all(color: cand.isNotEmpty ? pal.brand : C.line, width: 3),
@@ -1320,7 +1320,7 @@ class _ScienceGameState extends State<ScienceGame> {
         children: [
           Container(
             padding: const EdgeInsets.all(40),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.md),
+            decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.md),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

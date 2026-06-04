@@ -98,7 +98,7 @@ class _GroupTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.md), boxShadow: Sh.sm),
+      decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.md), boxShadow: Sh.sm),
       child: Column(
         children: [
           GestureDetector(

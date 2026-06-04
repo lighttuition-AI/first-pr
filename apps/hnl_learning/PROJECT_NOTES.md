@@ -45,15 +45,16 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 - Switch live in **Settings (Tweaks) → Look**. Selection persists (tweaks key
   `skin`). `AppState.setSkin(id)` swaps `activeSkin` + saves; `app.pal` now returns
   `activeSkin.palette`.
-- Shipping looks one at a time; `kReadySkins` is the ordered picker list. Shipped:
-  **Sunshine** (polished default) · **Jungle** (clay + monkeys/bananas) · **Ocean**
-  (glassy water + original shark family, `widgets/sea.dart`) · **Crayon Pop**
-  (neubrutalism: ink borders + block shadows + original hero squad,
-  `widgets/comic.dart`) · **Classic** (original, 1:1). Planned: Moonlit Calm.
-- `Skin.cardBorder` (a `Border?`) is honored by the shared card surfaces
-  (kid_button, HnlChip, IconCircle, speech bubble, home chip/island/mission/game
-  cards). Null for every look except Crayon Pop. High-traffic `Colors.white`
-  surface fills were migrated to `C.card` along the way (no-op while card==white).
+- All 5 looks shipped (`kReadySkins`): **Sunshine** (polished default) · **Jungle**
+  (clay + monkeys/bananas) · **Ocean** (glassy water + original shark family,
+  `widgets/sea.dart`) · **Crayon Pop** (neubrutalism + original hero squad,
+  `widgets/comic.dart`) · **Moonlit Calm** (cozy DARK theme + original cat-&-mouse
+  night scene) · **Classic** (original, 1:1).
+- `Skin.brightness` flags dark looks. `Skin.cardBorder` (a `Border?`) is honored by
+  the shared card surfaces. Surface `Colors.white` fills across all screens were
+  migrated to `C.card` (a no-op on light looks; required for Moonlit's dark cards).
+  Map dots + scrims are skin-aware (light dots on dark). Remaining literal whites
+  are intentional (text, icons, toggle knobs, illustration/eye/highlight art).
 - A skin may carry an **animated scene** (`Skin.sceneBuilder` → `FloatingScene` in
   `widgets/scene.dart`): ambient drifting "characters" drawn behind the content,
   wrapped in `IgnorePointer`. Home goes transparent when `activeSkin.hasScene` so
