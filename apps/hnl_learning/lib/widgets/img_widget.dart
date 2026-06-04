@@ -1,0 +1,52 @@
+// The universal editable picture. Shows the uploaded image if one
+// exists for this slot, else the original emoji — so nothing ever
+// looks broken. Mirrors <Img> from js/img.jsx.
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../services/image_service.dart';
+import '../theme/tokens.dart';
+
+class Img extends StatelessWidget {
+  final String token; // emoji / natural token
+  final String? id; // explicit slot id (else imgTokenId(token))
+  final String? display; // glyph override (e.g. gate number)
+  final double size; // emoji font-size / square box size
+  final bool fill; // fill the parent box (cover)
+  final double? radius;
+
+  const Img(
+    this.token, {
+    super.key,
+    this.id,
+    this.display,
+    this.size = 40,
+    this.fill = false,
+    this.radius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final svc = context.watch<ImageService>();
+    final slotId = id ?? imgTokenId(token);
+    final bytes = svc.bytesFor(slotId);
+    final glyph = display ?? token;
+
+    if (bytes != null) {
+      final image = Image.memory(bytes, fit: BoxFit.cover, gaplessPlayback: true);
+      if (fill) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(radius ?? R.md),
+          child: SizedBox.expand(child: image),
+        );
+      }
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(radius ?? size * 0.2),
+        child: SizedBox(width: size, height: size, child: image),
+      );
+    }
+
+    final text = Text(glyph, style: TextStyle(fontSize: size, height: 1.0));
+    return fill ? Center(child: text) : text;
+  }
+}

@@ -1,0 +1,40 @@
+name: hnl_learning
+description: "HNL Learning — an audio-first, touch-first educational app for kids ages 2–8."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State + persistence (mirrors the prototype's localStorage save)
+  provider: ^6.1.2
+  shared_preferences: ^2.3.2
+
+  # Rounded, friendly type system: Baloo 2 (display) + Nunito (body)
+  google_fonts: ^6.2.1
+
+  # Audio-first voiceover: default "robot" voice via TTS,
+  # plus record-your-own-voice studio with playback.
+  flutter_tts: ^4.2.0
+  record: ^5.1.2
+  audioplayers: ^6.1.0
+
+  # Picture Studio: upload your own art from the device gallery.
+  image_picker: ^1.1.2
+
+  # Writable path for recorded voiceover clips (native platforms).
+  path_provider: ^2.1.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
