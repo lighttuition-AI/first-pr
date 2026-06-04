@@ -2,32 +2,32 @@
 // Somali Village — original hand-drawn art for the "Somali Village" skin.
 // ------------------------------------------------------------
 // All ORIGINAL shapes (not traced from any image): three cute little
-// sisters with big eyes & dresses, an aqal Soomaali (dome hut), and a
-// savanna acacia tree. Drawn with CustomPaint so they scale crisply.
+// sisters (round faces, big dreamy eyes, bridal/wedding-style gowns), an
+// aqal Soomaali (dome hut), and a savanna acacia tree.
 // ============================================================
 import 'package:flutter/material.dart';
 
 // ------------------------------------------------------------
-// A cute chibi "little sister": big eyes, smile, hoop earrings,
-// a colourful dress, and one of a few hairstyles.
+// A cute chibi "little sister": round face, big dreamy eyes, a flower
+// crown + soft veil, and a flowing wedding-style gown in [dress].
 // ------------------------------------------------------------
 class SomaliGirl extends StatelessWidget {
-  final Color dress;
+  final Color dress; // gown colour (gold / pink / purple…)
   final String hair; // 'afro' | 'puffs' | 'bun'
   final Color skinTone;
-  final double size; // width; height is ~1.18×
+  final double size; // width; height is ~1.4×
   const SomaliGirl({
     super.key,
     required this.dress,
     this.hair = 'afro',
-    this.skinTone = const Color(0xFFE3B083),
-    this.size = 110,
+    this.skinTone = const Color(0xFFE8B98C),
+    this.size = 120,
   });
 
   @override
   Widget build(BuildContext context) => SizedBox(
         width: size,
-        height: size * 1.18,
+        height: size * 1.4,
         child: CustomPaint(painter: _GirlPainter(dress, hair, skinTone)),
       );
 }
@@ -46,108 +46,146 @@ class _GirlPainter extends CustomPainter {
     Offset o(double fx, double fy) => Offset(x(fx), y(fy));
 
     const hairCol = Color(0xFF2B2320);
-    final hairHi = Color.lerp(hairCol, Colors.white, .14)!;
     final skinShade = Color.lerp(skin, Colors.black, .12)!;
-    final ink = const Color(0xFF2B2320);
+    final gown = dress;
+    final gownHi = Color.lerp(gown, Colors.white, .28)!;
+    final gownDeep = Color.lerp(gown, Colors.black, .16)!;
+    const ivory = Color(0xFFFBF7EF);
+    final veilCol = Colors.white.withValues(alpha: .5);
     const gold = Color(0xFFF2C14E);
-    final blush = const Color(0xFFE8867A).withValues(alpha: .5);
-    final dressDeep = Color.lerp(dress, Colors.black, .18)!;
+    final blush = const Color(0xFFEE8E8E).withValues(alpha: .55);
+    const ink = Color(0xFF3A2A22);
+    const iris = Color(0xFF4A3326);
 
-    final fill = Paint()..isAntiAlias = true;
-    final line = Paint()
-      ..color = ink
+    final f = Paint()..isAntiAlias = true;
+    Paint sp(Color c, double sw) => Paint()
+      ..color = c
       ..style = PaintingStyle.stroke
-      ..strokeWidth = w * 0.012
+      ..strokeWidth = sw
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..isAntiAlias = true;
+    void blob(double cx, double cy, double r, [Color? c]) =>
+        canvas.drawCircle(o(cx, cy), r * w, f..color = c ?? hairCol);
 
-    // ---- Dress / body ----
-    final body = Path()
-      ..moveTo(x(.28), y(1.0))
-      ..lineTo(x(.39), y(.72))
-      ..lineTo(x(.61), y(.72))
-      ..lineTo(x(.72), y(1.0))
-      ..close();
-    canvas.drawPath(body, fill..color = dress);
-    // little collar
+    // ---- Veil (bridal, behind everything) ----
     canvas.drawPath(
       Path()
-        ..moveTo(x(.42), y(.74))
-        ..quadraticBezierTo(x(.5), y(.82), x(.58), y(.74)),
-      Paint()
-        ..color = dressDeep
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = w * 0.03
-        ..strokeCap = StrokeCap.round,
+        ..moveTo(x(.5), y(.05))
+        ..quadraticBezierTo(x(.00), y(.34), x(.13), y(.95))
+        ..lineTo(x(.87), y(.95))
+        ..quadraticBezierTo(x(1.0), y(.34), x(.5), y(.05))
+        ..close(),
+      f..color = veilCol,
     );
-    // neck
-    canvas.drawRect(Rect.fromLTRB(x(.45), y(.64), x(.55), y(.76)), fill..color = skinShade);
+
+    // ---- Gown (wedding-style A-line) ----
+    canvas.drawPath(
+      Path()
+        ..moveTo(x(.40), y(.62))
+        ..lineTo(x(.15), y(.99))
+        ..lineTo(x(.85), y(.99))
+        ..lineTo(x(.60), y(.62))
+        ..close(),
+      f..color = gown,
+    );
+    // side shading for depth
+    canvas.drawPath(
+      Path()
+        ..moveTo(x(.40), y(.62))
+        ..lineTo(x(.15), y(.99))
+        ..lineTo(x(.37), y(.99))
+        ..lineTo(x(.48), y(.62))
+        ..close(),
+      f..color = gownDeep.withValues(alpha: .30),
+    );
+    // bodice + puff sleeves
+    canvas.drawPath(
+      Path()
+        ..moveTo(x(.41), y(.50))
+        ..lineTo(x(.40), y(.63))
+        ..lineTo(x(.60), y(.63))
+        ..lineTo(x(.59), y(.50))
+        ..close(),
+      f..color = gown,
+    );
+    canvas.drawCircle(o(.36, .53), .078 * w, f..color = gownHi);
+    canvas.drawCircle(o(.64, .53), .078 * w, f..color = gownHi);
+    // lacy scalloped hem
+    for (var i = 0; i < 7; i++) {
+      canvas.drawCircle(Offset(x(.19 + i * .105), y(.965)), .052 * w, f..color = ivory);
+    }
+    // white waist sash + bow
+    canvas.drawRect(Rect.fromLTRB(x(.39), y(.605), x(.61), y(.645)), f..color = ivory);
+    canvas.drawCircle(o(.5, .625), .028 * w, f..color = gownHi);
+
+    // ---- Neck ----
+    canvas.drawRect(Rect.fromLTRB(x(.455), y(.45), x(.545), y(.55)), f..color = skinShade);
 
     // ---- Hair (behind the face) ----
-    void blob(double cx, double cy, double r, [Color? c]) =>
-        canvas.drawCircle(o(cx, cy), r * w, fill..color = c ?? hairCol);
     switch (hair) {
       case 'puffs':
-        blob(.27, .22, .19);
-        blob(.73, .22, .19);
-        blob(.5, .30, .26); // cap
+        blob(.22, .16, .20);
+        blob(.78, .16, .20);
+        blob(.5, .23, .27);
       case 'bun':
-        blob(.5, .12, .13);
-        blob(.5, .32, .27);
-      default: // afro — a cloud of curls
+        blob(.5, .045, .12);
+        blob(.5, .24, .275);
+      default: // afro cloud
         for (final p in const [
-          [.26, .30], [.30, .16], [.42, .10], [.5, .07], [.58, .10],
-          [.70, .16], [.74, .30], [.30, .44], [.70, .44]
+          [.23, .20], [.19, .33], [.30, .10], [.42, .05], [.5, .03],
+          [.58, .05], [.70, .10], [.81, .33], [.77, .20]
         ]) {
-          blob(p[0], p[1], .13);
+          blob(p[0], p[1], .135);
         }
-        blob(.5, .28, .27);
+        blob(.5, .22, .27);
     }
 
-    // ---- Face ----
-    canvas.drawCircle(o(.5, .42), .215 * w, fill..color = skin);
-    // ears + gold hoop earrings
-    canvas.drawCircle(o(.295, .44), .045 * w, fill..color = skin);
-    canvas.drawCircle(o(.705, .44), .045 * w, fill..color = skin);
-    final hoop = Paint()
-      ..color = gold
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = w * 0.02;
-    canvas.drawCircle(o(.295, .52), .035 * w, hoop);
-    canvas.drawCircle(o(.705, .52), .035 * w, hoop);
+    // ---- Face (big & round) ----
+    canvas.drawCircle(o(.5, .30), .265 * w, f..color = skin);
+    // ears + gold hoops
+    canvas.drawCircle(o(.255, .32), .05 * w, f..color = skin);
+    canvas.drawCircle(o(.745, .32), .05 * w, f..color = skin);
+    canvas.drawCircle(o(.255, .40), .034 * w, sp(gold, .02 * w));
+    canvas.drawCircle(o(.745, .40), .034 * w, sp(gold, .02 * w));
 
-    // a few front curls over the forehead (afro/puffs)
-    if (hair != 'bun') {
-      blob(.36, .26, .085, hairHi);
-      blob(.5, .23, .09, hairHi);
-      blob(.64, .26, .085, hairHi);
+    // ---- Big dreamy eyes ----
+    void eye(double cx, double dir) {
+      final c = o(cx, .31);
+      canvas.drawOval(Rect.fromCenter(center: c, width: .16 * w, height: .20 * w), f..color = Colors.white);
+      canvas.drawOval(Rect.fromCenter(center: c, width: .16 * w, height: .20 * w), sp(ink, .009 * w));
+      canvas.drawCircle(o(cx, .325), .082 * w, f..color = iris);
+      canvas.drawCircle(o(cx, .335), .05 * w, f..color = ink);
+      canvas.drawCircle(o(cx - .022, .285), .033 * w, f..color = Colors.white); // big sparkle
+      canvas.drawCircle(o(cx + .03, .34), .015 * w, f..color = Colors.white); // small sparkle
+      // a few lashes on the outer corner
+      final l = sp(ink, .011 * w);
+      canvas.drawPath(Path()..moveTo(x(cx + dir * .07), y(.275))..lineTo(x(cx + dir * .088), y(.258)), l);
+      canvas.drawPath(Path()..moveTo(x(cx + dir * .082), y(.30))..lineTo(x(cx + dir * .104), y(.30)), l);
     }
 
-    // ---- Face features (big cute eyes) ----
-    void eye(double cx) {
-      canvas.drawOval(Rect.fromCenter(center: o(cx, .42), width: .15 * w, height: .19 * w),
-          fill..color = Colors.white);
-      canvas.drawOval(Rect.fromCenter(center: o(cx, .42), width: .15 * w, height: .19 * w), line);
-      canvas.drawCircle(o(cx, .44), .052 * w, fill..color = ink);
-      canvas.drawCircle(o(cx + .018, .42), .018 * w, fill..color = Colors.white);
+    eye(.385, -1);
+    eye(.615, 1);
+    // soft brows
+    canvas.drawPath(Path()..moveTo(x(.31), y(.205))..quadraticBezierTo(x(.385), y(.185), x(.46), y(.205)), sp(ink, .012 * w));
+    canvas.drawPath(Path()..moveTo(x(.54), y(.205))..quadraticBezierTo(x(.615), y(.185), x(.69), y(.205)), sp(ink, .012 * w));
+    // blush, nose, sweet smile
+    canvas.drawCircle(o(.30, .40), .036 * w, f..color = blush);
+    canvas.drawCircle(o(.70, .40), .036 * w, f..color = blush);
+    canvas.drawCircle(o(.5, .40), .012 * w, f..color = skinShade);
+    canvas.drawPath(Path()..moveTo(x(.43), y(.43))..quadraticBezierTo(x(.5), y(.49), x(.57), y(.43)), sp(ink, .016 * w));
+
+    // ---- Flower crown (on top of the hair) ----
+    void flower(double cx, double cy) {
+      for (final p in const [[0, -1], [0, 1], [-1, 0], [1, 0]]) {
+        canvas.drawCircle(Offset(x(cx) + p[0] * .026 * w, y(cy) + p[1] * .026 * w), .024 * w, f..color = ivory);
+      }
+      canvas.drawCircle(o(cx, cy), .022 * w, f..color = gold);
     }
 
-    eye(.41);
-    eye(.59);
-    // brows
-    canvas.drawPath(Path()..moveTo(x(.34), y(.33))..quadraticBezierTo(x(.41), y(.305), x(.48), y(.33)), line);
-    canvas.drawPath(Path()..moveTo(x(.52), y(.33))..quadraticBezierTo(x(.59), y(.305), x(.66), y(.33)), line);
-    // blush
-    canvas.drawCircle(o(.35, .50), .035 * w, fill..color = blush);
-    canvas.drawCircle(o(.65, .50), .035 * w, fill..color = blush);
-    // nose
-    canvas.drawCircle(o(.5, .49), .013 * w, fill..color = skinShade);
-    // smile
-    canvas.drawPath(
-      Path()..moveTo(x(.43), y(.53))..quadraticBezierTo(x(.5), y(.60), x(.57), y(.53)),
-      line..strokeWidth = w * 0.016,
-    );
+    flower(.33, .135);
+    flower(.5, .095);
+    flower(.67, .135);
   }
 
   @override
@@ -183,7 +221,6 @@ class _HutPainter extends CustomPainter {
     const cream = Color(0xFFF2E4C4);
     const ink = Color(0xFF5A4427);
 
-    // Dome silhouette (flat bottom, rounded top).
     final dome = Path()
       ..moveTo(x(.06), y(1.0))
       ..lineTo(x(.06), y(.52))
@@ -192,7 +229,6 @@ class _HutPainter extends CustomPainter {
       ..close();
     canvas.drawPath(dome, Paint()..color = straw..isAntiAlias = true);
 
-    // Woven bands — clip to the dome, draw a few coloured arcs.
     canvas.save();
     canvas.clipPath(dome);
     final bands = [strawDeep, red, cream, red, strawDeep];
@@ -209,7 +245,6 @@ class _HutPainter extends CustomPainter {
     }
     canvas.restore();
 
-    // Outline.
     canvas.drawPath(
       dome,
       Paint()
@@ -219,7 +254,6 @@ class _HutPainter extends CustomPainter {
         ..isAntiAlias = true,
     );
 
-    // Doorway (arched opening with a little curtain).
     final door = Path()
       ..moveTo(x(.40), y(1.0))
       ..lineTo(x(.40), y(.72))
@@ -270,7 +304,6 @@ class _AcaciaPainter extends CustomPainter {
     const leaf = Color(0xFF6FA844);
     const leafDeep = Color(0xFF4F8A33);
 
-    // Trunk with a couple of upward branches.
     final t = Paint()
       ..color = trunk
       ..style = PaintingStyle.stroke
@@ -280,29 +313,27 @@ class _AcaciaPainter extends CustomPainter {
     canvas.drawPath(Path()..moveTo(x(.5), y(1.0))..lineTo(x(.5), y(.5)), t);
     canvas.drawPath(Path()..moveTo(x(.5), y(.6))..lineTo(x(.28), y(.42)), t..strokeWidth = w * 0.04);
     canvas.drawPath(Path()..moveTo(x(.5), y(.58))..lineTo(x(.72), y(.42)), t);
-    canvas.drawPath(Path()..moveTo(x(.5), y(.66))..lineTo(x(.5), y(.5)), Paint()
-      ..color = trunkDeep
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = w * 0.018
-      ..strokeCap = StrokeCap.round);
+    canvas.drawPath(
+        Path()..moveTo(x(.5), y(.66))..lineTo(x(.5), y(.5)),
+        Paint()
+          ..color = trunkDeep
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = w * 0.018
+          ..strokeCap = StrokeCap.round);
 
-    // Flat, wide umbrella canopy (two layers for depth).
     canvas.drawOval(
-        Rect.fromCenter(center: o(w, h, .5, .40), width: w * 0.96, height: h * 0.30),
+        Rect.fromCenter(center: Offset(x(.5), y(.40)), width: w * 0.96, height: h * 0.30),
         Paint()..color = leafDeep..isAntiAlias = true);
     canvas.drawOval(
-        Rect.fromCenter(center: o(w, h, .5, .35), width: w * 0.90, height: h * 0.24),
+        Rect.fromCenter(center: Offset(x(.5), y(.35)), width: w * 0.90, height: h * 0.24),
         Paint()..color = leaf..isAntiAlias = true);
-    // a couple of lighter clumps on top
     canvas.drawOval(
-        Rect.fromCenter(center: o(w, h, .36, .31), width: w * 0.34, height: h * 0.16),
+        Rect.fromCenter(center: Offset(x(.36), y(.31)), width: w * 0.34, height: h * 0.16),
         Paint()..color = Color.lerp(leaf, Colors.white, .12)!);
     canvas.drawOval(
-        Rect.fromCenter(center: o(w, h, .64, .31), width: w * 0.34, height: h * 0.16),
+        Rect.fromCenter(center: Offset(x(.64), y(.31)), width: w * 0.34, height: h * 0.16),
         Paint()..color = Color.lerp(leaf, Colors.white, .12)!);
   }
-
-  Offset o(double w, double h, double fx, double fy) => Offset(fx * w, fy * h);
 
   @override
   bool shouldRepaint(covariant CustomPainter old) => false;
