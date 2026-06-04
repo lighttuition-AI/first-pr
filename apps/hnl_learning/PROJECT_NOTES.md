@@ -40,14 +40,16 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   finishing serves fresh animals next visit (per-child `animalsSeen`). Somali
   names are best-effort defaults (loan transliterations where Somali borrows the
   word) — meant to be re-recorded.
-- **Launch splash** (`widgets/splash.dart`): the three Somali sisters' faces +
-  playful accents, shown on cold start then cross-fades into the app. The three
-  names play **sequentially to completion** (`VoService.playToCompletion`) over a
-  looping harp — name 1 is never dropped and name 3 is never cut. The splash
-  **fade is tied to the names finishing** (boot gate gets `onComplete`; a 10 s
-  safety net covers stuck/muted audio), so the splash audio never bleeds into
-  the app behind it. Cold start always lands on **home** — `_load` never resumes
-  a mid-activity screen (game / continents / animal-quiz / break / rewards /
+- **Launch splash** (`widgets/splash.dart`): the three Somali sisters, each in a
+  round badge with a **colourful progress ring** that fills (sparkles at the
+  leading edge, a glow when complete) while her name is announced — Nimoo →
+  Ladan → Hibo, one ring at a time, over a looping harp. **The ring fill is the
+  clock**: each name gets a guaranteed ~2 s slot (fixed timers, not audio
+  callbacks — the latter proved unreliable on-device and let names overlap /
+  get cut). The splash **fade is tied to the last ring finishing** (boot gate
+  gets `onComplete`; 10 s safety net), so the names never bleed into the app
+  behind it. Cold start always lands on **home** — `_load` never resumes a
+  mid-activity screen (game / continents / animal-quiz / break / rewards /
   gate), so the app can't flash the island before the splash.
 - **GIF Studio** (Settings / Tweaks, gated): upload celebration GIFs; one plays
   on full-alphabet completion (falls back to Robo if none).

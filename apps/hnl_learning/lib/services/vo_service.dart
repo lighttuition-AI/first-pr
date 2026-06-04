@@ -10,7 +10,10 @@ import 'dart:convert';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'local_file.dart' if (dart.library.io) 'local_file_io.dart';
 
 const _voPathsKey = 'hnl-vo-paths';
 
@@ -21,8 +24,15 @@ class VoService extends ChangeNotifier {
   final FlutterTts _tts = FlutterTts();
   final AudioPlayer _player = AudioPlayer();
 
-  /// line id -> recorded clip path/url
+  /// line id -> recorded clip reference. For local recordings we store only
+  /// the *filename* (e.g. `vo_<id>.m4a`), resolved against the current app
+  /// Documents dir at play time — absolute sandbox paths go stale whenever the
+  /// container changes (reinstall/app update), which made saved clips silently
+  /// fail. Web recordings are stored as blob/data URLs verbatim.
   final Map<String, String> _recordings = {};
+
+  /// Current app Documents dir (mobile/desktop), cached at init.
+  String? _docsDir;
 
   static const double _defaultRate = 0.46; // friendly, unhurried
 
@@ -46,6 +56,12 @@ class VoService extends ChangeNotifier {
     _tts.setCancelHandler(() => _clear());
     _player.onPlayerComplete.listen((_) => _clear());
 
+    if (!kIsWeb) {
+      try {
+        _docsDir = (await getApplicationDocumentsDirectory()).path;
+      } catch (_) {/* no docs dir on this platform */}
+    }
+
     final raw = _prefs.getString(_voPathsKey);
     if (raw != null) {
       try {
@@ -53,6 +69,32 @@ class VoService extends ChangeNotifier {
         _recordings.addAll(m.map((k, v) => MapEntry(k, v as String)));
       } catch (_) {}
     }
+
+    // Heal legacy saves that stored absolute paths → keep just the filename,
+    // so clips resolve against the *current* container instead of a dead one.
+    if (!kIsWeb) {
+      var changed = false;
+      for (final e in _recordings.entries.toList()) {
+        final v = e.value;
+        if (!_isRemote(v) && v.contains('/')) {
+          _recordings[e.key] = v.split('/').last;
+          changed = true;
+        }
+      }
+      if (changed) _persistPaths();
+    }
+  }
+
+  bool _isRemote(String ref) => ref.startsWith('http') || ref.startsWith('blob') || ref.startsWith('data:');
+
+  /// Resolve a stored recording reference to a source we can play right now,
+  /// or null if it's a local file that no longer exists (→ caller uses TTS).
+  Source? _resolveSource(String ref) {
+    if (_isRemote(ref)) return UrlSource(ref);
+    if (kIsWeb) return DeviceFileSource(ref);
+    final name = ref.contains('/') ? ref.split('/').last : ref;
+    final full = _docsDir != null ? '$_docsDir/$name' : ref;
+    return localFileExists(full) ? DeviceFileSource(full) : null;
   }
 
   void _setActive(String? id) {
@@ -90,10 +132,15 @@ class VoService extends ChangeNotifier {
 
     final clip = _recordings[id];
     if (clip != null) {
-      try {
-        await _player.play(_sourceFor(clip));
-        return;
-      } catch (_) {/* fall through to TTS */}
+      final src = _resolveSource(clip);
+      if (src != null) {
+        try {
+          await _player.play(src);
+          return;
+        } catch (_) {/* fall through to TTS */}
+      }
+      // Recording is registered but the file is gone (e.g. reinstalled) — speak
+      // the line instead of failing silently.
     }
     if (text != null && text.isNotEmpty) {
       try {
@@ -110,56 +157,13 @@ class VoService extends ChangeNotifier {
     if (activeId == id) _setActive(null);
   }
 
-  /// Like [play], but the returned Future completes only when the audio has
-  /// actually *finished* (recording played to the end, or TTS done speaking).
-  /// Used by the launch splash so the three names play one fully after another
-  /// instead of cutting each other off. Falls back gracefully if audio fails.
-  Future<void> playToCompletion(String id, String? text,
-      {String lang = 'en-US', double? rate}) async {
-    await stop();
-    if (!_enabled) return;
-    _setActive(id);
-
-    final clip = _recordings[id];
-    if (clip != null) {
-      try {
-        // Listen for completion *before* starting so we can't miss the event.
-        final done = _player.onPlayerComplete.first;
-        await _player.play(_sourceFor(clip));
-        await done.timeout(const Duration(seconds: 8), onTimeout: () {});
-        return;
-      } catch (_) {/* fall through to TTS */}
-    }
-    if (text != null && text.isNotEmpty) {
-      try {
-        await _tts.setLanguage(lang);
-        await _tts.setSpeechRate(rate ?? _defaultRate);
-        await _tts.awaitSpeakCompletion(true); // make speak() resolve on completion
-        await _tts.speak(text);
-        return;
-      } catch (_) {
-      } finally {
-        // Restore the default fire-and-forget behaviour for normal play().
-        try {
-          await _tts.awaitSpeakCompletion(false);
-        } catch (_) {}
-      }
-    }
-    // Nothing to play — a brief beat so the caller's pacing still feels right.
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (activeId == id) _setActive(null);
-  }
-
-  Source _sourceFor(String clip) {
-    if (clip.startsWith('http') || clip.startsWith('blob')) {
-      return UrlSource(clip);
-    }
-    return DeviceFileSource(clip);
-  }
-
   // ---- recordings registry (capture happens in the Studio) ----
   void registerRecording(String id, String path) {
-    _recordings[id] = path;
+    // Persist only the filename for local recordings so the clip keeps working
+    // after the sandbox container path changes; keep web blob/data URLs as-is.
+    _recordings[id] = (kIsWeb || _isRemote(path) || !path.contains('/'))
+        ? path
+        : path.split('/').last;
     _persistPaths();
     notifyListeners();
   }

@@ -1,3 +1,4 @@
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +16,15 @@ Future<void> main() async {
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
+
+  // Let the splash harp and the spoken names play together (so the first
+  // name isn't swallowed by the music grabbing the audio session), and keep
+  // voice/music audible even when the device ringer is on silent.
+  try {
+    await AudioPlayer.global.setAudioContext(
+      AudioContextConfig(focus: AudioContextConfigFocus.mixWithOthers).build(),
+    );
+  } catch (_) {/* not supported on this platform — ignore */}
 
   final prefs = await SharedPreferences.getInstance();
 
