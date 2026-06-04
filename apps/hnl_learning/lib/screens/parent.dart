@@ -132,7 +132,7 @@ class _GateScreenState extends State<GateScreen> {
             height: 150,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: got ? app.pal.brandSoft : Colors.white,
+              color: got ? app.pal.brandSoft : C.card,
               borderRadius: BorderRadius.circular(R.lg),
               boxShadow: Sh.md,
             ),
@@ -273,7 +273,7 @@ class _ParentScreenState extends State<ParentScreen> {
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 8),
           padding: const EdgeInsets.symmetric(vertical: 22),
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.sm),
+          decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.sm),
           child: Column(
             children: [
               Text(ico, style: const TextStyle(fontSize: 36)),
@@ -286,7 +286,7 @@ class _ParentScreenState extends State<ParentScreen> {
 
   Widget _childrenCard(AppState app) => Container(
         padding: const EdgeInsets.all(30),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.md),
+        decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -368,7 +368,7 @@ class _ParentScreenState extends State<ParentScreen> {
 
   Widget _card(String kicker, String title, Widget child) => Container(
         padding: const EdgeInsets.all(30),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.md),
+        decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -412,7 +412,7 @@ class _ParentScreenState extends State<ParentScreen> {
 
   Widget _settingsCard(AppState app) => Container(
         padding: const EdgeInsets.all(30),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.md),
+        decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,

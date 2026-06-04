@@ -82,7 +82,7 @@ class _BreakScreenState extends State<BreakScreen> {
         margin: const EdgeInsets.symmetric(horizontal: 12),
         width: 180,
         padding: const EdgeInsets.symmetric(vertical: 22),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.sm),
+        decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.sm),
         child: Column(
           children: [
             Text(value, style: AppText.display(size: 46, weight: FontWeight.w800)),

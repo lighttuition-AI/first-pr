@@ -107,7 +107,7 @@ class _AgeTile extends StatelessWidget {
         width: 150,
         height: 168,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: C.card,
           borderRadius: BorderRadius.circular(R.lg),
           boxShadow: Sh.sm,
           border: Border.all(color: selected ? pal.brand : Colors.transparent, width: 4),
@@ -209,7 +209,7 @@ class _TopicTile extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 190),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: C.card,
           borderRadius: BorderRadius.circular(R.lg),
           boxShadow: Sh.sm,
           border: Border.all(color: selected ? tc : Colors.transparent, width: 4),
@@ -348,7 +348,7 @@ class _AvatarPick extends StatelessWidget {
         height: 150,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: C.card,
           borderRadius: BorderRadius.circular(R.lg),
           boxShadow: Sh.sm,
           border: Border.all(color: selected ? outline : Colors.transparent, width: 4),

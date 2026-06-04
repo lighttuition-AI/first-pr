@@ -68,7 +68,7 @@ class _TailPainter extends CustomPainter {
   _TailPainter(this.tail);
   @override
   void paint(Canvas canvas, Size size) {
-    final p = Paint()..color = Colors.white;
+    final p = Paint()..color = C.card;
     final path = Path();
     if (tail == Tail.down) {
       final cx = size.width / 2;

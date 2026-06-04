@@ -18,7 +18,9 @@ class TweaksButton extends StatelessWidget {
         width: 60,
         height: 60,
         decoration: BoxDecoration(color: C.ink, shape: BoxShape.circle, boxShadow: Sh.md),
-        child: const Icon(Icons.tune_rounded, color: Colors.white, size: 30),
+        // Icon uses paper (the bg colour) so it always contrasts with the ink
+        // circle — light icon on dark looks, dark icon on the night look.
+        child: Icon(Icons.tune_rounded, color: C.paper, size: 30),
       ),
     );
   }
@@ -41,9 +43,9 @@ class TweaksPanel extends StatelessWidget {
             width: 420,
             height: double.infinity,
             padding: const EdgeInsets.all(30),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              boxShadow: [BoxShadow(color: Color(0x33000000), blurRadius: 40)],
+            decoration: BoxDecoration(
+              color: C.card,
+              boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 40)],
             ),
             child: SingleChildScrollView(
               child: Column(

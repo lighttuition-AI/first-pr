@@ -103,7 +103,7 @@ class _Group extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.md), boxShadow: Sh.sm),
+      decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.md), boxShadow: Sh.sm),
       child: Column(
         children: [
           GestureDetector(
@@ -167,7 +167,7 @@ class _SlotTile extends StatelessWidget {
                     width: 44,
                     height: 44,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: Sh.sm),
+                    decoration: BoxDecoration(color: C.card, shape: BoxShape.circle, boxShadow: Sh.sm),
                     child: const Icon(Icons.refresh_rounded, size: 24),
                   ),
                 ),

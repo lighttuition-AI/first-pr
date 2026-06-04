@@ -206,6 +206,19 @@ void main() {
     expect(kSkins['ocean']!.cardBorder, isNull);
   });
 
+  test('skins: Moonlit Calm is ready, dark, with a night scene', () {
+    expect(kReadySkins, contains('moonlit'));
+    final m = kSkins['moonlit']!;
+    expect(m.brightness, Brightness.dark);
+    expect(m.hasScene, isTrue);
+    expect(m.sceneBuilder!(), isA<FloatingScene>());
+    // Dark look has a light ink for text + a dark paper surface.
+    expect(m.ink.computeLuminance(), greaterThan(0.5));
+    expect(m.paper.computeLuminance(), lessThan(0.2));
+    // Light looks stay light.
+    expect(kSkins['sunshine']!.brightness, Brightness.light);
+  });
+
   testWidgets('Ocean scene renders shark family + bubbles without error', (tester) async {
     await tester.binding.setSurfaceSize(const Size(1366, 1024));
     addTearDown(() => tester.binding.setSurfaceSize(null));

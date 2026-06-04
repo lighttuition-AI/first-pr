@@ -116,7 +116,7 @@ class _GifTile extends StatelessWidget {
     return Container(
       width: 220,
       height: 220,
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.md), boxShadow: Sh.sm),
+      decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.md), boxShadow: Sh.sm),
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -133,7 +133,7 @@ class _GifTile extends StatelessWidget {
                 width: 40,
                 height: 40,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: Sh.sm),
+                decoration: BoxDecoration(color: C.card, shape: BoxShape.circle, boxShadow: Sh.sm),
                 child: const Icon(Icons.close_rounded, size: 22, color: Color(0xFFE0573D)),
               ),
             ),
