@@ -47,14 +47,17 @@ void main() {
     expect(find.byType(IconTile), findsNWidgets(kGames.length));
   });
 
-  test('voiceover registry: 14 groups, every line id unique', () {
+  test('voiceover registry: 15 groups, every line id unique', () {
     final groups = buildVoRegistry();
-    expect(groups.length, 14);
-    // 45 original + Arabic group (1 instruction + 28 letters) + trace instruction.
+    expect(groups.length, 15); // + the Splash screen group
+    // 45 original + Splash (3 names) + Arabic group (1 instruction + 28 letters)
+    // + trace instruction.
     final total = groups.fold<int>(0, (sum, g) => sum + g.lines.length);
-    expect(total, 45 + 1 + kArabicLetters.length + 1);
+    expect(total, 45 + 3 + 1 + kArabicLetters.length + 1);
     final ids = groups.expand((g) => g.lines.map((l) => l.id)).toList();
     expect(ids.toSet().length, ids.length);
+    // the splash names are recordable
+    expect(groups.any((g) => g.group == 'Splash screen'), isTrue);
   });
 
   test('Arabic world has 28 recordable letters', () {

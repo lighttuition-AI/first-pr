@@ -6,8 +6,13 @@
 // · ♪) and the HNL Learning wordmark, bouncing in on cold start. Shown
 // by the boot gate in app.dart, then it fades into the app.
 // ============================================================
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../models/content.dart';
+import '../services/vo_service.dart';
+import '../state/app_state.dart';
 import 'branding.dart';
 import 'village.dart';
 
@@ -21,9 +26,39 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
   late final AnimationController _c =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..forward();
+  final AudioPlayer _harp = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _playIntro());
+  }
+
+  // Soft harp under the splash + the three sisters' names announced in order
+  // with a growing stretch (slower rate = more stretched). Each name plays the
+  // family's recording if made (Studio → "Splash screen"), else default TTS.
+  Future<void> _playIntro() async {
+    if (!mounted) return;
+    if (!context.read<AppState>().sound) return; // respect the mute switch
+    final vo = context.read<VoService>();
+    try {
+      await _harp.setReleaseMode(ReleaseMode.stop);
+      await _harp.setVolume(0.55);
+      await _harp.play(AssetSource('audio/harp.wav'));
+    } catch (_) {/* audio unavailable here */}
+    const rates = [0.42, 0.34, 0.26]; // name 1 stretches least … name 3 most
+    const startMs = [450, 2000, 3650];
+    for (var i = 0; i < kSplashVo.length && i < 3; i++) {
+      final line = kSplashVo[i];
+      Future.delayed(Duration(milliseconds: startMs[i]), () {
+        if (mounted) vo.play(line.id, line.text, rate: rates[i]);
+      });
+    }
+  }
 
   @override
   void dispose() {
+    _harp.dispose();
     _c.dispose();
     super.dispose();
   }

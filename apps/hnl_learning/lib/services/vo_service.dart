@@ -24,6 +24,8 @@ class VoService extends ChangeNotifier {
   /// line id -> recorded clip path/url
   final Map<String, String> _recordings = {};
 
+  static const double _defaultRate = 0.46; // friendly, unhurried
+
   String? activeId;
   bool _enabled = true;
 
@@ -35,7 +37,7 @@ class VoService extends ChangeNotifier {
   Future<void> init() async {
     try {
       await _tts.setLanguage('en-US');
-      await _tts.setSpeechRate(0.46); // friendly, unhurried
+      await _tts.setSpeechRate(_defaultRate);
       await _tts.setPitch(1.12); // slightly higher = warmer for kids
       await _tts.setVolume(1.0);
       await _tts.awaitSpeakCompletion(false);
@@ -81,7 +83,7 @@ class VoService extends ChangeNotifier {
   /// [lang] sets the TTS voice for this utterance (e.g. 'so-SO' for Somali);
   /// if the device lacks that voice the TTS simply no-ops and the recording
   /// (once made in the Studio / inline) is what plays.
-  Future<void> play(String id, String? text, {String lang = 'en-US'}) async {
+  Future<void> play(String id, String? text, {String lang = 'en-US', double? rate}) async {
     await stop();
     if (!_enabled) return;
     _setActive(id);
@@ -96,6 +98,9 @@ class VoService extends ChangeNotifier {
     if (text != null && text.isNotEmpty) {
       try {
         await _tts.setLanguage(lang);
+        // Set rate explicitly every utterance so a custom (slower, stretched)
+        // rate never leaks into the next line.
+        await _tts.setSpeechRate(rate ?? _defaultRate);
         await _tts.speak(text);
         return;
       } catch (_) {}
