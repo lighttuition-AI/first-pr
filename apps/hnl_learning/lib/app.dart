@@ -117,11 +117,14 @@ class _BootSplashGateState extends State<_BootSplashGate> {
   @override
   void initState() {
     super.initState();
-    // Hold the splash while the harp + the three sisters' names play, then
-    // fade it away to reveal the app.
-    Future.delayed(const Duration(milliseconds: 5600), () {
-      if (mounted) setState(() => _opacity = 0);
-    });
+    // Safety net: even if audio never reports done (muted oddly, codec issue),
+    // never trap the child on the splash.
+    Future.delayed(const Duration(milliseconds: 10000), _fadeOut);
+  }
+
+  // Fade the splash away once the three names have finished playing.
+  void _fadeOut() {
+    if (mounted && _opacity != 0) setState(() => _opacity = 0);
   }
 
   @override
@@ -139,7 +142,7 @@ class _BootSplashGateState extends State<_BootSplashGate> {
               onEnd: () {
                 if (_opacity == 0 && mounted) setState(() => _gone = true);
               },
-              child: const SplashScreen(),
+              child: SplashScreen(onComplete: _fadeOut),
             ),
           ),
       ],

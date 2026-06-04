@@ -41,7 +41,14 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   names are best-effort defaults (loan transliterations where Somali borrows the
   word) — meant to be re-recorded.
 - **Launch splash** (`widgets/splash.dart`): the three Somali sisters' faces +
-  playful accents, shown on cold start then cross-fades into the app.
+  playful accents, shown on cold start then cross-fades into the app. The three
+  names play **sequentially to completion** (`VoService.playToCompletion`) over a
+  looping harp — name 1 is never dropped and name 3 is never cut. The splash
+  **fade is tied to the names finishing** (boot gate gets `onComplete`; a 10 s
+  safety net covers stuck/muted audio), so the splash audio never bleeds into
+  the app behind it. Cold start always lands on **home** — `_load` never resumes
+  a mid-activity screen (game / continents / animal-quiz / break / rewards /
+  gate), so the app can't flash the island before the splash.
 - **GIF Studio** (Settings / Tweaks, gated): upload celebration GIFs; one plays
   on full-alphabet completion (falls back to Robo if none).
 - **Multiple child profiles**: each child has its own profile + isolated
@@ -55,9 +62,13 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   holds **every Look as data** — this is the single tidy home for them. A global
   `activeSkin` drives the design tokens, so switching a Look reskins all screens
   with **no per-screen changes**.
-- Switch live in **Settings (Tweaks) → Look**. Selection persists (tweaks key
-  `skin`). `AppState.setSkin(id)` swaps `activeSkin` + saves; `app.pal` now returns
-  `activeSkin.palette`.
+- Switch live in **Settings (Tweaks) → Look**. `AppState.setSkin(id)` swaps
+  `activeSkin` + saves; `app.pal` now returns `activeSkin.palette`.
+- **Looks are per-child.** Each profile remembers its own Look (`Child.skin`);
+  switching profiles re-applies that kid's Look via `_applyActiveChildSkin()`.
+  A child with no pick falls back to `_baseSkin` (the saved `tweaks.skin`
+  default; `kDefaultSkin` on a fresh install). Old single-skin saves migrate
+  cleanly — children with no `skin` inherit `_baseSkin`.
 - Looks (`kReadySkins`): **Sunshine** (polished default) · **Jungle** (clay +
   monkeys/bananas) · **Ocean** (glassy water + original shark family,
   `widgets/sea.dart`) · **Crayon Pop** (neubrutalism + original hero squad,

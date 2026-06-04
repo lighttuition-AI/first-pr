@@ -110,6 +110,46 @@ class VoService extends ChangeNotifier {
     if (activeId == id) _setActive(null);
   }
 
+  /// Like [play], but the returned Future completes only when the audio has
+  /// actually *finished* (recording played to the end, or TTS done speaking).
+  /// Used by the launch splash so the three names play one fully after another
+  /// instead of cutting each other off. Falls back gracefully if audio fails.
+  Future<void> playToCompletion(String id, String? text,
+      {String lang = 'en-US', double? rate}) async {
+    await stop();
+    if (!_enabled) return;
+    _setActive(id);
+
+    final clip = _recordings[id];
+    if (clip != null) {
+      try {
+        // Listen for completion *before* starting so we can't miss the event.
+        final done = _player.onPlayerComplete.first;
+        await _player.play(_sourceFor(clip));
+        await done.timeout(const Duration(seconds: 8), onTimeout: () {});
+        return;
+      } catch (_) {/* fall through to TTS */}
+    }
+    if (text != null && text.isNotEmpty) {
+      try {
+        await _tts.setLanguage(lang);
+        await _tts.setSpeechRate(rate ?? _defaultRate);
+        await _tts.awaitSpeakCompletion(true); // make speak() resolve on completion
+        await _tts.speak(text);
+        return;
+      } catch (_) {
+      } finally {
+        // Restore the default fire-and-forget behaviour for normal play().
+        try {
+          await _tts.awaitSpeakCompletion(false);
+        } catch (_) {}
+      }
+    }
+    // Nothing to play — a brief beat so the caller's pacing still feels right.
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (activeId == id) _setActive(null);
+  }
+
   Source _sourceFor(String clip) {
     if (clip.startsWith('http') || clip.startsWith('blob')) {
       return UrlSource(clip);

@@ -34,6 +34,7 @@ class Child {
   List<String> topics;
   String? avatar; // avatar id
   String? photo; // base64-encoded photo
+  String? skin; // this child's chosen Look (theme/skins.dart); null = app default
   int stars;
   List<String> planets;
   int streak;
@@ -49,6 +50,7 @@ class Child {
     List<String>? topics,
     this.avatar,
     this.photo,
+    this.skin,
     this.stars = 0,
     List<String>? planets,
     this.streak = 1,
@@ -76,6 +78,7 @@ class Child {
         'topics': topics,
         'avatar': avatar,
         'photo': photo,
+        'skin': skin,
         'stars': stars,
         'planets': planets,
         'streak': streak,
@@ -89,6 +92,7 @@ class Child {
         topics: (d['topics'] as List?)?.cast<String>(),
         avatar: d['avatar'] as String?,
         photo: d['photo'] as String?,
+        skin: d['skin'] as String?,
         stars: d['stars'] as int? ?? 0,
         planets: (d['planets'] as List?)?.cast<String>(),
         streak: d['streak'] as int? ?? 1,
@@ -102,7 +106,7 @@ class Child {
 class AppState extends ChangeNotifier {
   AppState(this._prefs) {
     _load();
-    setActiveSkin(skin); // keep the global skin in sync even with no save
+    _applyActiveChildSkin(); // show the active child's saved Look on boot
   }
 
   final SharedPreferences _prefs;
@@ -137,7 +141,11 @@ class AppState extends ChangeNotifier {
   Map<String, int> get skillXp => child.skillXp;
 
   // ---- tweaks ----
+  // [skin] mirrors the *active child's* Look (drives the Tweaks highlight +
+  // the global activeSkin). Each child remembers its own Look in `Child.skin`;
+  // [_baseSkin] is the fallback for a child who hasn't picked one yet.
   String skin = kDefaultSkin; // the active "Look" (see skins.dart)
+  String _baseSkin = kDefaultSkin; // default Look for children without their own
   String palette = 'meadow'; // legacy; kept for save compatibility
   String font = 'baloo'; // legacy; kept for save compatibility
   bool mascot = true;
@@ -177,6 +185,7 @@ class AppState extends ChangeNotifier {
     activeIndex = i;
     showChildMenu = false;
     session = null;
+    _applyActiveChildSkin(); // load this child's saved Look
     // Resume setup if this child isn't finished, else go to their home.
     go(child.isSetUp ? 'home' : 'age');
   }
@@ -188,6 +197,7 @@ class AppState extends ChangeNotifier {
     activeIndex = children.length - 1;
     showChildMenu = false;
     session = null;
+    _applyActiveChildSkin(); // a fresh child starts on the default Look
     go('age');
   }
 
@@ -195,6 +205,7 @@ class AppState extends ChangeNotifier {
     if (children.length <= 1 || i < 0 || i >= children.length) return;
     children.removeAt(i);
     if (activeIndex >= children.length) activeIndex = children.length - 1;
+    _applyActiveChildSkin(); // the now-active child may use a different Look
     _changed();
   }
 
@@ -254,12 +265,21 @@ class AppState extends ChangeNotifier {
   /// The active look's accent palette (the rest of the app reads `app.pal`).
   Palette get pal => activeSkin.palette;
 
-  /// Switch the whole-app Look. Swaps the global [activeSkin], persists, and
-  /// rebuilds every screen (tokens read the active skin).
+  /// Switch the active child's Look. Saved onto *that child* so switching
+  /// profiles restores each kid's own Look. Swaps the global [activeSkin],
+  /// persists, and rebuilds every screen (tokens read the active skin).
   void setSkin(String id) {
+    child.skin = id;
     skin = id;
     setActiveSkin(id);
     _changed();
+  }
+
+  /// Apply the active child's saved Look (or the default if they have none).
+  void _applyActiveChildSkin() {
+    final id = child.skin ?? _baseSkin;
+    skin = id;
+    setActiveSkin(id);
   }
 
   // ------------------------------------------------------------
@@ -296,8 +316,11 @@ class AppState extends ChangeNotifier {
       }
 
       final t = (d['tweaks'] as Map?) ?? {};
-      skin = t['skin'] as String? ?? kDefaultSkin;
-      setActiveSkin(skin);
+      // The saved Look is the *default* for children without their own. Each
+      // child's chosen Look rides in their own profile (Child.skin); the active
+      // one is applied after _load by _applyActiveChildSkin().
+      _baseSkin = t['skin'] as String? ?? kDefaultSkin;
+      skin = _baseSkin;
       palette = t['palette'] as String? ?? 'meadow';
       font = t['font'] as String? ?? 'baloo';
       mascot = t['mascot'] as bool? ?? true;
@@ -305,8 +328,14 @@ class AppState extends ChangeNotifier {
       sessionLen = t['sessionLen'] as int? ?? 15;
       sound = t['sound'] as bool? ?? true;
 
+      // On a cold start we always come up through the splash and land on a
+      // calm screen — never resume mid-activity (a game, the island/continent
+      // map, a quiz, a break/reward, or the parent gate).
       final s = d['screen'] as String?;
-      if (s != null && !s.startsWith('game')) {
+      const kTransientScreens = {
+        'game', 'continents', 'animal-quiz', 'break', 'rewards', 'gate',
+      };
+      if (s != null && !s.startsWith('game') && !kTransientScreens.contains(s)) {
         screen = s;
       } else {
         screen = child.isSetUp ? 'home' : 'onb-0';
@@ -319,7 +348,7 @@ class AppState extends ChangeNotifier {
       'children': [for (final c in children) c.toJson()],
       'activeIndex': activeIndex,
       'tweaks': {
-        'skin': skin,
+        'skin': _baseSkin, // default Look; each child's own Look rides in their profile
         'palette': palette,
         'font': font,
         'mascot': mascot,

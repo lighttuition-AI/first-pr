@@ -17,7 +17,12 @@ import 'branding.dart';
 import 'village.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  /// Fired once the harp + all three names have finished (or immediately on
+  /// mute / audio failure) so the boot gate can fade the splash away. This
+  /// keeps the splash up until the names are fully spoken — they never bleed
+  /// into the app behind it.
+  final VoidCallback? onComplete;
+  const SplashScreen({super.key, this.onComplete});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -27,6 +32,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   late final AnimationController _c =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..forward();
   final AudioPlayer _harp = AudioPlayer();
+  bool _completed = false;
 
   @override
   void initState() {
@@ -34,26 +40,44 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     WidgetsBinding.instance.addPostFrameCallback((_) => _playIntro());
   }
 
-  // Soft harp under the splash + the three sisters' names announced in order
-  // with a growing stretch (slower rate = more stretched). Each name plays the
-  // family's recording if made (Studio → "Splash screen"), else default TTS.
+  void _done() {
+    if (_completed) return;
+    _completed = true;
+    widget.onComplete?.call();
+  }
+
+  // Soft harp under the splash + the three sisters' names announced *in order*,
+  // each one played fully before the next begins (so the first name is never
+  // dropped and the last is never cut off). Each name plays the family's
+  // recording if made (Studio → "Splash screen"), else default TTS with a
+  // growing stretch. Signals [onComplete] when the last name finishes.
   Future<void> _playIntro() async {
     if (!mounted) return;
-    if (!context.read<AppState>().sound) return; // respect the mute switch
+    if (!context.read<AppState>().sound) {
+      // Muted: still show the splash for a friendly beat, then move on.
+      await Future.delayed(const Duration(milliseconds: 1800));
+      _done();
+      return;
+    }
     final vo = context.read<VoService>();
     try {
-      await _harp.setReleaseMode(ReleaseMode.stop);
-      await _harp.setVolume(0.55);
+      await _harp.setReleaseMode(ReleaseMode.loop); // loop softly under the names
+      await _harp.setVolume(0.5);
       await _harp.play(AssetSource('audio/harp.wav'));
     } catch (_) {/* audio unavailable here */}
-    const rates = [0.42, 0.34, 0.26]; // name 1 stretches least … name 3 most
-    const startMs = [450, 2000, 3650];
+
+    // Let the harp settle, then the faces have popped in.
+    await Future.delayed(const Duration(milliseconds: 650));
+
+    const rates = [0.42, 0.34, 0.26]; // name 1 stretches least … name 3 most (TTS only)
     for (var i = 0; i < kSplashVo.length && i < 3; i++) {
+      if (!mounted) break;
       final line = kSplashVo[i];
-      Future.delayed(Duration(milliseconds: startMs[i]), () {
-        if (mounted) vo.play(line.id, line.text, rate: rates[i]);
-      });
+      await vo.playToCompletion(line.id, line.text, rate: rates[i]);
+      if (!mounted) break;
+      await Future.delayed(const Duration(milliseconds: 280)); // a breath between sisters
     }
+    _done();
   }
 
   @override
