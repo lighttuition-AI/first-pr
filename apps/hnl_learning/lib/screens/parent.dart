@@ -346,6 +346,8 @@ class _ParentScreenState extends State<ParentScreen> {
                 KidButton(small: true, variant: BtnVariant.ghost, onTap: app.openVoiceStudio, child: const Text('🎙️ Open Studio'))),
             _setRow('Use my own pictures',
                 KidButton(small: true, variant: BtnVariant.ghost, onTap: app.openPictureStudio, child: const Text('🖼️ Picture Studio'))),
+            _setRow('Celebration GIFs',
+                KidButton(small: true, variant: BtnVariant.ghost, onTap: app.openGifStudio, child: const Text('🎞️ GIF Studio'))),
             _setRow('Child profile', Row(mainAxisSize: MainAxisSize.min, children: [
               KidButton(small: true, variant: BtnVariant.ghost, onTap: () => app.go('age'), child: const Text('Age')),
               const SizedBox(width: 10),

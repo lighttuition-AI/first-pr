@@ -87,6 +87,11 @@ class TweaksPanel extends StatelessWidget {
                     app.toggleTweaks();
                     app.openPictureStudio();
                   }),
+                  const SizedBox(height: 12),
+                  _panelButton('Add celebration GIFs 🎞️', () {
+                    app.toggleTweaks();
+                    app.openGifStudio();
+                  }),
                 ],
               ),
             ),
