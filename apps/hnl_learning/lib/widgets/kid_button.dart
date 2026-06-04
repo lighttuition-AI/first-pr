@@ -86,7 +86,7 @@ class _KidButtonState extends State<KidButton> {
         color: bg,
         borderRadius: BorderRadius.circular(R.pill),
         boxShadow: shadows,
-        border: ghost ? Border.all(color: C.line, width: 3) : null,
+        border: ghost ? Border.all(color: C.line, width: 3) : activeSkin.cardBorder,
       ),
       child: DefaultTextStyle(
         style: AppText.display(size: fontSize, weight: FontWeight.w700, color: fg),
@@ -154,9 +154,10 @@ class _IconCircleState extends State<IconCircle> {
           width: widget.size,
           height: widget.size,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: C.card,
             shape: BoxShape.circle,
             boxShadow: Sh.sm,
+            border: activeSkin.cardBorder,
           ),
           child: Icon(widget.icon, color: C.ink, size: widget.size * 0.46),
         ),

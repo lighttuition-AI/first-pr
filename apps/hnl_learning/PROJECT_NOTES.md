@@ -47,8 +47,13 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   `activeSkin.palette`.
 - Shipping looks one at a time; `kReadySkins` is the ordered picker list. Shipped:
   **Sunshine** (polished default) · **Jungle** (clay + monkeys/bananas) · **Ocean**
-  (glassy water + an original shark family swimming, `widgets/sea.dart`) ·
-  **Classic** (original, 1:1). Planned: Crayon Pop, Moonlit Calm.
+  (glassy water + original shark family, `widgets/sea.dart`) · **Crayon Pop**
+  (neubrutalism: ink borders + block shadows + original hero squad,
+  `widgets/comic.dart`) · **Classic** (original, 1:1). Planned: Moonlit Calm.
+- `Skin.cardBorder` (a `Border?`) is honored by the shared card surfaces
+  (kid_button, HnlChip, IconCircle, speech bubble, home chip/island/mission/game
+  cards). Null for every look except Crayon Pop. High-traffic `Colors.white`
+  surface fills were migrated to `C.card` along the way (no-op while card==white).
 - A skin may carry an **animated scene** (`Skin.sceneBuilder` → `FloatingScene` in
   `widgets/scene.dart`): ambient drifting "characters" drawn behind the content,
   wrapped in `IgnorePointer`. Home goes transparent when `activeSkin.hasScene` so

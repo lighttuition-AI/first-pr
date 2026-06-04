@@ -17,9 +17,10 @@ class HnlChip extends StatelessWidget {
       height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: C.card,
         borderRadius: BorderRadius.circular(R.pill),
         boxShadow: Sh.sm,
+        border: activeSkin.cardBorder,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
