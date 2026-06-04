@@ -31,11 +31,15 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   N/28"; finishing all 28 → confetti + a big uploaded GIF).
 - **Animals** (5th island, 🦒): tap → an interactive continent map (7 original
   blob landmasses). Tap a continent → a shuffled quiz of up to 20 animals from
-  that continent's pool (`models/animals.dart`); each shows a picture (emoji
-  default; uploadable real photo in Img slot `animal-<id>`) + **English** /
-  **Somali** buttons that announce the name (EN via TTS; SO plays the family's
-  recording or attempts Somali TTS — record inline with the mic). Next → confetti
-  → next; finishing serves fresh animals next visit (per-child `animalsSeen`).
+  that continent's pool (`models/animals.dart` — ~370 animals: Africa 70, Asia
+  68, N.America 60, Europe 58, S.America 49, Oceania 46, Antarctica 20; ids are
+  continent-suffixed so they stay unique). Each shows a picture (emoji default;
+  uploadable real photo in Img slot `animal-<id>`) + **English** / **Somali**
+  buttons that announce the name (EN via TTS; SO plays the family's recording or
+  attempts Somali TTS — record inline with the mic). Next → confetti → next;
+  finishing serves fresh animals next visit (per-child `animalsSeen`). Somali
+  names are best-effort defaults (loan transliterations where Somali borrows the
+  word) — meant to be re-recorded.
 - **Launch splash** (`widgets/splash.dart`): the three Somali sisters' faces +
   playful accents, shown on cold start then cross-fades into the app.
 - **GIF Studio** (Settings / Tweaks, gated): upload celebration GIFs; one plays
