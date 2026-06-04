@@ -460,16 +460,20 @@ class _GameCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final topic = topicById(game.topic);
-    final isAlphabet = game.type == GameType.alphabet;
-    final subtitle = isAlphabet ? '${kArabicLetters.length} letters' : '${game.rounds.length} rounds';
-
-    Widget trailing;
-    if (isAlphabet) {
-      trailing = const Text('🔤', style: TextStyle(fontSize: 34));
-    } else if (done) {
-      trailing = Text('✓', style: AppText.display(size: 34, weight: FontWeight.w800, color: const Color(0xFF15B886)));
-    } else {
-      trailing = Planet(data: planetById(game.reward), size: 44);
+    final String subtitle;
+    final Widget trailing;
+    switch (game.type) {
+      case GameType.alphabet:
+        subtitle = '${kArabicLetters.length} letters';
+        trailing = const Text('🔤', style: TextStyle(fontSize: 34));
+      case GameType.trace:
+        subtitle = 'Trace & colour';
+        trailing = const Text('✏️', style: TextStyle(fontSize: 34));
+      default:
+        subtitle = '${game.rounds.length} rounds';
+        trailing = done
+            ? Text('✓', style: AppText.display(size: 34, weight: FontWeight.w800, color: const Color(0xFF15B886)))
+            : Planet(data: planetById(game.reward), size: 44);
     }
 
     return GestureDetector(

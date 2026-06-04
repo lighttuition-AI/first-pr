@@ -85,13 +85,15 @@ class _GameHostState extends State<GameHost> {
           Positioned.fill(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(40, 140, 40, 40),
-              child: widget.game.type == GameType.alphabet
-                  // The board fills the area and scrolls; other games center.
-                  ? const AlphabetBoard()
-                  : Center(
-                      child: _GameBody(
-                          key: ValueKey(_roundIdx), game: widget.game, round: round, onSolved: _onSolved),
-                    ),
+              child: switch (widget.game.type) {
+                // These fill the area (and scroll / draw); other games center.
+                GameType.alphabet => const AlphabetBoard(),
+                GameType.trace => const TraceGame(),
+                _ => Center(
+                    child: _GameBody(
+                        key: ValueKey(_roundIdx), game: widget.game, round: round, onSolved: _onSolved),
+                  ),
+              },
             ),
           ),
 
@@ -134,7 +136,7 @@ class _GameHostState extends State<GameHost> {
                     ),
                   ],
                 ),
-                if (widget.game.type != GameType.alphabet) ...[
+                if (widget.game.type != GameType.alphabet && widget.game.type != GameType.trace) ...[
                   const SizedBox(height: 12),
                   _RoundDots(total: widget.game.rounds.length, index: _roundIdx),
                 ],
@@ -265,6 +267,8 @@ class _GameBody extends StatelessWidget {
       case GameType.alphabet:
         // Routed directly in GameHost (it fills/scrolls); here for completeness.
         return const AlphabetBoard();
+      case GameType.trace:
+        return const TraceGame();
     }
   }
 }
@@ -354,6 +358,227 @@ class _LetterTileState extends State<_LetterTile> {
       ),
     );
   }
+}
+
+// ---------------- Arabic World · game 2: letter tracing ----------------
+// Pick a colour, then trace the letter with a finger over a hollow guide.
+// Each letter reuses the same recordable voice line as the alphabet board.
+class TraceGame extends StatefulWidget {
+  const TraceGame({super.key});
+  @override
+  State<TraceGame> createState() => _TraceGameState();
+}
+
+class _Stroke {
+  final Color color;
+  final List<Offset> points;
+  _Stroke(this.color, this.points);
+}
+
+class _TraceGameState extends State<TraceGame> {
+  static const _palette = [
+    Color(0xFFE84C6B), Color(0xFFFF8A3D), Color(0xFFFFC23C), Color(0xFF2E8B57),
+    Color(0xFF2E8BC4), Color(0xFF7A5BD0), Color(0xFF8B5A2B), Color(0xFF2B3A43),
+  ];
+  static const double _canvas = 520;
+
+  int _idx = 0;
+  Color _color = _palette[0];
+  final List<_Stroke> _strokes = [];
+  _Stroke? _current;
+
+  ArabicLetter get _letter => kArabicLetters[_idx];
+
+  @override
+  void initState() {
+    super.initState();
+    _playLetter(550);
+  }
+
+  void _playLetter([int delay = 250]) {
+    Future.delayed(Duration(milliseconds: delay), () {
+      if (mounted) context.read<VoService>().play(_letter.id, _letter.name);
+    });
+  }
+
+  void _go(int delta) {
+    setState(() {
+      _idx = (_idx + delta) % kArabicLetters.length;
+      if (_idx < 0) _idx += kArabicLetters.length;
+      _strokes.clear();
+      _current = null;
+    });
+    _playLetter();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Letter name + speaker + prev/next
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconCircle(Icons.chevron_left_rounded, size: 64, onTap: () => _go(-1)),
+            const SizedBox(width: 20),
+            GestureDetector(
+              onTap: () => context.read<VoService>().play(_letter.id, _letter.name),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(R.pill), boxShadow: Sh.sm),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_letter.glyph, style: const TextStyle(fontSize: 40, fontWeight: FontWeight.w700)),
+                    const SizedBox(width: 14),
+                    Text(_letter.name, style: AppText.display(size: 28, weight: FontWeight.w700)),
+                    const SizedBox(width: 10),
+                    const Icon(Icons.volume_up_rounded, color: C.inkSoft),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 20),
+            IconCircle(Icons.chevron_right_rounded, size: 64, onTap: () => _go(1)),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Tracing canvas
+              Container(
+                width: _canvas,
+                height: _canvas,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(R.lg),
+                  boxShadow: Sh.md,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(R.lg),
+                  child: Stack(
+                    children: [
+                      // Hollow guide letter to trace over
+                      Center(
+                        child: Text(
+                          _letter.glyph,
+                          style: TextStyle(
+                            fontSize: 380,
+                            height: 1.0,
+                            foreground: Paint()
+                              ..style = PaintingStyle.stroke
+                              ..strokeWidth = 5
+                              ..color = const Color(0xFFCAD4DA),
+                          ),
+                        ),
+                      ),
+                      // Drawing surface
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onPanStart: (d) => setState(() {
+                          _current = _Stroke(_color, [d.localPosition]);
+                          _strokes.add(_current!);
+                        }),
+                        onPanUpdate: (d) => setState(() => _current?.points.add(d.localPosition)),
+                        onPanEnd: (_) => _current = null,
+                        child: CustomPaint(size: const Size(_canvas, _canvas), painter: _TracePainter(_strokes)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 44),
+              // Colour palette + clear
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Pick a colour', style: AppText.display(size: 26, weight: FontWeight.w700, color: C.inkSoft)),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: 200,
+                    child: Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      children: [
+                        for (final c in _palette) _Swatch(color: c, selected: c == _color, onTap: () => setState(() => _color = c)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  KidButton(
+                    variant: BtnVariant.ghost,
+                    onTap: _strokes.isEmpty ? null : () => setState(() => _strokes.clear()),
+                    child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(Icons.refresh_rounded),
+                      SizedBox(width: 8),
+                      Text('Clear'),
+                    ]),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _Swatch extends StatelessWidget {
+  final Color color;
+  final bool selected;
+  final VoidCallback onTap;
+  const _Swatch({required this.color, required this.selected, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          boxShadow: Sh.sm,
+          border: Border.all(color: Colors.white, width: selected ? 5 : 0),
+        ),
+        child: selected ? const Icon(Icons.check_rounded, color: Colors.white, size: 26) : null,
+      ),
+    );
+  }
+}
+
+class _TracePainter extends CustomPainter {
+  final List<_Stroke> strokes;
+  _TracePainter(this.strokes);
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final s in strokes) {
+      final paint = Paint()
+        ..color = s.color
+        ..strokeWidth = 18
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round
+        ..style = PaintingStyle.stroke;
+      if (s.points.length == 1) {
+        canvas.drawCircle(s.points.first, 9, Paint()..color = s.color);
+      } else {
+        final path = Path()..moveTo(s.points.first.dx, s.points.first.dy);
+        for (final p in s.points.skip(1)) {
+          path.lineTo(p.dx, p.dy);
+        }
+        canvas.drawPath(path, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _TracePainter old) => true;
 }
 
 // ---------------- Reusable tap card (pick / letter / science) ----------------
