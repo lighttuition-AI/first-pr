@@ -92,6 +92,7 @@ class Child {
 class AppState extends ChangeNotifier {
   AppState(this._prefs) {
     _load();
+    setActiveSkin(skin); // keep the global skin in sync even with no save
   }
 
   final SharedPreferences _prefs;
@@ -126,8 +127,9 @@ class AppState extends ChangeNotifier {
   Map<String, int> get skillXp => child.skillXp;
 
   // ---- tweaks ----
-  String palette = 'meadow';
-  String font = 'baloo'; // 'baloo' | 'quick'
+  String skin = kDefaultSkin; // the active "Look" (see skins.dart)
+  String palette = 'meadow'; // legacy; kept for save compatibility
+  String font = 'baloo'; // legacy; kept for save compatibility
   bool mascot = true;
   String celebration = 'big'; // 'big' | 'gentle'
   int sessionLen = 15;
@@ -239,8 +241,16 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Palette get pal => kPalettes[palette] ?? kPalettes['meadow']!;
-  bool get quicksand => font == 'quick';
+  /// The active look's accent palette (the rest of the app reads `app.pal`).
+  Palette get pal => activeSkin.palette;
+
+  /// Switch the whole-app Look. Swaps the global [activeSkin], persists, and
+  /// rebuilds every screen (tokens read the active skin).
+  void setSkin(String id) {
+    skin = id;
+    setActiveSkin(id);
+    _changed();
+  }
 
   // ------------------------------------------------------------
   // Persistence
@@ -276,6 +286,8 @@ class AppState extends ChangeNotifier {
       }
 
       final t = (d['tweaks'] as Map?) ?? {};
+      skin = t['skin'] as String? ?? kDefaultSkin;
+      setActiveSkin(skin);
       palette = t['palette'] as String? ?? 'meadow';
       font = t['font'] as String? ?? 'baloo';
       mascot = t['mascot'] as bool? ?? true;
@@ -297,6 +309,7 @@ class AppState extends ChangeNotifier {
       'children': [for (final c in children) c.toJson()],
       'activeIndex': activeIndex,
       'tweaks': {
+        'skin': skin,
         'palette': palette,
         'font': font,
         'mascot': mascot,

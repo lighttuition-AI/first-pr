@@ -11,7 +11,7 @@ import '../widgets/kid_button.dart';
 import '../widgets/robo.dart';
 import '../widgets/speech_bubble.dart';
 
-const _stepBg = [C.cream, C.cream, Color(0xFFE7EFFF)];
+List<Color> get _stepBg => [C.cream, C.cream, const Color(0xFFE7EFFF)];
 
 class OnboardingScreen extends StatefulWidget {
   final int index;

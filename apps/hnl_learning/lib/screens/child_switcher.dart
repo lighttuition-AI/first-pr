@@ -40,7 +40,7 @@ class ChildSwitcher extends StatelessWidget {
                 ),
                 for (var i = 0; i < app.children.length; i++)
                   _ChildRow(index: i, child: app.children[i], active: i == app.activeIndex),
-                const Divider(height: 22, color: C.line),
+                Divider(height: 22, color: C.line),
                 _MenuItem(
                   emoji: '➕',
                   label: 'Add a child',

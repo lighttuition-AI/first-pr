@@ -60,12 +60,8 @@ class TweaksPanel extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  _section('Look & feel'),
-                  _segment('Color theme', ['Meadow', 'Cosmic', 'Candy'],
-                      {'meadow': 'Meadow', 'cosmic': 'Cosmic', 'candy': 'Candy'}[app.palette]!,
-                      (v) => app.setTweak(() => app.palette = {'Meadow': 'meadow', 'Cosmic': 'cosmic', 'Candy': 'candy'}[v]!)),
-                  _segment('Font', ['Rounded', 'Geometric'], app.font == 'quick' ? 'Geometric' : 'Rounded',
-                      (v) => app.setTweak(() => app.font = v == 'Geometric' ? 'quick' : 'baloo')),
+                  _section('Look'),
+                  _lookPicker(app),
                   _section('Play'),
                   _segment('Celebration', ['Big', 'Gentle'], app.celebration == 'gentle' ? 'Gentle' : 'Big',
                       (v) => app.setTweak(() => app.celebration = v == 'Gentle' ? 'gentle' : 'big')),
@@ -105,6 +101,68 @@ class TweaksPanel extends StatelessWidget {
         padding: const EdgeInsets.only(top: 18, bottom: 10),
         child: Text(label.toUpperCase(), style: AppText.kicker),
       );
+
+  /// The whole-app "Look" picker — one card per ready skin.
+  Widget _lookPicker(AppState app) => Column(
+        children: [for (final id in kReadySkins) _lookCard(app, kSkins[id]!)],
+      );
+
+  Widget _lookCard(AppState app, Skin s) {
+    final selected = app.skin == s.id;
+    final accent = s.palette.brand;
+    return GestureDetector(
+      onTap: () => app.setSkin(s.id),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: selected ? accent.withValues(alpha: .08) : C.card,
+          borderRadius: BorderRadius.circular(R.md),
+          border: Border.all(color: selected ? accent : C.line, width: selected ? 3 : 2),
+        ),
+        child: Row(
+          children: [
+            // Colour swatch cluster.
+            Container(
+              width: 56,
+              height: 56,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: s.paper,
+                borderRadius: BorderRadius.circular(R.sm),
+                border: Border.all(color: C.line),
+              ),
+              child: Wrap(
+                spacing: 5,
+                runSpacing: 5,
+                children: [
+                  for (final c in s.swatches.take(4))
+                    Container(width: 15, height: 15, decoration: BoxDecoration(color: c, shape: BoxShape.circle)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(s.label, style: AppText.display(size: 24, weight: FontWeight.w800)),
+                  Text(s.tagline, style: AppText.body(size: 16, weight: FontWeight.w700, color: C.muted)),
+                ],
+              ),
+            ),
+            Icon(
+              selected ? Icons.check_circle_rounded : Icons.circle_outlined,
+              color: selected ? accent : C.line,
+              size: 28,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _segment(String label, List<String> options, String value, ValueChanged<String> onChange) {
     return Builder(builder: (context) {
@@ -205,8 +263,12 @@ class _SliderRow extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(label, style: AppText.body(size: 22, weight: FontWeight.w700, color: C.inkSoft)),
-              const Spacer(),
+              Expanded(
+                child: Text(label,
+                    style: AppText.body(size: 22, weight: FontWeight.w700, color: C.inkSoft),
+                    overflow: TextOverflow.ellipsis),
+              ),
+              const SizedBox(width: 8),
               Text('$value min', style: AppText.display(size: 22, weight: FontWeight.w700)),
             ],
           ),

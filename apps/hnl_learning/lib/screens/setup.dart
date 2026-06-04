@@ -303,10 +303,10 @@ class _AvatarScreenState extends State<AvatarScreen> with _AutoVo {
                       onTap: _addPhoto,
                       child: app.photoBytes != null
                           ? ClipOval(child: Image.memory(app.photoBytes!, width: 108, height: 108, fit: BoxFit.cover))
-                          : const Column(
+                          : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text('📷', style: TextStyle(fontSize: 44)),
+                                const Text('📷', style: TextStyle(fontSize: 44)),
                                 Text('Add photo', style: TextStyle(fontSize: 18, color: C.muted, fontWeight: FontWeight.w700)),
                               ],
                             ),

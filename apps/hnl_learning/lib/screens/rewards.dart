@@ -43,12 +43,12 @@ class _RewardsScreenState extends State<RewardsScreen> {
     final v = kScreenVo['rewards']!;
     final owned = app.planets;
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: RadialGradient(
-          center: Alignment(0, -1),
+          center: const Alignment(0, -1),
           radius: 1.3,
-          colors: [Color(0xFFEAF0FF), C.paper],
-          stops: [0, .6],
+          colors: [const Color(0xFFEAF0FF), C.paper],
+          stops: const [0, .6],
         ),
       ),
       child: Stack(
