@@ -21,6 +21,7 @@ import 'screens/picture_studio.dart';
 import 'screens/gif_studio.dart';
 import 'screens/child_switcher.dart';
 import 'screens/tweaks.dart';
+import 'widgets/splash.dart';
 
 class HnlApp extends StatelessWidget {
   const HnlApp({super.key});
@@ -91,10 +92,54 @@ class Stage extends StatelessWidget {
           // active skin's background (painted in _StageContent) shows through.
           child: Material(
             color: Colors.transparent,
-            child: _StageContent(),
+            child: _BootSplashGate(),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Shows the [SplashScreen] on cold start, then cross-fades into the app.
+/// Purely a boot-time overlay — it doesn't touch the screen state machine.
+class _BootSplashGate extends StatefulWidget {
+  const _BootSplashGate();
+  @override
+  State<_BootSplashGate> createState() => _BootSplashGateState();
+}
+
+class _BootSplashGateState extends State<_BootSplashGate> {
+  double _opacity = 1;
+  bool _gone = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Hold the splash briefly, then fade it away to reveal the app.
+    Future.delayed(const Duration(milliseconds: 1900), () {
+      if (mounted) setState(() => _opacity = 0);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        const _StageContent(),
+        if (!_gone)
+          IgnorePointer(
+            ignoring: _opacity == 0,
+            child: AnimatedOpacity(
+              opacity: _opacity,
+              duration: const Duration(milliseconds: 450),
+              curve: Curves.easeOut,
+              onEnd: () {
+                if (_opacity == 0 && mounted) setState(() => _gone = true);
+              },
+              child: const SplashScreen(),
+            ),
+          ),
+      ],
     );
   }
 }
