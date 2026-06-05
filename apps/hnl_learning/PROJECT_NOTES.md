@@ -40,8 +40,17 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   finishing serves fresh animals next visit (per-child `animalsSeen`). Somali
   names are best-effort defaults (loan transliterations where Somali borrows the
   word) — meant to be re-recorded.
-- **Launch splash** (`widgets/splash.dart`): the three Somali sisters' faces +
-  playful accents, shown on cold start then cross-fades into the app.
+- **Launch splash** (`widgets/splash.dart`): the three Somali sisters, each in a
+  round badge with a **colourful progress ring** that fills (sparkles at the
+  leading edge, a glow when complete) while her name is announced — Nimoo →
+  Ladan → Hibo, one ring at a time, over a looping harp. **The ring fill is the
+  clock**: each name gets a guaranteed ~2 s slot (fixed timers, not audio
+  callbacks — the latter proved unreliable on-device and let names overlap /
+  get cut). The splash **fade is tied to the last ring finishing** (boot gate
+  gets `onComplete`; 10 s safety net), so the names never bleed into the app
+  behind it. Cold start always lands on **home** — `_load` never resumes a
+  mid-activity screen (game / continents / animal-quiz / break / rewards /
+  gate), so the app can't flash the island before the splash.
 - **GIF Studio** (Settings / Tweaks, gated): upload celebration GIFs; one plays
   on full-alphabet completion (falls back to Robo if none).
 - **Multiple child profiles**: each child has its own profile + isolated
@@ -55,9 +64,13 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   holds **every Look as data** — this is the single tidy home for them. A global
   `activeSkin` drives the design tokens, so switching a Look reskins all screens
   with **no per-screen changes**.
-- Switch live in **Settings (Tweaks) → Look**. Selection persists (tweaks key
-  `skin`). `AppState.setSkin(id)` swaps `activeSkin` + saves; `app.pal` now returns
-  `activeSkin.palette`.
+- Switch live in **Settings (Tweaks) → Look**. `AppState.setSkin(id)` swaps
+  `activeSkin` + saves; `app.pal` now returns `activeSkin.palette`.
+- **Looks are per-child.** Each profile remembers its own Look (`Child.skin`);
+  switching profiles re-applies that kid's Look via `_applyActiveChildSkin()`.
+  A child with no pick falls back to `_baseSkin` (the saved `tweaks.skin`
+  default; `kDefaultSkin` on a fresh install). Old single-skin saves migrate
+  cleanly — children with no `skin` inherit `_baseSkin`.
 - Looks (`kReadySkins`): **Sunshine** (polished default) · **Jungle** (clay +
   monkeys/bananas) · **Ocean** (glassy water + original shark family,
   `widgets/sea.dart`) · **Crayon Pop** (neubrutalism + original hero squad,

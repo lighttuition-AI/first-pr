@@ -171,6 +171,38 @@ void main() {
     expect(app.children.length, 1);
   });
 
+  test('each child remembers its own Look across profile switches', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final app = AppState(prefs);
+
+    // Child 1 picks Moonlit; that Look applies app-wide.
+    app.setAge(5);
+    app.setSkin('moonlit');
+    expect(app.skin, 'moonlit');
+    expect(activeSkin.id, 'moonlit');
+
+    // Child 2 starts on the default, then picks Somali Village.
+    app.addChild();
+    expect(app.skin, 'sunshine'); // a fresh child falls back to the default Look
+    expect(activeSkin.id, 'sunshine');
+    app.setSkin('somali');
+    expect(activeSkin.id, 'somali');
+
+    // Switching back to child 1 restores *their* Look, not child 2's.
+    app.setActiveChild(0);
+    expect(app.skin, 'moonlit');
+    expect(activeSkin.id, 'moonlit');
+
+    // …and it survives an app relaunch (each Look rides in its own profile).
+    final reopened = AppState(prefs);
+    expect(reopened.skin, 'moonlit'); // child 0 is active
+    expect(reopened.children[0].skin, 'moonlit');
+    expect(reopened.children[1].skin, 'somali');
+
+    reopened.setSkin('sunshine'); // restore default for any later tests
+  });
+
   testWidgets('Arabic alphabet board renders glyphs with no overflow', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
