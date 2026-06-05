@@ -117,7 +117,7 @@ const List<OnboardingStep> kOnboarding = [
 ];
 
 // ---------------- Games ----------------
-enum GameType { pick, count, pattern, memory, letter, sort, science, alphabet, trace }
+enum GameType { pick, count, pattern, memory, letter, sort, science, alphabet, trace, arabicOrder }
 
 class PickOption {
   final String emoji;
@@ -276,6 +276,10 @@ final List<Game> kGames = [
   // 9 — ARABIC WORLD · game 2: trace each letter with a finger (pick a color).
   Game('arabic-trace', GameType.trace, 'arabic', 'letters', 'Letter Tracing', '', [
     Round(id: 'ar-trace', vo: 'Pick a colour, then trace the letter with your finger!', bg: Color(0xFFFCEEDD)),
+  ], mission: false),
+  // 10 — ARABIC WORLD · game 3: drag the shuffled letters back into order.
+  Game('arabic-order', GameType.arabicOrder, 'arabic', 'letters', 'Letter Order', '', [
+    Round(id: 'ar-order', vo: 'The letters are all mixed up! Drag each one up into the right box, in order.', bg: Color(0xFF1F3A63)),
   ], mission: false),
 ];
 

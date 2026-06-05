@@ -34,7 +34,14 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 - **Arabic World** (4th island): game 1 = alphabet board (tap a letter → hear
   it; 28 letters recordable in the VO Studio); game 2 = letter tracing (finger
   drag over a hollow guide, 8-colour palette, ◀/▶, Clear, "Done!" + "Traced
-  N/28"; finishing all 28 → confetti + a big uploaded GIF).
+  N/28"; finishing all 28 → confetti + a big uploaded GIF). **game 3 = letter
+  order** (`GameType.arabicOrder`, `ArabicOrderGame` in `game.dart`): 28 empty
+  boxes sit in alphabet order (RTL, Alif top-right) each showing a faint ghost
+  glyph as a gentle guide; the 28 letters are shuffled in a tray below. Drag a
+  letter onto its box → right box snaps it (glyph turns solid + the letter is
+  spoken + a little confetti), wrong box gives a gentle shake. Fill all 28 →
+  celebrate + play again (reshuffled). Explore-only (no timer/score), like the
+  other two. Completion card is the shared `_FinishCard` (also used by tracing).
 - **Animals** (5th island, 🦒): tap → an interactive continent map (7 original
   blob landmasses). Tap a continent → a shuffled quiz of up to 20 animals from
   that continent's pool (`models/animals.dart` — ~370 animals: Africa 70, Asia
@@ -111,7 +118,7 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   `activeSkin` (re-exports skins.dart). `C.inkA()` stays dark on every skin
   (shadows/scrims); stage size (1366×1024) + `kTap` live here.
 - `models/content.dart` — ALL content: topics, avatars, worlds, planets,
-  onboarding, the 9 games + rounds, VO lines + `buildVoRegistry()`, Arabic
+  onboarding, the 10 games + rounds, VO lines + `buildVoRegistry()`, Arabic
   letters (`kArabicLetters`).
 - `state/app_state.dart` — `AppState` (ChangeNotifier): `List<Child>` + active
   index, routing, persistence (shared_preferences key `hnl-save-v1`, migrates
@@ -162,7 +169,7 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 cd apps/hnl_learning
 flutter pub get
 flutter analyze        # clean
-flutter test           # 31 tests (content, mission, multi-child, board, skins, icons, animals, VO studio upload + animals section)
+flutter test           # 32 tests (content, mission, multi-child, board, skins, icons, animals, VO studio upload, Arabic letter-order game)
 flutter run -d chrome  # quick web run
 # iPad simulator used during dev: "iPad Pro 13-inch (M5)"
 #   udid 9C1A4EAC-B929-46AD-912D-6D29B9704D56

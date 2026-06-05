@@ -90,6 +90,7 @@ class _GameHostState extends State<GameHost> {
                 // These fill the area (and scroll / draw); other games center.
                 GameType.alphabet => const AlphabetBoard(),
                 GameType.trace => const TraceGame(),
+                GameType.arabicOrder => const ArabicOrderGame(),
                 _ => Center(
                     child: _GameBody(
                         key: ValueKey(_roundIdx), game: widget.game, round: round, onSolved: _onSolved),
@@ -137,7 +138,9 @@ class _GameHostState extends State<GameHost> {
                     ),
                   ],
                 ),
-                if (widget.game.type != GameType.alphabet && widget.game.type != GameType.trace) ...[
+                if (widget.game.type != GameType.alphabet &&
+                    widget.game.type != GameType.trace &&
+                    widget.game.type != GameType.arabicOrder) ...[
                   const SizedBox(height: 12),
                   _RoundDots(total: widget.game.rounds.length, index: _roundIdx),
                 ],
@@ -270,6 +273,8 @@ class _GameBody extends StatelessWidget {
         return const AlphabetBoard();
       case GameType.trace:
         return const TraceGame();
+      case GameType.arabicOrder:
+        return const ArabicOrderGame();
     }
   }
 }
@@ -583,17 +588,20 @@ class _TraceGameState extends State<TraceGame> {
     return Stack(
       children: [
         content,
-        if (_celebrating) Positioned.fill(child: _TraceComplete(onDone: _restart)),
+        if (_celebrating)
+          Positioned.fill(child: _FinishCard(title: 'You traced every letter! 🎉', onDone: _restart)),
       ],
     );
   }
 }
 
-// Full-alphabet completion: a big uploaded GIF (or Robo) + a replay button.
-// Confetti is fired separately via the FxController.
-class _TraceComplete extends StatelessWidget {
+// A full-set completion card: a big uploaded GIF (or Robo) + a replay button.
+// Shared by the tracing + letter-order games. Confetti is fired separately
+// via the FxController.
+class _FinishCard extends StatelessWidget {
+  final String title;
   final VoidCallback onDone;
-  const _TraceComplete({required this.onDone});
+  const _FinishCard({required this.title, required this.onDone});
 
   @override
   Widget build(BuildContext context) {
@@ -608,7 +616,7 @@ class _TraceComplete extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('You traced every letter! 🎉',
+              Text(title,
                   textAlign: TextAlign.center,
                   style: AppText.display(size: 46, weight: FontWeight.w800)),
               const SizedBox(height: 20),
@@ -688,6 +696,190 @@ class _TracePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _TracePainter old) => true;
+}
+
+// ---------------- Arabic World · game 3: put the letters in order ----------------
+// The 28 boxes sit empty in alphabet order (each shows a faint ghost of its
+// letter as a gentle guide); the letters are shuffled in a tray below. Drag a
+// letter up into its box — the right box snaps it in (glyph turns solid + the
+// letter is spoken + a little confetti); a wrong box gives a gentle shake. Fill
+// all 28 → celebrate + play again (reshuffled). Explore-only (no timer/score).
+class ArabicOrderGame extends StatefulWidget {
+  const ArabicOrderGame({super.key});
+  @override
+  State<ArabicOrderGame> createState() => _ArabicOrderGameState();
+}
+
+class _ArabicOrderGameState extends State<ArabicOrderGame> {
+  final Set<int> _placed = {}; // slot indices already filled correctly
+  final Map<int, GlobalKey<ShakerState>> _keys = {};
+  late List<int> _shuffled; // tray order (letter indices)
+  bool _celebrating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _shuffle();
+  }
+
+  void _shuffle() {
+    _shuffled = [for (var i = 0; i < kArabicLetters.length; i++) i]..shuffle();
+  }
+
+  GlobalKey<ShakerState> _key(int i) => _keys.putIfAbsent(i, () => GlobalKey<ShakerState>());
+
+  // A letter (index [letterIdx]) was dropped on the box for slot [slot].
+  void _drop(int slot, int letterIdx) {
+    if (_placed.contains(slot)) return;
+    if (letterIdx == slot) {
+      setState(() => _placed.add(slot));
+      context.read<VoService>().play(kArabicLetters[slot].id, kArabicLetters[slot].name);
+      final fx = context.read<FxController>();
+      if (_placed.length >= kArabicLetters.length) {
+        fx.fire(intensity: context.read<AppState>().celebration); // big finish
+        Future.delayed(const Duration(milliseconds: 550), () {
+          if (mounted) setState(() => _celebrating = true);
+        });
+      } else {
+        fx.fire(score: 0, intensity: 'gentle');
+      }
+    } else {
+      _key(letterIdx).currentState?.shake();
+      _wrongVo(context);
+    }
+  }
+
+  void _restart() {
+    setState(() {
+      _placed.clear();
+      _celebrating = false;
+      _shuffle();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.watch<AppState>().pal.brand;
+    final remaining = _shuffled.where((i) => !_placed.contains(i)).toList();
+
+    final content = Column(
+      children: [
+        // ---- the 28 ordered boxes (Alif top-right, reading right-to-left) ----
+        Directionality(
+          textDirection: TextDirection.rtl,
+          child: Center(
+            child: SizedBox(
+              width: 7 * 104 + 6 * 12, // exactly 7 boxes per row → 4 rows of 7
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [for (var i = 0; i < kArabicLetters.length; i++) _box(i, brand)],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text('Placed ${_placed.length} / ${kArabicLetters.length}',
+            style: AppText.body(size: 22, weight: FontWeight.w800, color: Colors.white)),
+        const SizedBox(height: 14),
+        // ---- the shuffled letter tray ----
+        Expanded(
+          child: SingleChildScrollView(
+            child: Center(
+              child: Wrap(
+                spacing: 14,
+                runSpacing: 14,
+                alignment: WrapAlignment.center,
+                children: [
+                  for (final i in remaining)
+                    Draggable<int>(
+                      data: i,
+                      dragAnchorStrategy: pointerDragAnchorStrategy,
+                      feedback: Material(
+                        type: MaterialType.transparency,
+                        child: FractionalTranslation(
+                          translation: const Offset(-0.5, -0.5),
+                          child: _tile(i, dragging: true),
+                        ),
+                      ),
+                      childWhenDragging: Opacity(opacity: .25, child: _tile(i)),
+                      child: Shaker(key: _key(i), child: _tile(i)),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+
+    return Stack(
+      children: [
+        content,
+        if (_celebrating)
+          Positioned.fill(child: _FinishCard(title: 'You put every letter in order! 🎉', onDone: _restart)),
+      ],
+    );
+  }
+
+  // One target box for slot [i]. Empty: a faint ghost glyph guide. Filled: the
+  // glyph in the brand colour, locked (won't accept more).
+  Widget _box(int i, Color brand) {
+    final filled = _placed.contains(i);
+    return DragTarget<int>(
+      onWillAcceptWithDetails: (_) => !filled,
+      onAcceptWithDetails: (d) => _drop(i, d.data),
+      builder: (context, cand, rej) => Container(
+        width: 104,
+        height: 88,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: filled ? brand.withValues(alpha: .14) : C.card,
+          borderRadius: BorderRadius.circular(R.md),
+          border: Border.all(
+            color: filled ? brand : (cand.isNotEmpty ? brand : C.line),
+            width: filled || cand.isNotEmpty ? 3 : 2,
+          ),
+          boxShadow: filled ? null : Sh.sm,
+        ),
+        child: Text(
+          kArabicLetters[i].glyph,
+          style: TextStyle(
+            fontSize: 46,
+            height: 1.0,
+            fontWeight: FontWeight.w700,
+            decoration: TextDecoration.none,
+            color: filled ? brand : C.muted.withValues(alpha: .26), // ghost guide when empty
+          ),
+        ),
+      ),
+    );
+  }
+
+  // A draggable letter tile (white card so it pops on the dark stage).
+  Widget _tile(int i, {bool dragging = false}) {
+    return Container(
+      width: 92,
+      height: 76,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(R.md),
+        boxShadow: dragging ? Sh.md : Sh.sm,
+        border: Border.all(color: C.line, width: 2),
+      ),
+      child: Text(
+        kArabicLetters[i].glyph,
+        style: const TextStyle(
+          fontSize: 42,
+          height: 1.0,
+          fontWeight: FontWeight.w800,
+          decoration: TextDecoration.none,
+          color: Color(0xFF1F3A63),
+        ),
+      ),
+    );
+  }
 }
 
 // ---------------- Reusable tap card (pick / letter / science) ----------------
