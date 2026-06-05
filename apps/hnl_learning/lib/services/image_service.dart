@@ -128,7 +128,8 @@ List<String> _gameTokens(Game g) {
       case GameType.alphabet:
       case GameType.trace:
       case GameType.arabicOrder:
-        break; // Arabic letters are text glyphs, not editable image slots.
+      case GameType.produceQuiz:
+        break; // Arabic glyphs + produce items aren't game-round image slots.
     }
   }
   return out;

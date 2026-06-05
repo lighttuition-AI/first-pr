@@ -21,11 +21,12 @@ import '../widgets/speech_bubble.dart';
 /// Island positions on the map, aligned with kWorlds order (fractions of
 /// the map area). Add a position here when a new world is added.
 const List<Offset> _worldPos = [
-  Offset(0.05, 0.34), // logic
-  Offset(0.34, 0.05), // galaxy
-  Offset(0.67, 0.10), // discovery
-  Offset(0.50, 0.42), // arabic
-  Offset(0.05, 0.02), // animals (top-left, above Logic Lab)
+  Offset(0.02, 0.40), // logic   (mid-left)
+  Offset(0.27, 0.02), // galaxy  (top)
+  Offset(0.52, 0.05), // discovery (top-right)
+  Offset(0.30, 0.40), // arabic  (mid-centre)
+  Offset(0.02, 0.03), // animals (top-left)
+  Offset(0.74, 0.33), // produce (right)
 ];
 
 class HomeScreen extends StatefulWidget {
@@ -133,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _islandAt(AppState app, World world, double lx, double ty, double w, double h) {
-    const iw = 250.0;
+    const iw = 210.0;
     return Positioned(
       left: w * lx - iw / 2 + iw / 2 - 20,
       top: h * ty,
@@ -234,11 +235,11 @@ class _IslandState extends State<_Island> with SingleTickerProviderStateMixin {
           child: child,
         ),
         child: Container(
-          width: 250,
-          height: 250,
-          padding: const EdgeInsets.all(20),
+          width: 210,
+          height: 210,
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(110),
+            borderRadius: BorderRadius.circular(92),
             gradient: RadialGradient(
               center: const Alignment(-0.3, -0.4),
               colors: [Color.lerp(wc, Colors.white, .35)!, wc, wd],
@@ -254,12 +255,12 @@ class _IslandState extends State<_Island> with SingleTickerProviderStateMixin {
             child: FittedBox(
               fit: BoxFit.scaleDown,
               child: SizedBox(
-                width: 214,
+                width: 178,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Img(widget.world.emoji, size: 64),
+                    Img(widget.world.emoji, size: 58),
                     const SizedBox(height: 4),
                     Text(widget.world.name,
                         textAlign: TextAlign.center,
@@ -492,6 +493,9 @@ class _GameCard extends StatelessWidget {
       case GameType.arabicOrder:
         subtitle = 'Drag them in order';
         trailing = customGameTrailing(game.id) ?? const Text('🔀', style: TextStyle(fontSize: 34));
+      case GameType.produceQuiz:
+        subtitle = 'Guess & hear · EN + Somali';
+        trailing = customGameTrailing(game.id) ?? Text(game.topic == 'fruit' ? '🍎' : '🥕', style: const TextStyle(fontSize: 34));
       default:
         subtitle = '${game.rounds.length} rounds';
         trailing = done

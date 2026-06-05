@@ -7,8 +7,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:hnl_learning/models/animals.dart';
 import 'package:hnl_learning/models/content.dart';
+import 'package:hnl_learning/models/produce.dart';
 import 'package:hnl_learning/screens/animal_quiz.dart';
 import 'package:hnl_learning/screens/game.dart';
+import 'package:hnl_learning/screens/produce_quiz.dart';
 import 'package:hnl_learning/screens/tweaks.dart';
 import 'package:hnl_learning/screens/voice_studio.dart';
 import 'package:hnl_learning/services/gif_service.dart';
@@ -23,15 +25,18 @@ import 'package:hnl_learning/widgets/sea.dart';
 import 'package:hnl_learning/widgets/village.dart';
 
 void main() {
-  test('all 10 games present (7 mini-games + 3 Arabic-world games)', () {
-    expect(kGames.length, 10);
-    expect(kGames.map((g) => g.type).toSet().length, 10);
+  test('all 12 games present (7 mini-games + 3 Arabic + 2 produce)', () {
+    expect(kGames.length, 12);
+    // 11 distinct types — Fruits + Veggies share GameType.produceQuiz.
+    expect(kGames.map((g) => g.type).toSet().length, 11);
     // The Arabic-world games are explore-only (never join a mission).
     expect(kGames.firstWhere((g) => g.type == GameType.alphabet).mission, isFalse);
     expect(kGames.firstWhere((g) => g.type == GameType.trace).mission, isFalse);
     expect(kGames.firstWhere((g) => g.type == GameType.arabicOrder).mission, isFalse);
     // All three Arabic games live in the Arabic world.
     expect(gamesInWorld('arabic').length, 3);
+    expect(gamesInWorld('produce').length, 2); // Fruits + Veggies
+    expect(kGames.firstWhere((g) => g.type == GameType.produceQuiz).mission, isFalse);
   });
 
   test('every game has a bespoke custom icon (no fallback emoji)', () {
@@ -56,11 +61,11 @@ void main() {
 
   test('voiceover registry: 16 groups, every line id unique', () {
     final groups = buildVoRegistry();
-    expect(groups.length, 16); // one VO group per game + the Splash screen group
+    expect(groups.length, 18); // one VO group per game + the Splash screen group
     // 45 original + Splash (1 background music + 3 names) + Arabic group
-    // (1 instruction + 28 letters) + trace instruction + letter-order instruction.
+    // (1 instruction + 28 letters) + trace + letter-order + 2 produce instructions.
     final total = groups.fold<int>(0, (sum, g) => sum + g.lines.length);
-    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1);
+    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 2);
     final ids = groups.expand((g) => g.lines.map((l) => l.id)).toList();
     expect(ids.toSet().length, ids.length);
     // the splash names are recordable
@@ -107,7 +112,7 @@ void main() {
     // 78 + the new Arabic world icon. Shared emoji appear in multiple game
     // groups but share ONE slot id, so one upload applies everywhere.
     final uniqueIds = groups.expand((g) => g.items.map((s) => s.id)).toSet();
-    expect(uniqueIds.length, 79);
+    expect(uniqueIds.length, 80);
   });
 
   test('planets: 9 total; the 7 reward-bearing games map to unique planets', () {
@@ -120,7 +125,59 @@ void main() {
   test('Animals: the island world exists with a giraffe icon', () {
     final animals = kWorlds.firstWhere((w) => w.id == 'animals');
     expect(animals.emoji, '🦒');
-    expect(kWorlds.length, 5);
+    expect(kWorlds.length, 6); // + Fruit & Veggies
+  });
+
+  test('Fruit & Veggies: world, two games, distinct-emoji pools', () {
+    final w = kWorlds.firstWhere((w) => w.id == 'produce');
+    expect(w.name, 'Fruit & Veggies');
+    expect(kFruits.isNotEmpty && kVeggies.isNotEmpty, isTrue);
+    // ids are globally unique and every item has an emoji + a Somali name.
+    final ids = [...kFruits, ...kVeggies].map((p) => p.id).toList();
+    expect(ids.toSet().length, ids.length);
+    for (final p in [...kFruits, ...kVeggies]) {
+      expect(p.emoji.isNotEmpty && p.so.isNotEmpty, isTrue, reason: p.en);
+    }
+    // distinct emoji within each category (so a child can tell them apart).
+    expect(kFruits.map((p) => p.emoji).toSet().length, kFruits.length);
+    expect(kVeggies.map((p) => p.emoji).toSet().length, kVeggies.length);
+  });
+
+  test('Fruit & Veggies: startProduce builds a shuffled session (≤20)', () async {
+    SharedPreferences.setMockInitialValues({});
+    final app = AppState(await SharedPreferences.getInstance());
+    app.startProduce('fruit');
+    expect(app.currentProduceCat, 'fruit');
+    expect(app.produceQueue.isNotEmpty, isTrue);
+    expect(app.produceQueue.length <= 20, isTrue);
+    expect(app.produceQueue.every((p) => kFruits.contains(p)), isTrue);
+  });
+
+  testWidgets('Fruit quiz shows the big picture + English/Somali buttons', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1366, 1024));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final app = AppState(prefs);
+    app.startProduce('fruit');
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: app),
+          ChangeNotifierProvider.value(value: VoService(prefs)),
+          ChangeNotifierProvider.value(value: ImageService(prefs)),
+          ChangeNotifierProvider.value(value: FxController()),
+        ],
+        child: const MaterialApp(home: Scaffold(body: ProduceQuiz(category: 'fruit'))),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull); // no overflow
+    expect(find.text('English'), findsOneWidget);
+    expect(find.text('Somali'), findsOneWidget);
+    expect(find.text(app.currentProduce!.en), findsOneWidget);
   });
 
   test('Animals: 7 continents, non-empty pools, unique animal ids', () {
