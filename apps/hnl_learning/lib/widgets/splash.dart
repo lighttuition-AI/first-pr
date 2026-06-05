@@ -241,6 +241,10 @@ class _SisterBadge extends StatelessWidget {
     final disc = Color.lerp(dress, Colors.white, 0.86)!;
     final headSize = d * 1.22;
     final done = fill >= 0.999;
+    final speaking = fill > 0.001 && !done; // her name is playing right now
+    // A gentle "lift" while speaking, settling a touch raised once complete.
+    final scale = speaking ? 1.06 : (done ? 1.03 : 1.0);
+    final pulse = speaking ? (0.5 + 0.5 * math.sin(twinkle * 2 * math.pi)) : 0.0;
     return SizedBox(
       width: d,
       height: d,
@@ -250,16 +254,17 @@ class _SisterBadge extends StatelessWidget {
           // soft drop shadow + the face disc
           Positioned.fill(
             child: Transform.scale(
-              scale: done ? 1.04 : 1.0,
+              scale: scale,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: disc,
                   boxShadow: [
                     BoxShadow(
-                      color: dress.withValues(alpha: done ? 0.45 : 0.22),
-                      blurRadius: done ? 26 : 16,
-                      spreadRadius: done ? 1 : 0,
+                      color: dress.withValues(
+                          alpha: speaking ? (0.34 + 0.14 * pulse) : (done ? 0.42 : 0.20)),
+                      blurRadius: speaking ? (26 + 8 * pulse) : (done ? 26 : 15),
+                      spreadRadius: speaking ? (1 + pulse) : (done ? 1 : 0),
                       offset: const Offset(0, 6),
                     ),
                   ],
