@@ -27,6 +27,10 @@ Flutter/flutter_export_environment.sh
 ServiceDefinitions.json
 Runner/GeneratedPluginRegistrant.*
 
+# Xcode Swift Package Manager resolution caches (generated on build, e.g. when
+# file_picker resolves its iOS deps via SPM). Machine-specific — don't commit.
+**/xcshareddata/swiftpm/
+
 # Exceptions to above rules.
 !default.mode1v3
 !default.mode2v3

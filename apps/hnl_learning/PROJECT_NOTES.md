@@ -23,8 +23,14 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 ## Feature inventory (all shipped, PRs #5–#11)
 - Full design port: onboarding → child setup → home map → daily mission/timer →
   7 mini-games (drag + tap, confetti/shake) → planet rewards → parent gate +
-  dashboard. Voiceover Studio (record-your-own per line) + Picture Studio
-  (upload-your-own per slot).
+  dashboard. Voiceover Studio (**record _or upload_** your own clip per line) +
+  Picture Studio (upload-your-own per slot). The Voiceover Studio is now the
+  single home for **every sound in the app** — screen/game lines, the splash
+  music, and an **Animals section** (by continent → animal → Sound / Somali
+  name / English name). Every clip plays at its natural length; an uploaded clip
+  is a file the grown-up saved (a Voice Memo exported to Files, or a sound saved
+  from the web) — picked via the system document picker so Files/iCloud are
+  reachable. See `lib/services/vo_service.dart` (`importFile`, `splashMusicSource`).
 - **Arabic World** (4th island): game 1 = alphabet board (tap a letter → hear
   it; 28 letters recordable in the VO Studio); game 2 = letter tracing (finger
   drag over a hollow guide, 8-colour palette, ◀/▶, Clear, "Done!" + "Traced
@@ -123,6 +129,16 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 ## Gotchas / decisions (don't re-trip these)
 - **`record` is pinned `^6.1.1`** — `5.x` resolved an incompatible
   `record_linux 0.7.2` that broke the iOS Dart compile. Don't downgrade.
+- **`file_picker ^11`** (audio upload). API is **static** now —
+  `FilePicker.pickFiles(...)`, *not* `FilePicker.platform.pickFiles(...)`.
+  We use `FileType.custom` + `kAudioExtensions` (in `vo_service.dart`) on purpose:
+  it forces the iOS **document picker** (Files/iCloud/exported Voice Memos),
+  unlike `FileType.audio` which can route to the music library and need
+  `NSAppleMusicUsageDescription`. The document-picker path needs **no extra
+  Info.plist key**. Uploaded clips are copied into the app Documents dir as
+  `vo_<id>.<ext>` (web: stored as a `data:` URL), same persistence model as
+  recordings. iOS build pulls file_picker's deps via SPM — the generated
+  `**/swiftpm/` dirs are build artifacts (don't commit them).
 - **iOS permissions** in `ios/Runner/Info.plist`: `NSMicrophoneUsageDescription`
   (recording) + `NSPhotoLibraryUsageDescription` (image/GIF picker). Missing
   these = hard crash on iOS. Android has `RECORD_AUDIO` in the manifest.
@@ -146,7 +162,7 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 cd apps/hnl_learning
 flutter pub get
 flutter analyze        # clean
-flutter test           # 24 tests (content, mission, multi-child, board, skins, icons, animals)
+flutter test           # 31 tests (content, mission, multi-child, board, skins, icons, animals, VO studio upload + animals section)
 flutter run -d chrome  # quick web run
 # iPad simulator used during dev: "iPad Pro 13-inch (M5)"
 #   udid 9C1A4EAC-B929-46AD-912D-6D29B9704D56
