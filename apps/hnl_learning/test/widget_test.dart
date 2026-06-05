@@ -10,6 +10,7 @@ import 'package:hnl_learning/models/content.dart';
 import 'package:hnl_learning/screens/animal_quiz.dart';
 import 'package:hnl_learning/screens/game.dart';
 import 'package:hnl_learning/screens/tweaks.dart';
+import 'package:hnl_learning/screens/voice_studio.dart';
 import 'package:hnl_learning/services/image_service.dart';
 import 'package:hnl_learning/services/vo_service.dart';
 import 'package:hnl_learning/state/app_state.dart';
@@ -52,10 +53,10 @@ void main() {
   test('voiceover registry: 15 groups, every line id unique', () {
     final groups = buildVoRegistry();
     expect(groups.length, 15); // + the Splash screen group
-    // 45 original + Splash (3 names) + Arabic group (1 instruction + 28 letters)
-    // + trace instruction.
+    // 45 original + Splash (1 background music + 3 names) + Arabic group
+    // (1 instruction + 28 letters) + trace instruction.
     final total = groups.fold<int>(0, (sum, g) => sum + g.lines.length);
-    expect(total, 45 + 3 + 1 + kArabicLetters.length + 1);
+    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1);
     final ids = groups.expand((g) => g.lines.map((l) => l.id)).toList();
     expect(ids.toSet().length, ids.length);
     // the splash names are recordable
@@ -454,5 +455,60 @@ void main() {
     expect(find.text('Hear the sound'), findsOneWidget);
     expect(find.text('English'), findsOneWidget);
     expect(find.text('Somali'), findsOneWidget);
+  });
+
+  test('VoLineData defaults to English TTS, Somali lines can override the voice', () {
+    const def = VoLineData('x', 'hi', 'where');
+    const so = VoLineData('y', 'salaan', 'where', lang: 'so-SO');
+    expect(def.lang, 'en-US');
+    expect(so.lang, 'so-SO');
+  });
+
+  test('Splash music is an overridable Studio line backed by the harp asset', () {
+    expect(kSplashMusic.asset, 'audio/harp.wav');
+    final splash = buildVoRegistry().firstWhere((g) => g.group == 'Splash screen');
+    expect(splash.lines.any((l) => l.id == 'splash-music'), isTrue);
+  });
+
+  testWidgets('Voiceover Studio: upload buttons + an Animals section per continent', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1366, 1024));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: AppState(prefs)),
+          ChangeNotifierProvider.value(value: VoService(prefs)),
+        ],
+        child: const MaterialApp(home: Scaffold(body: VoiceStudio())),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Every line now offers an Upload alongside Record (the default-open group).
+    expect(find.byIcon(Icons.upload_rounded), findsWidgets);
+    // The Animals section lists all 7 continents.
+    expect(find.text('ANIMALS — SOUNDS & NAMES'), findsOneWidget);
+    for (final c in kContinents) {
+      expect(find.text(c.name), findsOneWidget, reason: '${c.name} continent tile');
+    }
+    expect(tester.takeException(), isNull); // no overflow
+
+    // Open Africa → its first animal → the three recordable clips appear.
+    final firstAfrica = continentById('africa').pool.first;
+    await tester.ensureVisible(find.text('Africa'));
+    await tester.tap(find.text('Africa'));
+    await tester.pumpAndSettle();
+    expect(find.text(firstAfrica.en), findsWidgets);
+
+    await tester.ensureVisible(find.text(firstAfrica.en).first);
+    await tester.tap(find.text(firstAfrica.en).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Animal sound'), findsOneWidget);
+    expect(find.text('Somali name'), findsOneWidget);
+    expect(find.text('English name'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }

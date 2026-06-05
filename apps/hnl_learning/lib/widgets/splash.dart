@@ -69,8 +69,10 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     if (soundOn) {
       try {
         await _harp.setReleaseMode(ReleaseMode.loop); // soft bed under the names
-        await _harp.setVolume(0.30);
-        await _harp.play(AssetSource('audio/harp.wav'));
+        // A grown-up's uploaded intro tune (Studio) plays a touch louder than
+        // the gentle default harp; both sit under the spoken names.
+        await _harp.setVolume(vo.hasSplashMusic ? 0.45 : 0.30);
+        await _harp.play(vo.splashMusicSource());
       } catch (_) {/* audio unavailable here */}
     }
     await Future.delayed(const Duration(milliseconds: _leadInMs));

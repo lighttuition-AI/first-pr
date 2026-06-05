@@ -30,6 +30,7 @@ dependencies:
 
   # Writable path for recorded voiceover clips (native platforms).
   path_provider: ^2.1.4
+  file_picker: ^11.0.2
 
 dev_dependencies:
   flutter_test:

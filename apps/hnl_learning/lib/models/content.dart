@@ -326,8 +326,25 @@ List<Game> gamesInWorld(String world) => kGames.where((g) => g.world == world).t
 // ---------------- Voiceover lines ----------------
 class VoLineData {
   final String id, text, where;
-  const VoLineData(this.id, this.text, this.where);
+
+  /// TTS voice for the default (un-recorded) preview, e.g. 'so-SO' for Somali
+  /// names. Recorded/uploaded clips ignore this and play as-is.
+  final String lang;
+
+  /// For lines whose default is a *bundled sound* (e.g. the splash music) rather
+  /// than spoken text: the asset to play when no clip has been recorded/uploaded.
+  final String? asset;
+  const VoLineData(this.id, this.text, this.where, {this.lang = 'en-US', this.asset});
 }
+
+/// The splash background music — an overridable line so a grown-up can upload
+/// their own intro tune in the Studio (else the bundled harp bed plays).
+const VoLineData kSplashMusic = VoLineData(
+  'splash-music',
+  'Soft harp tune under the sisters’ names',
+  'Splash · background music',
+  asset: 'audio/harp.wav',
+);
 
 /// Non-game screen VO (id → text). Order matters for grouping.
 const Map<String, VoLineData> kScreenVo = {
@@ -379,7 +396,7 @@ class VoGroup {
 /// the app — including each Arabic letter — is here so it can be re-recorded.
 List<VoGroup> buildVoRegistry() {
   final groups = <VoGroup>[];
-  groups.add(VoGroup('Splash screen', List.of(kSplashVo)));
+  groups.add(VoGroup('Splash screen', [kSplashMusic, ...kSplashVo]));
   groups.add(VoGroup('Onboarding', [
     for (final o in kOnboarding) VoLineData('vo-onb-${o.id}', o.vo, 'Onboarding ${o.step}'),
   ]));

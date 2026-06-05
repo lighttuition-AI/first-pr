@@ -8,12 +8,21 @@
 // ============================================================
 import 'dart:convert';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'local_file.dart' if (dart.library.io) 'local_file_io.dart';
+
+/// Audio file types the upload picker accepts. iOS plays them all; `.ogg` is
+/// deliberately excluded because iOS can't decode it.
+const List<String> kAudioExtensions = ['m4a', 'mp3', 'wav', 'aac', 'aiff', 'caf', 'm4r'];
+
+/// Outcome of [VoService.importFile] — lets the UI tell "you cancelled" apart
+/// from "that didn't work" (e.g. uploads aren't available on this platform).
+enum ImportResult { ok, cancelled, failed }
 
 const _voPathsKey = 'hnl-vo-paths';
 
@@ -136,7 +145,7 @@ class VoService extends ChangeNotifier {
   /// [lang] sets the TTS voice for this utterance (e.g. 'so-SO' for Somali);
   /// if the device lacks that voice the TTS simply no-ops and the recording
   /// (once made in the Studio / inline) is what plays.
-  Future<void> play(String id, String? text, {String lang = 'en-US', double? rate}) async {
+  Future<void> play(String id, String? text, {String lang = 'en-US', double? rate, String? asset}) async {
     await stop();
     if (!_enabled) return;
     _setActive(id);
@@ -148,10 +157,17 @@ class VoService extends ChangeNotifier {
         try {
           await _player.play(src);
           return;
-        } catch (_) {/* fall through to TTS */}
+        } catch (_) {/* fall through to asset/TTS */}
       }
-      // Recording is registered but the file is gone (e.g. reinstalled) — speak
-      // the line instead of failing silently.
+      // Recording is registered but the file is gone (e.g. reinstalled) — fall
+      // back to the bundled default instead of failing silently.
+    }
+    // A bundled sound default (e.g. the splash music) plays instead of TTS.
+    if (asset != null) {
+      try {
+        await _player.play(AssetSource(asset));
+        return;
+      } catch (_) {/* fall through to TTS */}
     }
     if (text != null && text.isNotEmpty) {
       try {
@@ -198,6 +214,63 @@ class VoService extends ChangeNotifier {
       return Duration(milliseconds: (900 + text.length * 70).clamp(900, 3200));
     }
     return fallback;
+  }
+
+  /// Whether a grown-up has uploaded their own splash music.
+  bool get hasSplashMusic => _recordings.containsKey('splash-music');
+
+  /// The looping splash bed: the grown-up's uploaded clip (Studio → Splash ·
+  /// background music) if set & resolvable, else the bundled harp. Played by the
+  /// splash on its own player, so it never collides with the spoken names.
+  Source splashMusicSource() {
+    final clip = _recordings['splash-music'];
+    if (clip != null) {
+      final src = _resolveSource(clip);
+      if (src != null) return src;
+    }
+    return AssetSource('audio/harp.wav');
+  }
+
+  // ---- upload an existing audio file as the clip for [id] ----
+  /// Let a grown-up pick an audio file — a clip recorded in Voice Memos, or a
+  /// sound saved from the web — and use it as the voice/sound for line [id].
+  /// The clip plays at its natural length everywhere the line is used.
+  ///
+  /// Returns one of: `ImportResult.ok` (stored), `ImportResult.cancelled`
+  /// (no file chosen), or `ImportResult.failed` (couldn't read/save it).
+  Future<ImportResult> importFile(String id) async {
+    FilePickerResult? res;
+    try {
+      res = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: kAudioExtensions,
+        withData: kIsWeb, // web needs the bytes; mobile copies from the path
+      );
+    } catch (_) {
+      return ImportResult.failed;
+    }
+    if (res == null || res.files.isEmpty) return ImportResult.cancelled;
+
+    final f = res.files.first;
+    final ext = (f.extension ?? 'm4a').toLowerCase();
+    try {
+      if (kIsWeb) {
+        final bytes = f.bytes;
+        if (bytes == null) return ImportResult.failed;
+        _recordings[id] = 'data:audio/$ext;base64,${base64Encode(bytes)}';
+      } else {
+        final src = f.path;
+        if (src == null || _docsDir == null) return ImportResult.failed;
+        final name = 'vo_$id.$ext';
+        await copyLocalFile(src, '$_docsDir/$name');
+        _recordings[id] = name;
+      }
+    } catch (_) {
+      return ImportResult.failed;
+    }
+    _persistPaths();
+    notifyListeners();
+    return ImportResult.ok;
   }
 
   // ---- recordings registry (capture happens in the Studio) ----
