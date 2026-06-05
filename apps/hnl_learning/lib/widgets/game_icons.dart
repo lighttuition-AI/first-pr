@@ -21,6 +21,8 @@ Widget? customGameIcon(String gameId, {double size = 52}) {
       return ArabicLettersIcon(size: size);
     case 'arabic-trace':
       return LetterTracingIcon(size: size);
+    case 'arabic-order':
+      return ArabicOrderIcon(size: size);
     case 'counting-basket':
       return CountDropIcon(size: size);
     case 'shapes-pattern':
@@ -223,6 +225,94 @@ class LetterTracingIcon extends StatelessWidget {
           ),
         ),
       );
+}
+
+// ------------------------------------------------------------
+// Letter Order — ordered boxes (ا ب …) with a letter dropping into the slot.
+// ------------------------------------------------------------
+class ArabicOrderIcon extends StatelessWidget {
+  final double size;
+  const ArabicOrderIcon({super.key, this.size = 52});
+
+  @override
+  Widget build(BuildContext context) => IconTile(
+        size: size,
+        grad: const [Color(0xFF5AC8A8), Color(0xFF2E9C8A)], // mint → teal
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              // three boxes along the bottom: two filled in order, one empty
+              Positioned(
+                bottom: size * .15,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _box('ا', filled: true),
+                    SizedBox(width: size * .055),
+                    _box('ب', filled: true),
+                    SizedBox(width: size * .055),
+                    _box(null, filled: false),
+                  ],
+                ),
+              ),
+              // a letter dropping into the empty (right-most) box
+              Positioned(
+                top: size * .07,
+                right: size * .14,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _tile('ت'),
+                    Icon(Icons.keyboard_arrow_down_rounded,
+                        color: Colors.white.withValues(alpha: .92), size: size * .22),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _box(String? glyph, {required bool filled}) {
+    final w = size * .22;
+    return Container(
+      width: w,
+      height: w * 1.18,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: filled ? Colors.white : Colors.white.withValues(alpha: .16),
+        borderRadius: BorderRadius.circular(size * .055),
+        border: filled ? null : Border.all(color: Colors.white.withValues(alpha: .85), width: size * .017),
+      ),
+      child: glyph == null
+          ? null
+          : Text(glyph,
+              style: TextStyle(
+                  fontSize: size * .16, fontWeight: FontWeight.w800, color: const Color(0xFF2E9C8A), height: 1.0)),
+    );
+  }
+
+  Widget _tile(String glyph) {
+    final w = size * .24;
+    return Container(
+      width: w,
+      height: w * 1.12,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFD23F),
+        borderRadius: BorderRadius.circular(size * .055),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: .25), blurRadius: size * .05, offset: Offset(0, size * .025)),
+        ],
+      ),
+      child: Text(glyph,
+          style: TextStyle(fontSize: size * .16, fontWeight: FontWeight.w900, color: const Color(0xFF7A4E00), height: 1.0)),
+    );
+  }
 }
 
 // ------------------------------------------------------------

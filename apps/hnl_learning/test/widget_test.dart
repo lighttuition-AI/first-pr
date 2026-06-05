@@ -11,6 +11,7 @@ import 'package:hnl_learning/screens/animal_quiz.dart';
 import 'package:hnl_learning/screens/game.dart';
 import 'package:hnl_learning/screens/tweaks.dart';
 import 'package:hnl_learning/screens/voice_studio.dart';
+import 'package:hnl_learning/services/gif_service.dart';
 import 'package:hnl_learning/services/image_service.dart';
 import 'package:hnl_learning/services/vo_service.dart';
 import 'package:hnl_learning/state/app_state.dart';
@@ -22,12 +23,15 @@ import 'package:hnl_learning/widgets/sea.dart';
 import 'package:hnl_learning/widgets/village.dart';
 
 void main() {
-  test('all 9 games present (7 mini-games + 2 Arabic-world games)', () {
-    expect(kGames.length, 9);
-    expect(kGames.map((g) => g.type).toSet().length, 9);
+  test('all 10 games present (7 mini-games + 3 Arabic-world games)', () {
+    expect(kGames.length, 10);
+    expect(kGames.map((g) => g.type).toSet().length, 10);
     // The Arabic-world games are explore-only (never join a mission).
     expect(kGames.firstWhere((g) => g.type == GameType.alphabet).mission, isFalse);
     expect(kGames.firstWhere((g) => g.type == GameType.trace).mission, isFalse);
+    expect(kGames.firstWhere((g) => g.type == GameType.arabicOrder).mission, isFalse);
+    // All three Arabic games live in the Arabic world.
+    expect(gamesInWorld('arabic').length, 3);
   });
 
   test('every game has a bespoke custom icon (no fallback emoji)', () {
@@ -50,13 +54,13 @@ void main() {
     expect(find.byType(IconTile), findsNWidgets(kGames.length));
   });
 
-  test('voiceover registry: 15 groups, every line id unique', () {
+  test('voiceover registry: 16 groups, every line id unique', () {
     final groups = buildVoRegistry();
-    expect(groups.length, 15); // + the Splash screen group
+    expect(groups.length, 16); // one VO group per game + the Splash screen group
     // 45 original + Splash (1 background music + 3 names) + Arabic group
-    // (1 instruction + 28 letters) + trace instruction.
+    // (1 instruction + 28 letters) + trace instruction + letter-order instruction.
     final total = groups.fold<int>(0, (sum, g) => sum + g.lines.length);
-    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1);
+    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1);
     final ids = groups.expand((g) => g.lines.map((l) => l.id)).toList();
     expect(ids.toSet().length, ids.length);
     // the splash names are recordable
@@ -69,6 +73,32 @@ void main() {
     for (final l in kArabicLetters) {
       expect(arabicGroup.lines.any((line) => line.id == l.id), isTrue);
     }
+  });
+
+  testWidgets('Arabic letter-order game: 28 boxes + 28 shuffled tiles, no overflow', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1366, 1024));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: AppState(prefs)),
+          ChangeNotifierProvider.value(value: VoService(prefs)),
+          ChangeNotifierProvider.value(value: GifService(prefs)),
+          ChangeNotifierProvider.value(value: FxController()),
+        ],
+        child: const MaterialApp(home: Scaffold(body: ArabicOrderGame())),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull); // no overflow
+    expect(find.text('Placed 0 / 28'), findsOneWidget);
+    // 28 empty target boxes + 28 shuffled draggable letter tiles.
+    expect(find.byType(DragTarget<int>), findsNWidgets(kArabicLetters.length));
+    expect(find.byType(Draggable<int>), findsNWidgets(kArabicLetters.length));
   });
 
   test('image registry: 11 groups, 79 unique slots (one upload syncs everywhere)', () {

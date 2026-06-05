@@ -489,6 +489,9 @@ class _GameCard extends StatelessWidget {
       case GameType.trace:
         subtitle = 'Trace & colour';
         trailing = customGameTrailing(game.id) ?? const Text('✏️', style: TextStyle(fontSize: 34));
+      case GameType.arabicOrder:
+        subtitle = 'Drag them in order';
+        trailing = customGameTrailing(game.id) ?? const Text('🔀', style: TextStyle(fontSize: 34));
       default:
         subtitle = '${game.rounds.length} rounds';
         trailing = done

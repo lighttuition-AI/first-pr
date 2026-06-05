@@ -127,6 +127,7 @@ List<String> _gameTokens(Game g) {
         out.addAll(r.options.map((o) => o.emoji));
       case GameType.alphabet:
       case GameType.trace:
+      case GameType.arabicOrder:
         break; // Arabic letters are text glyphs, not editable image slots.
     }
   }
