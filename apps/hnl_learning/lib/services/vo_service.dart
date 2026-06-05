@@ -51,6 +51,17 @@ class VoService extends ChangeNotifier {
       await _tts.setPitch(1.12); // slightly higher = warmer for kids
       await _tts.setVolume(1.0);
       await _tts.awaitSpeakCompletion(false);
+      // iOS: play through the *playback* category so the voice is heard even
+      // when the ringer/silent switch is on (kids apps must always be audible),
+      // and mix with the splash harp rather than fighting it.
+      await _tts.setIosAudioCategory(
+        IosTextToSpeechAudioCategory.playback,
+        [
+          IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+          IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
+        ],
+        IosTextToSpeechAudioMode.defaultMode,
+      );
     } catch (_) {/* TTS unavailable on this platform */}
     _tts.setCompletionHandler(() => _clear());
     _tts.setCancelHandler(() => _clear());
@@ -155,6 +166,38 @@ class VoService extends ChangeNotifier {
     // Nothing available — flash the speaking state briefly.
     await Future.delayed(const Duration(milliseconds: 1400));
     if (activeId == id) _setActive(null);
+  }
+
+  /// Splash helper: start announcing line [id] (the family's recording at its
+  /// real length, else TTS) and return how long the splash should let it run —
+  /// so each sister's name plays *fully* before the next begins (no cut-off).
+  /// Always returns a sane, bounded dwell even if audio is unavailable.
+  Future<Duration> beginSplashLine(String id, String? text, {double? rate}) async {
+    await stop();
+    const fallback = Duration(milliseconds: 1500);
+    if (!_enabled) return fallback;
+    _setActive(id);
+
+    final clip = _recordings[id];
+    final src = clip != null ? _resolveSource(clip) : null;
+    if (src != null) {
+      final durF = _player.onDurationChanged.first; // subscribe before play
+      try {
+        await _player.play(src);
+        final d = await durF.timeout(const Duration(milliseconds: 700), onTimeout: () => fallback);
+        final ms = d.inMilliseconds <= 0 ? fallback.inMilliseconds : d.inMilliseconds;
+        return Duration(milliseconds: ms.clamp(900, 5000));
+      } catch (_) {/* fall through to TTS */}
+    }
+    if (text != null && text.isNotEmpty) {
+      try {
+        await _tts.setLanguage('en-US');
+        await _tts.setSpeechRate(rate ?? _defaultRate);
+        await _tts.speak(text);
+      } catch (_) {}
+      return Duration(milliseconds: (900 + text.length * 70).clamp(900, 3200));
+    }
+    return fallback;
   }
 
   // ---- recordings registry (capture happens in the Studio) ----

@@ -33,29 +33,25 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMixin {
-  // ---- timing (the ring fill is the clock) ----
   static const int _names = 3;
-  static const int _slotMs = 2000; // each ring fills over this long
+  static const int _leadInMs = 650; // faces pop + harp settles before name 1
   static const int _gapMs = 200; // tiny hold between sisters
-  static const int _leadInMs = 850; // faces pop + harp settles before name 1
-  static const int _tailMs = 450; // after the last ring, before fading
-  static const int _ringTotalMs = _names * _slotMs + (_names - 1) * _gapMs;
+  static const int _tailMs = 380; // after the last ring, before fading
 
   // name 1 stretches least … name 3 most (only affects the default TTS voice).
   static const List<double> _rates = [0.42, 0.34, 0.26];
 
   late final AnimationController _pop =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 1000))..forward();
-  late final AnimationController _seq =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: _ringTotalMs))
-        ..addListener(_tick)
-        ..addStatusListener(_onSeqStatus);
+  // Reused per sister; its duration is set to that name's real clip length so
+  // the ring fills exactly as the name plays — never cutting it off.
+  late final AnimationController _ring = AnimationController(vsync: this);
   late final AnimationController _twinkle =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 850))..repeat();
 
   final AudioPlayer _harp = AudioPlayer();
-  final List<bool> _fired = List.filled(_names, false);
-  bool _soundOn = true;
+  int _active = -1; // which ring is filling right now (-1 = none)
+  int _doneCount = 0; // how many rings have completed (they stay full)
   bool _completed = false;
 
   @override
@@ -64,45 +60,40 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     WidgetsBinding.instance.addPostFrameCallback((_) => _playIntro());
   }
 
-  // Harp first, then after a short lead-in the ring sequence begins (which in
-  // turn announces each name as its ring starts to fill).
+  // Harp bed, then each sister in turn: announce her name and fill her ring
+  // over the name's *actual* duration before moving to the next.
   Future<void> _playIntro() async {
     if (!mounted) return;
-    _soundOn = context.read<AppState>().sound;
-    if (_soundOn) {
+    final soundOn = context.read<AppState>().sound;
+    final vo = context.read<VoService>();
+    if (soundOn) {
       try {
         await _harp.setReleaseMode(ReleaseMode.loop); // soft bed under the names
-        await _harp.setVolume(0.32);
+        await _harp.setVolume(0.30);
         await _harp.play(AssetSource('audio/harp.wav'));
       } catch (_) {/* audio unavailable here */}
     }
     await Future.delayed(const Duration(milliseconds: _leadInMs));
-    if (mounted) _seq.forward();
-  }
 
-  // Announce each name exactly once, the moment its ring starts to fill.
-  void _tick() {
-    final pMs = _seq.value * _ringTotalMs;
-    for (var i = 0; i < _names; i++) {
-      final start = i * (_slotMs + _gapMs);
-      if (!_fired[i] && pMs >= start) {
-        _fired[i] = true;
-        _say(i);
-      }
+    for (var i = 0; i < _names && i < kSplashVo.length; i++) {
+      if (!mounted) return;
+      final line = kSplashVo[i];
+      final dwell = soundOn
+          ? await vo.beginSplashLine(line.id, line.text, rate: _rates[i])
+          : const Duration(milliseconds: 1300);
+      if (!mounted) return;
+      _ring.duration = dwell;
+      setState(() => _active = i);
+      await _ring.forward(from: 0); // fills exactly as the name plays
+      if (!mounted) return;
+      setState(() {
+        _doneCount = i + 1;
+        _active = -1;
+      });
+      await Future.delayed(const Duration(milliseconds: _gapMs));
     }
-  }
-
-  void _say(int i) {
-    if (!mounted || !_soundOn) return;
-    final line = kSplashVo[i];
-    // Fire-and-forget; the ring slot — not the clip length — sets the pace.
-    context.read<VoService>().play(line.id, line.text, rate: _rates[i]);
-  }
-
-  void _onSeqStatus(AnimationStatus s) {
-    if (s == AnimationStatus.completed) {
-      Future.delayed(const Duration(milliseconds: _tailMs), _done);
-    }
+    await Future.delayed(const Duration(milliseconds: _tailMs));
+    _done();
   }
 
   void _done() {
@@ -115,24 +106,25 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   void dispose() {
     _harp.dispose();
     _twinkle.dispose();
-    _seq.dispose();
+    _ring.dispose();
     _pop.dispose();
     super.dispose();
   }
 
-  double _fill(int i, double pMs) {
-    final start = i * (_slotMs + _gapMs);
-    return ((pMs - start) / _slotMs).clamp(0.0, 1.0);
+  // Ring fill for sister [i]: full if already done, live value if active, else empty.
+  double _fill(int i) {
+    if (i < _doneCount) return 1.0;
+    if (i == _active) return _ring.value;
+    return 0.0;
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: Listenable.merge([_pop, _seq, _twinkle]),
+      animation: Listenable.merge([_pop, _ring, _twinkle]),
       builder: (context, _) {
         final pop = Curves.easeOutBack.transform(_pop.value);
         final fade = Curves.easeOut.transform((_pop.value * 1.5).clamp(0.0, 1.0));
-        final pMs = _seq.value * _ringTotalMs;
         return DecoratedBox(
           decoration: const BoxDecoration(
             gradient: RadialGradient(
@@ -147,7 +139,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
               children: [
                 Transform.scale(
                   scale: 0.62 + 0.38 * pop,
-                  child: Opacity(opacity: fade, child: _cluster(pMs)),
+                  child: Opacity(opacity: fade, child: _cluster()),
                 ),
                 const SizedBox(height: 22),
                 Opacity(opacity: fade, child: const Logo()),
@@ -159,7 +151,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     );
   }
 
-  Widget _cluster(double pMs) => SizedBox(
+  Widget _cluster() => SizedBox(
         width: 480,
         height: 360,
         child: Stack(
@@ -179,7 +171,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 d: 150,
                 dress: const Color(0xFFF2B233),
                 hair: 'afro',
-                fill: _fill(0, pMs),
+                fill: _fill(0),
                 twinkle: _twinkle.value,
               ),
             ),
@@ -190,7 +182,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 d: 150,
                 dress: const Color(0xFF9B5DE5),
                 hair: 'bun',
-                fill: _fill(1, pMs),
+                fill: _fill(1),
                 twinkle: _twinkle.value,
               ),
             ),
@@ -200,7 +192,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                 d: 172,
                 dress: const Color(0xFFF368A0),
                 hair: 'puffs',
-                fill: _fill(2, pMs),
+                fill: _fill(2),
                 twinkle: _twinkle.value,
               ),
             ),
