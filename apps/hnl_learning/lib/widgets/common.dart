@@ -11,8 +11,10 @@ import '../theme/tokens.dart';
 class Pressable extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final double pressedScale;
-  const Pressable({super.key, required this.child, this.onTap, this.pressedScale = 0.95});
+  const Pressable(
+      {super.key, required this.child, this.onTap, this.onLongPress, this.pressedScale = 0.95});
 
   @override
   State<Pressable> createState() => _PressableState();
@@ -20,8 +22,9 @@ class Pressable extends StatefulWidget {
 
 class _PressableState extends State<Pressable> {
   bool _down = false;
+  bool get _enabled => widget.onTap != null || widget.onLongPress != null;
   void _set(bool v) {
-    if (widget.onTap != null && _down != v) setState(() => _down = v);
+    if (_enabled && _down != v) setState(() => _down = v);
   }
 
   @override
@@ -31,6 +34,7 @@ class _PressableState extends State<Pressable> {
       onTapUp: (_) => _set(false),
       onTapCancel: () => _set(false),
       onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
       child: AnimatedScale(
         scale: _down ? widget.pressedScale : 1.0,
         duration: const Duration(milliseconds: 120),

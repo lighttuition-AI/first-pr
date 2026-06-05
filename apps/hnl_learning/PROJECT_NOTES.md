@@ -39,7 +39,14 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   attempts Somali TTS — record inline with the mic). Next → confetti → next;
   finishing serves fresh animals next visit (per-child `animalsSeen`). Somali
   names are best-effort defaults (loan transliterations where Somali borrows the
-  word) — meant to be re-recorded.
+  word) — meant to be re-recorded. Each animal card also has a big bright
+  **"Hear the sound"** button (full width, under EN/SO): it speaks a
+  kid-friendly onomatopoeia for the animal (`Animal.sound`, emoji-keyed in
+  `kAnimalSounds` — "Roar!", "Moo!", "Bzzz!" — never scary), or plays a real
+  recording if one exists. **Press-and-hold** the button to record a real sound
+  (`animal-<id>-sound`); a 🎙️ shows when a custom one is set. Bundled real-sound
+  assets can drop in later (free CC sources are mostly `.ogg`, which iOS can't
+  play, so a curated pack is a deliberate follow-up).
 - **Launch splash** (`widgets/splash.dart`): the three Somali sisters, each in a
   round badge with a **colourful progress ring** that fills (sparkles at the
   leading edge, a glow when complete) while her name is announced — Nimoo →

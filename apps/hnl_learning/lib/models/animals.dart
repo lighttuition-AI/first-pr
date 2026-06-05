@@ -24,7 +24,57 @@ class Animal {
   final String so; // Somali name (default; re-recordable)
   final String emoji; // friendly default picture
   const Animal(this.id, this.en, this.so, this.emoji);
+
+  /// A clear, kid-friendly sound for this animal — spoken in the warm app
+  /// voice ("what does the animal say?", ideal for ages 2–8), or overridden by
+  /// a real recorded sound (VO id `animal-ID-sound`). Keyed by the emoji so
+  /// every one of the ~370 animals gets a sensible sound.
+  String get sound => kAnimalSounds[emoji] ?? 'Hello! I am a $en.';
 }
+
+/// emoji → playful onomatopoeia. Never scary (the brief: "kids-friendly").
+const Map<String, String> kAnimalSounds = {
+  // big cats & predators
+  '🦁': 'Roar! Rrrroar!', '🐯': 'Roar! Rrrroar!', '🐆': 'Rraaawr!',
+  '🐻': 'Grrrowl!', '🐻‍❄️': 'Grrrowl!', '🐼': 'Bleat bleat!',
+  '🦊': 'Yip yip!', '🐺': 'Awoooo!', '🦝': 'Chitter chitter!',
+  '🦡': 'Grrr grrr!', '🦨': 'Sniff sniff!',
+  // farm & hooves
+  '🐄': 'Moooo!', '🐂': 'Moooo!', '🐃': 'Moooo!', '🦬': 'Snort! Moooo!', '🫎': 'Bellooow!',
+  '🐎': 'Neigh! Neigh!', '🐴': 'Neigh! Neigh!', '🦓': 'Hee-haw! Neigh!',
+  '🐑': 'Baaa baaa!', '🐏': 'Baaa baaa!', '🐐': 'Maa-aa-aa!',
+  '🐖': 'Oink oink!', '🐗': 'Oink oink!', '🐽': 'Oink oink!',
+  '🐪': 'Grumble grumble!', '🐫': 'Grumble grumble!', '🦙': 'Hummm! Mwaa!',
+  // big wild
+  '🐘': 'Pa-wooo! Trumpet!', '🦏': 'Grrunt! Snort!', '🦛': 'Honk! Grrunt!',
+  '🦒': 'Hummm! (giraffes hum)', '🦘': 'Boing boing!', '🦥': 'Squeeeak!',
+  // primates
+  '🐒': 'Ooh ooh ah ah!', '🐵': 'Ooh ooh ah ah!', '🦍': 'Oooh-oooh!', '🦧': 'Ooh ooh!',
+  // small mammals
+  '🐰': 'Sniff sniff! Boing!', '🐹': 'Squeak squeak!', '🐭': 'Squeak squeak!',
+  '🐀': 'Squeak squeak!', '🐿️': 'Chip chip!', '🦔': 'Snuffle snuffle!',
+  '🦫': 'Chomp chomp!', '🦦': 'Squeak squeak!', '🦇': 'Eee eee!',
+  '🐨': 'Yawwwn!', '🐈': 'Meow! Meow!',
+  // dogs
+  '🐕': 'Woof woof!', '🐶': 'Woof woof!',
+  // birds
+  '🐦': 'Tweet tweet!', '🐦‍⬛': 'Caw caw!', '🕊️': 'Coo coo!', '🦅': 'Skreee!',
+  '🦆': 'Quack quack!', '🦢': 'Honk honk!', '🪿': 'Honk honk!', '🦉': 'Hoo hoo!',
+  '🦜': 'Squawk! Hello!', '🐧': 'Squawk squawk!', '🦃': 'Gobble gobble!',
+  '🐓': 'Cock-a-doodle-doo!', '🦚': 'Squawk squawk!', '🦩': 'Honk honk!', '🦤': 'Squawk!',
+  // reptiles & amphibians
+  '🐍': 'Hissss hissss!', '🦎': 'Sss! (little hiss)', '🐊': 'Snap! Grrr!',
+  '🐢': 'Munch munch!', '🐸': 'Ribbit ribbit!',
+  // sea
+  '🐳': 'Whoooo! (whale song)', '🐋': 'Whoooo!', '🐬': 'Eee-eee-eee!',
+  '🦭': 'Ark ark ark!', '🦈': 'Chomp chomp!', '🐟': 'Blub blub!', '🐠': 'Blub blub!',
+  '🐡': 'Bloop bloop!', '🐙': 'Blub blub!', '🦑': 'Blub blub!', '🦐': 'Bloop!',
+  '🦀': 'Snip snip!', '🪼': 'Wibble wobble!', '⭐': 'Bloop bloop!',
+  // bugs
+  '🐝': 'Bzzzz bzzzz!', '🦟': 'Bzzzz!', '🪲': 'Bzzz!', '🐞': 'Flutter flutter!',
+  '🦋': 'Flutter flutter!', '🐜': 'Tip-tap tip-tap!', '🦗': 'Chirp chirp!',
+  '🐛': 'Munch munch!', '🕷️': 'Skitter skitter!', '🦂': 'Click click!', '🐌': 'Squish! Sliiide!',
+};
 
 class Continent {
   final String id;
