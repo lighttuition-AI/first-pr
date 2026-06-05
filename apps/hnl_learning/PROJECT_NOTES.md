@@ -190,14 +190,26 @@ flutter run -d 9C1A4EAC-B929-46AD-912D-6D29B9704D56
 # screenshot the sim:  xcrun simctl io booted screenshot out.png
 ```
 
-## PENDING — TestFlight (waiting on the user)
-The user will do the Apple login steps. To proceed I need from them:
-1. **Bundle ID** they own (currently placeholder `com.hnllearning.hnlLearning`).
-2. **Apple Developer Program** membership (paid) + Apple ID added in Xcode.
+## TestFlight — prep DONE, upload is the user's step
+Build-side prep is complete (the user now has the paid Apple Developer account):
+- **Bundle ID** `com.hnllearning.app` (set in all 6 pbxproj configs incl. RunnerTests).
+  Permanent — must match the App Store Connect record.
+- **Display name** `HNL Learning`; **version** `1.0.0+1`.
+- **App icon**: branded Robo mascot on a sunshine ground (no alpha — App-Store safe).
+  Built by rendering the in-app `Robo` art to a 1024 master, then resizing into every
+  `AppIcon.appiconset` slot (alpha stripped). The throwaway generator (a test that
+  briefly made `_RoboPainter` public + `Picture.toImage`'d Robo on a warm radial, then
+  PIL-resized) was removed after use. To re-skin the icon, re-render a 1024 PNG and resize.
+- **Export compliance** declared: `ITSAppUsesNonExemptEncryption=false` in Info.plist
+  (only standard HTTPS) — no per-upload encryption prompt.
+- Permissions (mic + photo) present; `flutter build ios --release --no-codesign` is green.
 
-Then: set bundle ID + signing → `flutter build ipa` → upload via Xcode Organizer
-or Transporter → App Store Connect → TestFlight → add testers. Full walkthrough
-is in the chat; summarized in the root steps above.
+**What only the user can do (Apple login):** open `ios/Runner.xcworkspace` in Xcode →
+Runner target → Signing & Capabilities → tick *Automatically manage signing* → pick their
+**Team** (their Apple ID). Then **Product ▸ Archive** → **Distribute App ▸ App Store Connect ▸
+Upload** (Xcode auto-creates certs/profiles, and the app record if missing). In App Store
+Connect ▸ TestFlight: fill the test details + add testers. Possible follow-up only if Apple
+emails about it: a `PrivacyInfo.xcprivacy` manifest (UserDefaults reason) — not blocking.
 
 ## Possible next ideas (not started)
 - Default letter voice via **Arabic TTS** locale (currently English TTS says the
