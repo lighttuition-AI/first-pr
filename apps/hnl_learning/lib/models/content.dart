@@ -21,6 +21,8 @@ final List<Topic> kTopics = [
   Topic('letters', 'Letters', '🔤', 'discovery', (p) => p.discovery),
   Topic('sorting', 'Sorting', '🗂️', 'logic', (p) => p.logic),
   Topic('science', 'Science & World', '🔬', 'discovery', (p) => p.discovery),
+  Topic('fruit', 'Fruits', '🍎', 'produce', (p) => const Color(0xFFE8553D)),
+  Topic('veggie', 'Veggies', '🥕', 'produce', (p) => const Color(0xFFF0822E)),
 ];
 
 Topic topicById(String id) => kTopics.firstWhere((t) => t.id == id);
@@ -58,6 +60,8 @@ const List<World> kWorlds = [
       'Meet the Arabic letters, hear each sound, and explore the language.'),
   World('animals', 'Animals', 'Continents & creatures', '🦒',
       'Hop around the world and meet amazing animals from every continent!'),
+  World('produce', 'Fruit & Veggies', 'Fruits & vegetables', '🍎🥕',
+      'Meet yummy fruits and veggies — hear each name in English and Somali!'),
 ];
 
 class PlanetData {
@@ -117,7 +121,7 @@ const List<OnboardingStep> kOnboarding = [
 ];
 
 // ---------------- Games ----------------
-enum GameType { pick, count, pattern, memory, letter, sort, science, alphabet, trace, arabicOrder }
+enum GameType { pick, count, pattern, memory, letter, sort, science, alphabet, trace, arabicOrder, produceQuiz }
 
 class PickOption {
   final String emoji;
@@ -280,6 +284,14 @@ final List<Game> kGames = [
   // 10 — ARABIC WORLD · game 3: drag the shuffled letters back into order.
   Game('arabic-order', GameType.arabicOrder, 'arabic', 'letters', 'Letter Order', '', [
     Round(id: 'ar-order', vo: 'The letters are all mixed up! Drag each one up into the right box, in order.', bg: Color(0xFF1F3A63)),
+  ], mission: false),
+  // 11 — FRUIT & VEGGIES WORLD · game 1: guess the fruit (EN + Somali).
+  Game('fruit-quiz', GameType.produceQuiz, 'produce', 'fruit', 'Fruits', '', [
+    Round(id: 'pq-fruit', vo: "Yummy fruits! Tap a button to hear the name, in English or Somali.", bg: Color(0xFFFFF1E6)),
+  ], mission: false),
+  // 12 — FRUIT & VEGGIES WORLD · game 2: guess the vegetable (EN + Somali).
+  Game('veggie-quiz', GameType.produceQuiz, 'produce', 'veggie', 'Veggies', '', [
+    Round(id: 'pq-veggie', vo: "Healthy veggies! Tap a button to hear the name, in English or Somali.", bg: Color(0xFFEFF6E8)),
   ], mission: false),
 ];
 

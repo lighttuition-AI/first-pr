@@ -60,6 +60,16 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   (`animal-<id>-sound`); a 🎙️ shows when a custom one is set. Bundled real-sound
   assets can drop in later (free CC sources are mostly `.ogg`, which iOS can't
   play, so a curated pack is a deliberate follow-up).
+- **Fruit & Veggies** (6th island, 🍎🥕): a world sheet with **2 games** — Fruits
+  & Veggies (`GameType.produceQuiz`, `screens/produce_quiz.dart`,
+  `models/produce.dart`). Each is a shuffled guessing session of up to 20 items
+  (`AppState.startProduce` + per-child `produceSeen`, reshuffles when exhausted)
+  — a **BIG** picture (emoji default; uploadable real photo in Img slot `<id>`) +
+  the name in **English / Somali**, each with its own speaker **and** its own
+  record mic (both languages voiceable inline or in the Studio under "Fruits &
+  Veggies"). Pools are distinct-emoji only (~17 fruits, ~19 veggies) so a child
+  can tell them apart — well under 100 by design. Somali names are best-effort
+  re-recordable defaults (same convention as animals).
 - **Launch splash** (`widgets/splash.dart`): the three Somali sisters, each in a
   round badge with a **colourful progress ring** that fills (sparkles at the
   leading edge, a glow when complete) while her name is announced — Nimoo →
@@ -118,7 +128,7 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   `activeSkin` (re-exports skins.dart). `C.inkA()` stays dark on every skin
   (shadows/scrims); stage size (1366×1024) + `kTap` live here.
 - `models/content.dart` — ALL content: topics, avatars, worlds, planets,
-  onboarding, the 10 games + rounds, VO lines + `buildVoRegistry()`, Arabic
+  onboarding, the 12 games + rounds, VO lines + `buildVoRegistry()`, Arabic
   letters (`kArabicLetters`).
 - `state/app_state.dart` — `AppState` (ChangeNotifier): `List<Child>` + active
   index, routing, persistence (shared_preferences key `hnl-save-v1`, migrates
@@ -169,7 +179,9 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 cd apps/hnl_learning
 flutter pub get
 flutter analyze        # clean
-flutter test           # 32 tests (content, mission, multi-child, board, skins, icons, animals, VO studio upload, Arabic letter-order game)
+flutter test           # 35 tests (content, mission, multi-child, board, skins, icons, animals, VO upload, Arabic order, Fruit & Veggies)
+# Home map: 6 islands (now 210px so all six fit). Somali Village sisters live
+# in the lower band (around the hut) so they're never hidden behind an island.
 flutter run -d chrome  # quick web run
 # iPad simulator used during dev: "iPad Pro 13-inch (M5)"
 #   udid 9C1A4EAC-B929-46AD-912D-6D29B9704D56

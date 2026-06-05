@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/animals.dart';
 import '../models/content.dart';
+import '../models/produce.dart';
 import '../theme/tokens.dart';
 import '../services/vo_service.dart';
 
@@ -45,6 +46,10 @@ class Child {
   /// visit serves fresh animals (reshuffles when a continent is exhausted).
   Map<String, List<String>> animalsSeen;
 
+  /// Per-category (fruit/veggie) produce ids already shown, so each visit
+  /// serves fresh items (reshuffles when a category is exhausted).
+  Map<String, List<String>> produceSeen;
+
   Child({
     this.age,
     List<String>? topics,
@@ -57,10 +62,12 @@ class Child {
     this.timeToday = 0,
     Map<String, int>? skillXp,
     Map<String, List<String>>? animalsSeen,
+    Map<String, List<String>>? produceSeen,
   })  : topics = topics ?? [],
         planets = planets ?? [],
         skillXp = skillXp ?? {},
-        animalsSeen = animalsSeen ?? {};
+        animalsSeen = animalsSeen ?? {},
+        produceSeen = produceSeen ?? {};
 
   bool get isSetUp => age != null;
 
@@ -85,6 +92,7 @@ class Child {
         'timeToday': timeToday,
         'skillXp': skillXp,
         'animalsSeen': animalsSeen,
+        'produceSeen': produceSeen,
       };
 
   factory Child.fromJson(Map<String, dynamic> d) => Child(
@@ -99,6 +107,8 @@ class Child {
         timeToday: d['timeToday'] as int? ?? 0,
         skillXp: (d['skillXp'] as Map?)?.map((k, v) => MapEntry(k as String, v as int)),
         animalsSeen: (d['animalsSeen'] as Map?)
+            ?.map((k, v) => MapEntry(k as String, (v as List).cast<String>())),
+        produceSeen: (d['produceSeen'] as Map?)
             ?.map((k, v) => MapEntry(k as String, (v as List).cast<String>())),
       );
 }
@@ -429,6 +439,9 @@ class AppState extends ChangeNotifier {
   }
 
   void startGame(String id) {
+    final g = gameById(id);
+    // The produce quiz builds a fresh shuffled session before the shell shows it.
+    if (g.type == GameType.produceQuiz) startProduce(g.topic);
     session = Session([id], 0, 'single', DateTime.now().millisecondsSinceEpoch);
     go('game');
   }
@@ -477,6 +490,52 @@ class AppState extends ChangeNotifier {
   bool nextAnimal() {
     if (animalIndex < animalQueue.length - 1) {
       animalIndex++;
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+
+  // ------------------------------------------------------------
+  // Fruit & Veggies island — a shuffled guessing session per category
+  // ------------------------------------------------------------
+  static const int kProducePerSession = 20;
+
+  String? currentProduceCat; // 'fruit' | 'veggie'
+  List<Produce> produceQueue = [];
+  int produceIndex = 0;
+
+  Produce? get currentProduce =>
+      (produceIndex >= 0 && produceIndex < produceQueue.length) ? produceQueue[produceIndex] : null;
+
+  /// Build a fresh quiz for [category]: up to 20 items the child hasn't seen
+  /// yet; once a category is exhausted the "seen" set resets (reshuffle), so
+  /// each visit serves fresh items. Notifies so the open quiz rebuilds.
+  void startProduce(String category) {
+    final pool = produceFor(category);
+    final seen = child.produceSeen[category] ?? <String>[];
+    var remaining = pool.where((p) => !seen.contains(p.id)).toList();
+    if (remaining.length < kProducePerSession && remaining.length < pool.length) {
+      child.produceSeen[category] = [];
+      remaining = List.of(pool);
+    }
+    remaining.shuffle();
+    final take = remaining.take(kProducePerSession).toList();
+    child.produceSeen[category] = [
+      ...(child.produceSeen[category] ?? []),
+      ...take.map((p) => p.id),
+    ];
+    currentProduceCat = category;
+    produceQueue = take;
+    produceIndex = 0;
+    _save();
+    notifyListeners();
+  }
+
+  /// Advance to the next item; returns false when the session is finished.
+  bool nextProduce() {
+    if (produceIndex < produceQueue.length - 1) {
+      produceIndex++;
       notifyListeners();
       return true;
     }

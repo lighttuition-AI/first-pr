@@ -16,6 +16,7 @@ import '../widgets/planet.dart';
 import '../widgets/robo.dart';
 import '../widgets/shaker.dart';
 import '../widgets/speech_bubble.dart';
+import 'produce_quiz.dart';
 
 void _wrongVo(BuildContext c) {
   final f = feedbackVo('vo-fb-tryagain');
@@ -91,6 +92,7 @@ class _GameHostState extends State<GameHost> {
                 GameType.alphabet => const AlphabetBoard(),
                 GameType.trace => const TraceGame(),
                 GameType.arabicOrder => const ArabicOrderGame(),
+                GameType.produceQuiz => ProduceQuiz(category: widget.game.topic),
                 _ => Center(
                     child: _GameBody(
                         key: ValueKey(_roundIdx), game: widget.game, round: round, onSolved: _onSolved),
@@ -140,7 +142,8 @@ class _GameHostState extends State<GameHost> {
                 ),
                 if (widget.game.type != GameType.alphabet &&
                     widget.game.type != GameType.trace &&
-                    widget.game.type != GameType.arabicOrder) ...[
+                    widget.game.type != GameType.arabicOrder &&
+                    widget.game.type != GameType.produceQuiz) ...[
                   const SizedBox(height: 12),
                   _RoundDots(total: widget.game.rounds.length, index: _roundIdx),
                 ],
@@ -275,6 +278,8 @@ class _GameBody extends StatelessWidget {
         return const TraceGame();
       case GameType.arabicOrder:
         return const ArabicOrderGame();
+      case GameType.produceQuiz:
+        return ProduceQuiz(category: game.topic);
     }
   }
 }
@@ -716,6 +721,14 @@ class _ArabicOrderGameState extends State<ArabicOrderGame> {
   late List<int> _shuffled; // tray order (letter indices)
   bool _celebrating = false;
 
+  // Vibrant, kid-friendly colours; each letter keeps its colour on both the
+  // tray tile and its target box, so a child can colour-match while learning.
+  static const _palette = [
+    Color(0xFFE84C6B), Color(0xFFFF8A3D), Color(0xFFFFC23C), Color(0xFF2E9E5B),
+    Color(0xFF2E8BC4), Color(0xFF7A5BD0), Color(0xFFE85AA0), Color(0xFF17A8A0),
+  ];
+  Color _col(int i) => _palette[i % _palette.length];
+
   @override
   void initState() {
     super.initState();
@@ -769,7 +782,7 @@ class _ArabicOrderGameState extends State<ArabicOrderGame> {
           textDirection: TextDirection.rtl,
           child: Center(
             child: SizedBox(
-              width: 7 * 104 + 6 * 12, // exactly 7 boxes per row → 4 rows of 7
+              width: 7 * 108 + 6 * 12, // exactly 7 boxes per row → 4 rows of 7
               child: Wrap(
                 spacing: 12,
                 runSpacing: 12,
@@ -822,60 +835,74 @@ class _ArabicOrderGameState extends State<ArabicOrderGame> {
     );
   }
 
-  // One target box for slot [i]. Empty: a faint ghost glyph guide. Filled: the
-  // glyph in the brand colour, locked (won't accept more).
+  // One target box for slot [i]. Empty: a soft colour tint + a colour-matched
+  // ghost glyph (a gentle guide). Filled: solid vibrant colour + white glyph,
+  // locked (won't accept more). [brand] highlights the box being hovered over.
   Widget _box(int i, Color brand) {
     final filled = _placed.contains(i);
+    final col = _col(i);
     return DragTarget<int>(
       onWillAcceptWithDetails: (_) => !filled,
       onAcceptWithDetails: (d) => _drop(i, d.data),
-      builder: (context, cand, rej) => Container(
-        width: 104,
-        height: 88,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: filled ? brand.withValues(alpha: .14) : C.card,
-          borderRadius: BorderRadius.circular(R.md),
-          border: Border.all(
-            color: filled ? brand : (cand.isNotEmpty ? brand : C.line),
-            width: filled || cand.isNotEmpty ? 3 : 2,
+      builder: (context, cand, rej) {
+        final hover = cand.isNotEmpty;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          width: 108,
+          height: 92,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: filled ? col : (hover ? col.withValues(alpha: .26) : col.withValues(alpha: .12)),
+            borderRadius: BorderRadius.circular(R.md),
+            border: Border.all(
+              color: hover ? brand : col.withValues(alpha: filled ? 1 : .5),
+              width: hover || filled ? 4 : 2.5,
+            ),
+            boxShadow: filled
+                ? [BoxShadow(color: col.withValues(alpha: .45), blurRadius: 12, offset: const Offset(0, 6))]
+                : Sh.sm,
           ),
-          boxShadow: filled ? null : Sh.sm,
-        ),
-        child: Text(
-          kArabicLetters[i].glyph,
-          style: TextStyle(
-            fontSize: 46,
-            height: 1.0,
-            fontWeight: FontWeight.w700,
-            decoration: TextDecoration.none,
-            color: filled ? brand : C.muted.withValues(alpha: .26), // ghost guide when empty
+          child: Text(
+            kArabicLetters[i].glyph,
+            style: TextStyle(
+              fontSize: 56,
+              height: 1.0,
+              fontWeight: FontWeight.w800,
+              decoration: TextDecoration.none,
+              color: filled ? Colors.white : col.withValues(alpha: .55), // colour-matched ghost guide
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  // A draggable letter tile (white card so it pops on the dark stage).
+  // A draggable letter tile — a vibrant colour chip (matches its target box).
   Widget _tile(int i, {bool dragging = false}) {
+    final col = _col(i);
     return Container(
-      width: 92,
-      height: 76,
+      width: 96,
+      height: 80,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color.lerp(col, Colors.white, .22)!, col],
+        ),
         borderRadius: BorderRadius.circular(R.md),
-        boxShadow: dragging ? Sh.md : Sh.sm,
-        border: Border.all(color: C.line, width: 2),
+        boxShadow: [
+          BoxShadow(color: col.withValues(alpha: dragging ? .6 : .42), blurRadius: dragging ? 18 : 10, offset: const Offset(0, 6)),
+        ],
       ),
       child: Text(
         kArabicLetters[i].glyph,
         style: const TextStyle(
-          fontSize: 42,
+          fontSize: 52,
           height: 1.0,
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w900,
           decoration: TextDecoration.none,
-          color: Color(0xFF1F3A63),
+          color: Colors.white,
         ),
       ),
     );

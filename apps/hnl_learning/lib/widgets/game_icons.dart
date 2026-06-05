@@ -23,6 +23,10 @@ Widget? customGameIcon(String gameId, {double size = 52}) {
       return LetterTracingIcon(size: size);
     case 'arabic-order':
       return ArabicOrderIcon(size: size);
+    case 'fruit-quiz':
+      return ProduceIcon(emoji: '🍎', grad: const [Color(0xFFFF8166), Color(0xFFE8553D)], size: size);
+    case 'veggie-quiz':
+      return ProduceIcon(emoji: '🥕', grad: const [Color(0xFFFFB458), Color(0xFFF0822E)], size: size);
     case 'counting-basket':
       return CountDropIcon(size: size);
     case 'shapes-pattern':
@@ -313,6 +317,26 @@ class ArabicOrderIcon extends StatelessWidget {
           style: TextStyle(fontSize: size * .16, fontWeight: FontWeight.w900, color: const Color(0xFF7A4E00), height: 1.0)),
     );
   }
+}
+
+// ------------------------------------------------------------
+// Fruits / Veggies — a big bright emoji on a glossy colour tile (pops!).
+// ------------------------------------------------------------
+class ProduceIcon extends StatelessWidget {
+  final String emoji;
+  final List<Color> grad;
+  final double size;
+  const ProduceIcon({super.key, required this.emoji, required this.grad, this.size = 52});
+
+  @override
+  Widget build(BuildContext context) => IconTile(
+        size: size,
+        grad: grad,
+        child: Text(
+          emoji,
+          style: TextStyle(fontSize: size * .52, height: 1.0),
+        ),
+      );
 }
 
 // ------------------------------------------------------------

@@ -58,6 +58,7 @@ class Palette {
         'discovery' => discovery,
         'arabic' => const Color(0xFF6E5AC8), // distinct purple
         'animals' => const Color(0xFFE2A33A), // savanna gold
+        'produce' => const Color(0xFFE8553D), // apple red
         _ => brand,
       };
 
@@ -67,6 +68,7 @@ class Palette {
         'discovery' => discoveryDeep,
         'arabic' => const Color(0xFF4E3DA0),
         'animals' => const Color(0xFFBE7F22),
+        'produce' => const Color(0xFFB83A26), // deep apple red
         _ => brandDeep,
       };
 }
@@ -635,12 +637,13 @@ Widget _somaliScene() => FloatingScene(
         // clear below the Arabic island so the whole dome shows).
         Sprite(child: const AcaciaTree(size: 250), x: -0.02, y: .54, bob: 4, sway: 5, rotate: .010, period: 9.0),
         Sprite(child: const AqalHut(size: 184), x: .50, y: .77, bob: 0, sway: 2, period: 10.0),
-        // The three little sisters in wedding-style gowns (gold/pink/purple),
-        // tucked into the open gaps between the world islands so each is fully
-        // visible (faces never hidden behind a planet).
-        Sprite(child: const SomaliGirl(dress: Color(0xFFF2B233), hair: 'afro', size: 150), x: .225, y: .455, bob: 9, rotate: .03, period: 4.6, phase: .1),
-        Sprite(child: const SomaliGirl(dress: Color(0xFFF368A0), hair: 'puffs', size: 150), x: .345, y: .555, bob: 10, rotate: .03, period: 5.0, phase: .5),
-        Sprite(child: const SomaliGirl(dress: Color(0xFF9B5DE5), hair: 'bun', size: 142), x: .825, y: .425, bob: 9, rotate: .03, period: 4.8, phase: .8),
+        // The three little sisters in wedding-style gowns (gold/pink/purple).
+        // Placed LOW (around the aqal hut, below the world islands) so their
+        // faces are always fully visible — never hidden behind an island or its
+        // name label, clear of Robo (bottom-left) and the mission card (right).
+        Sprite(child: const SomaliGirl(dress: Color(0xFFF2B233), hair: 'afro', size: 146), x: .22, y: .72, bob: 9, rotate: .03, period: 4.6, phase: .1),
+        Sprite(child: const SomaliGirl(dress: Color(0xFFF368A0), hair: 'puffs', size: 146), x: .37, y: .80, bob: 10, rotate: .03, period: 5.0, phase: .5),
+        Sprite(child: const SomaliGirl(dress: Color(0xFF9B5DE5), hair: 'bun', size: 140), x: .63, y: .72, bob: 9, rotate: .03, period: 4.8, phase: .8),
       ],
     );
 

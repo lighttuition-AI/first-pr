@@ -11,6 +11,7 @@ import 'package:record/record.dart';
 
 import '../models/animals.dart';
 import '../models/content.dart';
+import '../models/produce.dart';
 import '../services/vo_service.dart';
 import '../state/app_state.dart';
 import '../theme/tokens.dart';
@@ -92,6 +93,25 @@ class _VoiceStudioState extends State<VoiceStudio> {
                             open: _open == 'cont:${c.id}',
                             onToggle: () => setState(() => _open = _open == 'cont:${c.id}' ? null : 'cont:${c.id}'),
                           ),
+                        // ---- Fruits & Veggies: English + Somali names ----
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(4, 18, 4, 10),
+                          child: _SectionLabel('FRUITS & VEGGIES — NAMES'),
+                        ),
+                        _ProduceCatTile(
+                          title: 'Fruits',
+                          emoji: '🍎',
+                          items: kFruits,
+                          open: _open == 'prod:fruit',
+                          onToggle: () => setState(() => _open = _open == 'prod:fruit' ? null : 'prod:fruit'),
+                        ),
+                        _ProduceCatTile(
+                          title: 'Veggies',
+                          emoji: '🥕',
+                          items: kVeggies,
+                          open: _open == 'prod:veggie',
+                          onToggle: () => setState(() => _open = _open == 'prod:veggie' ? null : 'prod:veggie'),
+                        ),
                       ],
                     ),
                   ),
@@ -273,6 +293,113 @@ class _AnimalTileState extends State<_AnimalTile> {
 
 /// The three recordable clip ids for an animal: sound, Somali name, English.
 List<String> _animalIds(String id) => ['animal-$id-sound', 'animal-$id-so', 'animal-$id-en'];
+
+// ---- One produce category (Fruits/Veggies): lists its items ----
+class _ProduceCatTile extends StatelessWidget {
+  final String title, emoji;
+  final List<Produce> items;
+  final bool open;
+  final VoidCallback onToggle;
+  const _ProduceCatTile(
+      {required this.title, required this.emoji, required this.items, required this.open, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    final vo = context.watch<VoService>();
+    final clips = items.fold<int>(0, (n, p) => n + ['${p.id}-en', '${p.id}-so'].where(vo.has).length);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.md), boxShadow: Sh.sm),
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: onToggle,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+              color: Colors.transparent,
+              child: Row(
+                children: [
+                  Text(emoji, style: const TextStyle(fontSize: 30)),
+                  const SizedBox(width: 14),
+                  Expanded(child: Text(title, style: AppText.display(size: 28, weight: FontWeight.w700))),
+                  Text(clips > 0 ? '$clips 🎙️' : '${items.length} items',
+                      style: AppText.body(size: 22, weight: FontWeight.w700, color: C.muted)),
+                  const SizedBox(width: 12),
+                  Icon(open ? Icons.expand_less_rounded : Icons.expand_more_rounded),
+                ],
+              ),
+            ),
+          ),
+          if (open)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: Column(children: [for (final p in items) _ProduceItemTile(item: p)]),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProduceItemTile extends StatefulWidget {
+  final Produce item;
+  const _ProduceItemTile({required this.item});
+  @override
+  State<_ProduceItemTile> createState() => _ProduceItemTileState();
+}
+
+class _ProduceItemTileState extends State<_ProduceItemTile> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final vo = context.watch<VoService>();
+    final p = widget.item;
+    final hasAny = ['${p.id}-en', '${p.id}-so'].any(vo.has);
+    final lines = <VoLineData>[
+      VoLineData('${p.id}-en', p.en, 'English name'),
+      VoLineData('${p.id}-so', p.so, 'Somali name', lang: 'so-SO'),
+    ];
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(color: C.paper, borderRadius: BorderRadius.circular(R.md), border: Border.all(color: C.line)),
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: () => setState(() => _open = !_open),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: Colors.transparent,
+              child: Row(
+                children: [
+                  Text(p.emoji, style: const TextStyle(fontSize: 28)),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(p.en, style: AppText.body(size: 22, weight: FontWeight.w800)),
+                        Text(p.so, style: AppText.body(size: 18, weight: FontWeight.w700, color: C.muted)),
+                      ],
+                    ),
+                  ),
+                  if (hasAny)
+                    Padding(padding: const EdgeInsets.only(right: 8), child: Text('🎙️', style: AppText.body(size: 20))),
+                  Icon(_open ? Icons.expand_less_rounded : Icons.expand_more_rounded),
+                ],
+              ),
+            ),
+          ),
+          if (_open)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+              child: Column(children: [for (final l in lines) _VoLineRow(line: l)]),
+            ),
+        ],
+      ),
+    );
+  }
+}
 
 class _VoLineRow extends StatefulWidget {
   final VoLineData line;
