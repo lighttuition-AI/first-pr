@@ -2,10 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>HNL Learning uses the microphone so a grown-up can record their own voice for the app's instructions in the Voiceover Studio.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>HNL Learning lets a grown-up choose pictures from the photo library to use as the app's own artwork in the Picture Studio.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -32,6 +28,14 @@
 	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>HNL Learning uses the microphone so a grown-up can record their own voice for the app's instructions in the Voiceover Studio.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>HNL Learning lets a grown-up choose pictures from the photo library to use as the app's own artwork in the Picture Studio.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>HNL Learning may use the camera only if a grown-up chooses to add their own photo as the app's artwork. It is not used otherwise.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>HNL Learning does not use your location. This notice is required only because a bundled file-picker component references the location API.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -59,6 +63,8 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
@@ -69,7 +75,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>UIRequiresFullScreen</key>
-	<true/>
 </dict>
 </plist>
