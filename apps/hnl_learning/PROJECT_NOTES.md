@@ -180,8 +180,9 @@ cd apps/hnl_learning
 flutter pub get
 flutter analyze        # clean
 flutter test           # 35 tests (content, mission, multi-child, board, skins, icons, animals, VO upload, Arabic order, Fruit & Veggies)
-# Home map: 6 islands (now 210px so all six fit). Somali Village sisters live
-# in the lower band (around the hut) so they're never hidden behind an island.
+# Home map: 6 islands (now 210px so all six fit). Somali Village sisters are a
+# family group in the clear bottom-CENTRE (in front of a raised aqal hut), kept
+# off the "Tap an island" bubble + Robo (left) and the Daily Mission card (right).
 flutter run -d chrome  # quick web run
 # iPad simulator used during dev: "iPad Pro 13-inch (M5)"
 #   udid 9C1A4EAC-B929-46AD-912D-6D29B9704D56
