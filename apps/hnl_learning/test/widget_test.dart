@@ -7,12 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:hnl_learning/models/animals.dart';
 import 'package:hnl_learning/models/content.dart';
+import 'package:hnl_learning/screens/animal_quiz.dart';
 import 'package:hnl_learning/screens/game.dart';
 import 'package:hnl_learning/screens/tweaks.dart';
 import 'package:hnl_learning/services/image_service.dart';
 import 'package:hnl_learning/services/vo_service.dart';
 import 'package:hnl_learning/state/app_state.dart';
 import 'package:hnl_learning/theme/tokens.dart';
+import 'package:hnl_learning/widgets/common.dart';
 import 'package:hnl_learning/widgets/game_icons.dart';
 import 'package:hnl_learning/widgets/scene.dart';
 import 'package:hnl_learning/widgets/sea.dart';
@@ -383,5 +385,74 @@ void main() {
     expect(activeSkin.id, 'somali');
 
     app.setSkin('sunshine'); // restore default
+  });
+
+  testWidgets('Pressable gives press-in feedback then springs back', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Pressable(
+              onTap: () => taps++,
+              // a hit-testable surface (as in the app: islands/cards are filled)
+              child: Container(width: 120, height: 120, color: const Color(0xFF3366FF)),
+            ),
+          ),
+        ),
+      ),
+    );
+    double scale() => tester.widget<AnimatedScale>(find.byType(AnimatedScale)).scale;
+
+    expect(scale(), 1.0); // at rest
+    final g = await tester.startGesture(tester.getCenter(find.byType(Pressable)));
+    await tester.pump(const Duration(milliseconds: 120)); // flush tap-down deadline
+    expect(scale(), lessThan(1.0)); // pressed in
+    await g.up();
+    await tester.pumpAndSettle();
+    expect(scale(), 1.0); // sprung back
+    expect(taps, 1); // and it fired
+  });
+
+  test('every animal has a kid-friendly sound (emoji-mapped, with fallback)', () {
+    // mapped sounds
+    expect(const Animal('lion-af', 'Lion', 'Libaax', '🦁').sound, contains('Roar'));
+    expect(const Animal('cow-x', 'Cow', 'Sac', '🐄').sound, contains('Moo'));
+    expect(const Animal('frog-x', 'Frog', 'Rah', '🐸').sound, contains('Ribbit'));
+    // unmapped emoji → graceful spoken fallback using the name
+    expect(const Animal('zzz', 'Quokka', 'Kuwoka', '🟦').sound, contains('Quokka'));
+    // every real animal in every continent resolves to a non-empty sound
+    for (final c in kContinents) {
+      for (final a in c.pool) {
+        expect(a.sound.trim(), isNotEmpty, reason: '${a.en} (${a.emoji}) has no sound');
+      }
+    }
+  });
+
+  testWidgets('Animal quiz shows the big "Hear the sound" button', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1366, 1024));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final app = AppState(prefs);
+    app.startContinent('africa'); // gives currentContinent + an animal
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: app),
+          ChangeNotifierProvider.value(value: VoService(prefs)),
+          ChangeNotifierProvider.value(value: ImageService(prefs)),
+          ChangeNotifierProvider.value(value: FxController()),
+        ],
+        child: const MaterialApp(home: Scaffold(body: AnimalQuizScreen())),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull); // no overflow
+    expect(find.text('Hear the sound'), findsOneWidget);
+    expect(find.text('English'), findsOneWidget);
+    expect(find.text('Somali'), findsOneWidget);
   });
 }

@@ -225,7 +225,7 @@ class _IslandState extends State<_Island> with SingleTickerProviderStateMixin {
     final pal = context.watch<AppState>().pal;
     final wc = pal.world(widget.world.id);
     final wd = pal.worldDeep(widget.world.id);
-    return GestureDetector(
+    return Pressable(
       onTap: widget.onTap,
       child: AnimatedBuilder(
         animation: _bob,
@@ -304,7 +304,7 @@ class _MissionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
       child: Container(
         width: 320,
@@ -496,7 +496,7 @@ class _GameCard extends StatelessWidget {
             : Planet(data: planetById(game.reward), size: 44);
     }
 
-    return GestureDetector(
+    return Pressable(
       onTap: onTap,
       child: Container(
         width: 290,
