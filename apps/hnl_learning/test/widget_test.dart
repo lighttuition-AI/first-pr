@@ -13,6 +13,7 @@ import 'package:hnl_learning/services/image_service.dart';
 import 'package:hnl_learning/services/vo_service.dart';
 import 'package:hnl_learning/state/app_state.dart';
 import 'package:hnl_learning/theme/tokens.dart';
+import 'package:hnl_learning/widgets/common.dart';
 import 'package:hnl_learning/widgets/game_icons.dart';
 import 'package:hnl_learning/widgets/scene.dart';
 import 'package:hnl_learning/widgets/sea.dart';
@@ -383,5 +384,32 @@ void main() {
     expect(activeSkin.id, 'somali');
 
     app.setSkin('sunshine'); // restore default
+  });
+
+  testWidgets('Pressable gives press-in feedback then springs back', (tester) async {
+    var taps = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Pressable(
+              onTap: () => taps++,
+              // a hit-testable surface (as in the app: islands/cards are filled)
+              child: Container(width: 120, height: 120, color: const Color(0xFF3366FF)),
+            ),
+          ),
+        ),
+      ),
+    );
+    double scale() => tester.widget<AnimatedScale>(find.byType(AnimatedScale)).scale;
+
+    expect(scale(), 1.0); // at rest
+    final g = await tester.startGesture(tester.getCenter(find.byType(Pressable)));
+    await tester.pump(const Duration(milliseconds: 120)); // flush tap-down deadline
+    expect(scale(), lessThan(1.0)); // pressed in
+    await g.up();
+    await tester.pumpAndSettle();
+    expect(scale(), 1.0); // sprung back
+    expect(taps, 1); // and it fired
   });
 }
