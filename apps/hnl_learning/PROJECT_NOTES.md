@@ -46,9 +46,10 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   RTL poster (Alif top-right) where every card starts "turned around" — a solid
   colour back showing the glyph mirrored & dim + a flip-arrows hint. Tap → a 3D
   `rotateY` flip to the correct, upright letter (white card, colour border, name)
-  and the letter is spoken. It **reuses the alphabet board's 28 voice lines**
-  (`ar-*`), so recording a letter under "Arabic Letters" in the Studio voices it
-  here too. Reveal all 28 → confetti, then the whole board flips back (colours
+  and the letter is spoken. It has its **own 28 letter recordings** (`ar-*-flip`,
+  via `flipVoId`), grouped under "Flip the Letters" in the Studio — separate from
+  the alphabet board's `ar-*` lines so the flip cards can be voiced on their own.
+  Reveal all 28 → confetti, then the whole board flips back (colours
   re-cycled) for a fresh round. **game 5 = letter sounds** (`GameType.arabicSounds`,
   `ArabicSoundsGame`): the harakat wall-chart — a 4×7 RTL grid of 28 consonant
   cards, each holding the **3 short-vowel forms** (read right-to-left as a · i · u,
@@ -218,7 +219,9 @@ Locked-in identity (all permanent / must match App Store Connect):
   `DEVELOPMENT_TEAM` on the 3 Runner configs + automatic signing. ⚠️ Gotcha: the cert
   name shows "Khadar Ainashe (BLGU4D968K)" — `BLGU4D968K` is a CERT id, **not** the team;
   the team is `4696KN59VV` (confirmed by the issued provisioning profile + Xcode plist).
-- **Display name** `HNL Learning`; **version `1.0.0+1`** (bump the `+build` in pubspec
+- **Display name** `HNL Learning`; **version `1.1.0+2`** (1.0.0+1 was the first
+  TestFlight build; 1.1.0+2 adds the Flip the Letters + Letter Sounds games — bump
+  the `+build` in pubspec
   before each new upload — App Store Connect rejects a reused build number).
 - **App icon**: branded Robo on a sunshine ground (alpha stripped). To re-skin: re-render
   the in-app `Robo` to a 1024 PNG and resize into every `AppIcon.appiconset` slot.

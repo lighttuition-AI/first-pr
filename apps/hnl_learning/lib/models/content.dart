@@ -527,6 +527,13 @@ List<VoGroup> buildVoRegistry() {
         lines.add(VoLineData(l.id, l.name, 'Arabic letter · ${l.glyph}'));
       }
     }
+    // The flip game has its OWN 28 letter recordings (separate ids), so a
+    // grown-up can voice the flip cards independently of the alphabet board.
+    if (g.type == GameType.arabicFlip) {
+      for (final l in kArabicLetters) {
+        lines.add(VoLineData(flipVoId(l), l.name, 'Flip card · ${l.glyph}'));
+      }
+    }
     groups.add(VoGroup(g.title, lines));
   }
   groups.add(VoGroup('Planet rewards', kRewardVo.values.toList()));
@@ -535,3 +542,7 @@ List<VoGroup> buildVoRegistry() {
 
 /// The floating in-game speaker must use the SAME id the Studio registers.
 String voIdForRound(Round r) => r.vo != null ? r.id : '${r.id}-fact';
+
+/// The Flip game's own recordable id for a letter — distinct from the alphabet
+/// board's `l.id` so each flip card can be voiced separately in the Studio.
+String flipVoId(ArabicLetter l) => '${l.id}-flip';

@@ -945,7 +945,7 @@ class _ArabicFlipGameState extends State<ArabicFlipGame> {
   void _tap(int i) {
     if (_resetting) return;
     final l = kArabicLetters[i];
-    context.read<VoService>().play(l.id, l.name); // tap (or re-tap) → hear it
+    context.read<VoService>().play(flipVoId(l), l.name); // tap (or re-tap) → hear it (own recording)
     if (_revealed.contains(i)) return;
     setState(() => _revealed.add(i));
     if (_revealed.length >= kArabicLetters.length) {

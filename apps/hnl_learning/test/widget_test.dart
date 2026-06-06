@@ -64,16 +64,22 @@ void main() {
   test('voiceover registry: 20 groups, every line id unique', () {
     final groups = buildVoRegistry();
     expect(groups.length, 20); // one VO group per game (14) + 5 flow groups + rewards
-    // 45 original + Splash (1 background music + 3 names) + Arabic alphabet group
-    // (1 instruction + 28 letters) + trace + order + flip + sounds instructions +
-    // 2 produce instructions. (The 84 harakat sounds live in their own Studio
-    // section, not the flat registry.)
+    // 45 original + Splash (1 bg music + 3 names) + alphabet group (1 instruction
+    // + 28 letters) + trace + order + sounds instructions + flip group (1
+    // instruction + its OWN 28 letters) + 2 produce instructions. (The 84 harakat
+    // sounds live in their own Studio section, not the flat registry.)
     final total = groups.fold<int>(0, (sum, g) => sum + g.lines.length);
-    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 1 + 1 + 2);
+    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 1 + (1 + kArabicLetters.length) + 2);
     final ids = groups.expand((g) => g.lines.map((l) => l.id)).toList();
     expect(ids.toSet().length, ids.length);
     // the splash names are recordable
     expect(groups.any((g) => g.group == 'Splash screen'), isTrue);
+    // the flip game carries its own 28 letter recordings (distinct ids)
+    final flipGroup = groups.firstWhere((g) => g.group == 'Flip the Letters');
+    for (final l in kArabicLetters) {
+      expect(flipGroup.lines.any((line) => line.id == flipVoId(l)), isTrue);
+      expect(flipVoId(l) == l.id, isFalse); // separate from the alphabet board
+    }
   });
 
   test('Arabic world has 28 recordable letters', () {
