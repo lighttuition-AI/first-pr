@@ -23,6 +23,10 @@ Widget? customGameIcon(String gameId, {double size = 52}) {
       return LetterTracingIcon(size: size);
     case 'arabic-order':
       return ArabicOrderIcon(size: size);
+    case 'arabic-flip':
+      return ArabicFlipIcon(size: size);
+    case 'arabic-sounds':
+      return ArabicSoundsIcon(size: size);
     case 'fruit-quiz':
       return ProduceIcon(emoji: '🍎', grad: const [Color(0xFFFF8166), Color(0xFFE8553D)], size: size);
     case 'veggie-quiz':
@@ -317,6 +321,152 @@ class ArabicOrderIcon extends StatelessWidget {
           style: TextStyle(fontSize: size * .16, fontWeight: FontWeight.w900, color: const Color(0xFF7A4E00), height: 1.0)),
     );
   }
+}
+
+// ------------------------------------------------------------
+// Flip the Letters — a face-down card (mirrored glyph + flip arrows) beside a
+// card flipped open to a bright, correct letter.
+// ------------------------------------------------------------
+class ArabicFlipIcon extends StatelessWidget {
+  final double size;
+  const ArabicFlipIcon({super.key, this.size = 52});
+
+  @override
+  Widget build(BuildContext context) => IconTile(
+        size: size,
+        grad: const [Color(0xFFF36CA8), Color(0xFFC23B86)], // pink → magenta
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              // face-down card — the letter "turned around" (mirrored, dim)
+              Transform.translate(
+                offset: Offset(-size * .15, size * .02),
+                child: Transform.rotate(
+                  angle: -0.20,
+                  child: _card(
+                    const Color(0xFF8E2C66),
+                    child: Transform.flip(
+                      flipX: true,
+                      child: Text('ب',
+                          style: TextStyle(
+                              fontSize: size * .26,
+                              fontWeight: FontWeight.w800,
+                              height: 1.0,
+                              color: Colors.white.withValues(alpha: .40))),
+                    ),
+                  ),
+                ),
+              ),
+              // revealed card — the correct, upright letter
+              Transform.translate(
+                offset: Offset(size * .15, -size * .02),
+                child: Transform.rotate(
+                  angle: 0.18,
+                  child: _card(
+                    Colors.white,
+                    child: Text('ا',
+                        style: TextStyle(
+                            fontSize: size * .30, fontWeight: FontWeight.w900, height: 1.0, color: const Color(0xFFC23B86))),
+                  ),
+                ),
+              ),
+              // little flip-arrows hint
+              Positioned(
+                bottom: size * .04,
+                child: Icon(Icons.cached_rounded, size: size * .22, color: Colors.white.withValues(alpha: .95)),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _card(Color c, {required Widget child}) => Container(
+        width: size * .40,
+        height: size * .54,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: c,
+          borderRadius: BorderRadius.circular(size * .10),
+          border: Border.all(color: Colors.white.withValues(alpha: .92), width: size * .03),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: .22), blurRadius: size * .06, offset: Offset(0, size * .03)),
+          ],
+        ),
+        child: child,
+      );
+}
+
+// ------------------------------------------------------------
+// Letter Sounds — a card of three vowelled letters (بَ بِ بُ) with sound waves.
+// ------------------------------------------------------------
+class ArabicSoundsIcon extends StatelessWidget {
+  final double size;
+  const ArabicSoundsIcon({super.key, this.size = 52});
+
+  @override
+  Widget build(BuildContext context) => IconTile(
+        size: size,
+        grad: const [Color(0xFF5BB8E8), Color(0xFF2E73C4)], // sky → blue
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              // white card holding the three short-vowel forms
+              Container(
+                width: size * .64,
+                height: size * .56,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(size * .14),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: .18), blurRadius: size * .06, offset: Offset(0, size * .03)),
+                  ],
+                ),
+                padding: EdgeInsets.symmetric(horizontal: size * .04),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (final g in const ['بَ', 'بِ', 'بُ'])
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: size * .012),
+                            child: Text(g,
+                                style: TextStyle(
+                                    fontSize: size * .21,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.0,
+                                    color: const Color(0xFF2E73C4))),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // sound waves off the top-right corner
+              Positioned(
+                top: size * .05,
+                right: size * .04,
+                child: SizedBox(
+                  width: size * .26,
+                  height: size * .26,
+                  child: CustomPaint(painter: _SoundPainter(Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
 }
 
 // ------------------------------------------------------------

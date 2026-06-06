@@ -42,6 +42,24 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   spoken + a little confetti), wrong box gives a gentle shake. Fill all 28 →
   celebrate + play again (reshuffled). Explore-only (no timer/score), like the
   other two. Completion card is the shared `_FinishCard` (also used by tracing).
+  **game 4 = flip the letters** (`GameType.arabicFlip`, `ArabicFlipGame`): a 7×4
+  RTL poster (Alif top-right) where every card starts "turned around" — a solid
+  colour back showing the glyph mirrored & dim + a flip-arrows hint. Tap → a 3D
+  `rotateY` flip to the correct, upright letter (white card, colour border, name)
+  and the letter is spoken. It **reuses the alphabet board's 28 voice lines**
+  (`ar-*`), so recording a letter under "Arabic Letters" in the Studio voices it
+  here too. Reveal all 28 → confetti, then the whole board flips back (colours
+  re-cycled) for a fresh round. **game 5 = letter sounds** (`GameType.arabicSounds`,
+  `ArabicSoundsGame`): the harakat wall-chart — a 4×7 RTL grid of 28 consonant
+  cards, each holding the **3 short-vowel forms** (read right-to-left as a · i · u,
+  fatha/kasra/damma). That's **84 separately-tappable cells**, each with its own
+  recordable sound. Tap a cell → just that syllable plays (highlights while
+  speaking). Data is `kHarakatLetters`/`kHarakatForms` in `content.dart` (built
+  from `kArabicLetters` + a per-letter syllable table; ids are `ar-<letter>-a|i|u`,
+  disjoint from the whole-letter ids). The 84 sounds are recorded in a dedicated
+  **"ARABIC — LETTER SOUNDS (HARAKAT)"** Studio section (28 expandable consonant
+  tiles × 3 lines), mirroring the Animals/Produce nested pattern. Both games are
+  explore-only and fit the stage with no scroll (LayoutBuilder-sized cells).
 - **Animals** (5th island, 🦒): tap → an interactive continent map (7 original
   blob landmasses). Tap a continent → a shuffled quiz of up to 20 animals from
   that continent's pool (`models/animals.dart` — ~370 animals: Africa 70, Asia
@@ -179,7 +197,7 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 cd apps/hnl_learning
 flutter pub get
 flutter analyze        # clean
-flutter test           # 35 tests (content, mission, multi-child, board, skins, icons, animals, VO upload, Arabic order, Fruit & Veggies)
+flutter test           # 38 tests (content, mission, multi-child, board, skins, icons, animals, VO upload, Arabic order/flip/sounds, Fruit & Veggies)
 # Home map: 6 islands (now 210px so all six fit). Somali Village sisters are a
 # family group in the clear bottom-CENTRE (in front of a raised aqal hut), kept
 # off the "Tap an island" bubble + Robo (left) and the Daily Mission card (right).

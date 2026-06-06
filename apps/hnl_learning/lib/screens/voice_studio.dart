@@ -112,6 +112,17 @@ class _VoiceStudioState extends State<VoiceStudio> {
                           open: _open == 'prod:veggie',
                           onToggle: () => setState(() => _open = _open == 'prod:veggie' ? null : 'prod:veggie'),
                         ),
+                        // ---- Arabic letter sounds: 28 letters × a/i/u = 84 ----
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(4, 18, 4, 10),
+                          child: _SectionLabel('ARABIC — LETTER SOUNDS (HARAKAT)'),
+                        ),
+                        for (final h in kHarakatLetters)
+                          _HarakatTile(
+                            letter: h,
+                            open: _open == 'harakat:${h.id}',
+                            onToggle: () => setState(() => _open = _open == 'harakat:${h.id}' ? null : 'harakat:${h.id}'),
+                          ),
                       ],
                     ),
                   ),
@@ -393,6 +404,55 @@ class _ProduceItemTileState extends State<_ProduceItemTile> {
           if (_open)
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
+              child: Column(children: [for (final l in lines) _VoLineRow(line: l)]),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---- One Arabic consonant: expands to its 3 vowel-form sounds (a · i · u) ----
+class _HarakatTile extends StatelessWidget {
+  final HarakatLetter letter;
+  final bool open;
+  final VoidCallback onToggle;
+  const _HarakatTile({required this.letter, required this.open, required this.onToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    final vo = context.watch<VoService>();
+    final clips = letter.forms.where((f) => vo.has(f.id)).length;
+    // The recordable lines for this letter (Latin labels render under google_fonts;
+    // the Arabic glyph is shown in the header with the system font instead).
+    final lines = [for (final f in letter.forms) VoLineData(f.id, f.label, 'Letter sound · ${letter.name}')];
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.md), boxShadow: Sh.sm),
+      child: Column(
+        children: [
+          GestureDetector(
+            onTap: onToggle,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+              color: Colors.transparent,
+              child: Row(
+                children: [
+                  // System font so the Arabic glyph renders (not google_fonts).
+                  Text(letter.glyph, style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700)),
+                  const SizedBox(width: 14),
+                  Expanded(child: Text(letter.name, style: AppText.display(size: 28, weight: FontWeight.w700))),
+                  Text(clips > 0 ? '$clips/3 🎙️' : '3 sounds',
+                      style: AppText.body(size: 22, weight: FontWeight.w700, color: C.muted)),
+                  const SizedBox(width: 12),
+                  Icon(open ? Icons.expand_less_rounded : Icons.expand_more_rounded),
+                ],
+              ),
+            ),
+          ),
+          if (open)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Column(children: [for (final l in lines) _VoLineRow(line: l)]),
             ),
         ],

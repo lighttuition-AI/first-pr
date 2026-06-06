@@ -92,6 +92,8 @@ class _GameHostState extends State<GameHost> {
                 GameType.alphabet => const AlphabetBoard(),
                 GameType.trace => const TraceGame(),
                 GameType.arabicOrder => const ArabicOrderGame(),
+                GameType.arabicFlip => const ArabicFlipGame(),
+                GameType.arabicSounds => const ArabicSoundsGame(),
                 GameType.produceQuiz => ProduceQuiz(category: widget.game.topic),
                 _ => Center(
                     child: _GameBody(
@@ -143,6 +145,8 @@ class _GameHostState extends State<GameHost> {
                 if (widget.game.type != GameType.alphabet &&
                     widget.game.type != GameType.trace &&
                     widget.game.type != GameType.arabicOrder &&
+                    widget.game.type != GameType.arabicFlip &&
+                    widget.game.type != GameType.arabicSounds &&
                     widget.game.type != GameType.produceQuiz) ...[
                   const SizedBox(height: 12),
                   _RoundDots(total: widget.game.rounds.length, index: _roundIdx),
@@ -278,6 +282,10 @@ class _GameBody extends StatelessWidget {
         return const TraceGame();
       case GameType.arabicOrder:
         return const ArabicOrderGame();
+      case GameType.arabicFlip:
+        return const ArabicFlipGame();
+      case GameType.arabicSounds:
+        return const ArabicSoundsGame();
       case GameType.produceQuiz:
         return ProduceQuiz(category: game.topic);
     }
@@ -903,6 +911,350 @@ class _ArabicOrderGameState extends State<ArabicOrderGame> {
           fontWeight: FontWeight.w900,
           decoration: TextDecoration.none,
           color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------- Arabic World · game 4: flip the letters ----------------
+// A poster of 28 cards, each shown "turned around" (the letter mirrored & dim,
+// with a little flip hint). Tap a card → it does a 3D flip to the correct,
+// upright letter and speaks it (reusing the alphabet board's recordable voice
+// lines). When all 28 are revealed → confetti, then every card flips back for
+// a fresh round. Explore-only (no timer/score).
+class ArabicFlipGame extends StatefulWidget {
+  const ArabicFlipGame({super.key});
+  @override
+  State<ArabicFlipGame> createState() => _ArabicFlipGameState();
+}
+
+class _ArabicFlipGameState extends State<ArabicFlipGame> {
+  final Set<int> _revealed = {}; // cards flipped to the correct side
+  int _round = 0; // bumps each new game → cycles the card colours
+  bool _resetting = false; // brief lock while the board flips back
+
+  // Vibrant, poster-style colours (cycled across the 28 cards).
+  static const _palette = [
+    Color(0xFFE84C6B), Color(0xFFFF8A3D), Color(0xFFF2B100), Color(0xFF2E9E5B),
+    Color(0xFF2E8BC4), Color(0xFF7A5BD0), Color(0xFFE85AA0), Color(0xFF17A8A0),
+    Color(0xFF8B5A2B), Color(0xFF4A63B8),
+  ];
+  Color _col(int i) => _palette[(i + _round) % _palette.length];
+
+  void _tap(int i) {
+    if (_resetting) return;
+    final l = kArabicLetters[i];
+    context.read<VoService>().play(l.id, l.name); // tap (or re-tap) → hear it
+    if (_revealed.contains(i)) return;
+    setState(() => _revealed.add(i));
+    if (_revealed.length >= kArabicLetters.length) {
+      context.read<FxController>().fire(intensity: context.read<AppState>().celebration);
+      setState(() => _resetting = true);
+      Future.delayed(const Duration(milliseconds: 1800), () {
+        if (!mounted) return;
+        setState(() {
+          _revealed.clear();
+          _round++;
+          _resetting = false;
+        });
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, cons) {
+              const cols = 7, rows = 4, gap = 14.0;
+              final cw = ((cons.maxWidth - gap * (cols - 1)) / cols).floorToDouble();
+              final ch = ((cons.maxHeight - gap * (rows - 1)) / rows).floorToDouble();
+              return Directionality(
+                // RTL so the first letter (Alif) sits top-right, like a poster.
+                textDirection: TextDirection.rtl,
+                child: Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: [
+                    for (var i = 0; i < kArabicLetters.length; i++)
+                      _FlipCard(
+                        key: ValueKey('flip-$i'),
+                        letter: kArabicLetters[i],
+                        color: _col(i),
+                        flipped: _revealed.contains(i),
+                        width: cw,
+                        height: ch,
+                        onTap: () => _tap(i),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text('Flipped ${_revealed.length} / ${kArabicLetters.length}',
+            style: AppText.body(size: 22, weight: FontWeight.w800, color: Colors.white)),
+      ],
+    );
+  }
+}
+
+class _FlipCard extends StatefulWidget {
+  final ArabicLetter letter;
+  final Color color;
+  final bool flipped;
+  final double width, height;
+  final VoidCallback onTap;
+  const _FlipCard({
+    super.key,
+    required this.letter,
+    required this.color,
+    required this.flipped,
+    required this.width,
+    required this.height,
+    required this.onTap,
+  });
+  @override
+  State<_FlipCard> createState() => _FlipCardState();
+}
+
+class _FlipCardState extends State<_FlipCard> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 430),
+    value: widget.flipped ? 1 : 0,
+  );
+  late final Animation<double> _a = CurvedAnimation(parent: _c, curve: Curves.easeInOut);
+  bool _down = false;
+
+  @override
+  void didUpdateWidget(covariant _FlipCard old) {
+    super.didUpdateWidget(old);
+    if (widget.flipped != old.flipped) {
+      widget.flipped ? _c.forward() : _c.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _down = true),
+      onTapUp: (_) => setState(() => _down = false),
+      onTapCancel: () => setState(() => _down = false),
+      onTap: widget.onTap,
+      child: AnimatedScale(
+        scale: _down ? 0.95 : 1,
+        duration: const Duration(milliseconds: 110),
+        child: AnimatedBuilder(
+          animation: _a,
+          builder: (context, _) {
+            final showFront = _a.value > 0.5; // past the halfway point
+            return Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()
+                ..setEntry(3, 2, 0.0014) // perspective
+                ..rotateY(_a.value * math.pi),
+              child: showFront
+                  // un-mirror the front (the card itself is rotated 180°)
+                  ? Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.identity()..rotateY(math.pi),
+                      child: _front(),
+                    )
+                  : _back(),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // "Turned around": a solid colour card with the glyph mirrored & dim + a
+  // little circular-arrows hint — it reads as the letter facing away.
+  Widget _back() {
+    return Container(
+      width: widget.width,
+      height: widget.height,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: widget.color,
+        borderRadius: BorderRadius.circular(R.lg),
+        boxShadow: Sh.sm,
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Transform.flip(
+            flipX: true,
+            child: Text(
+              widget.letter.glyph,
+              style: TextStyle(
+                fontSize: widget.height * 0.42,
+                height: 1.0,
+                fontWeight: FontWeight.w700,
+                color: Colors.white.withValues(alpha: .26),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: widget.height * 0.08,
+            child: Icon(Icons.cached_rounded, color: Colors.white.withValues(alpha: .82), size: widget.height * 0.16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // The correct, upright letter + its name — the colourful poster face.
+  Widget _front() {
+    return Container(
+      width: widget.width,
+      height: widget.height,
+      decoration: BoxDecoration(
+        color: C.card,
+        borderRadius: BorderRadius.circular(R.lg),
+        boxShadow: Sh.sm,
+        border: Border.all(color: widget.color, width: 4),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            widget.letter.glyph,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: widget.height * 0.40, height: 1.0, fontWeight: FontWeight.w800, color: widget.color),
+          ),
+          SizedBox(height: widget.height * 0.03),
+          SizedBox(
+            width: widget.width - 16,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(widget.letter.name,
+                  style: AppText.body(size: widget.height * 0.12, weight: FontWeight.w800, color: widget.color)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------- Arabic World · game 5: letter sounds (harakat) ----------------
+// A 4×7 RTL grid of 28 consonant cards; each card holds the 3 short-vowel forms
+// (read right-to-left as a · i · u). Every one of the 84 cells is its own
+// tappable sound — tap → hear that exact syllable (each separately recordable
+// in the Voiceover Studio). Explore-only.
+class ArabicSoundsGame extends StatelessWidget {
+  const ArabicSoundsGame({super.key});
+
+  static const _palette = [
+    Color(0xFFE84C6B), Color(0xFFFF8A3D), Color(0xFFF2B100), Color(0xFF2E9E5B),
+    Color(0xFF2E8BC4), Color(0xFF7A5BD0), Color(0xFFE85AA0), Color(0xFF17A8A0),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, cons) {
+        const cols = 4, rows = 7, gap = 12.0, cellGap = 6.0, padH = 8.0, padV = 7.0;
+        final cw = ((cons.maxWidth - gap * (cols - 1)) / cols).floorToDouble();
+        final ch = ((cons.maxHeight - gap * (rows - 1)) / rows).floorToDouble();
+        final cellW = (cw - padH * 2 - cellGap * 2) / 3;
+        final cellH = ch - padV * 2;
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Wrap(
+            spacing: gap,
+            runSpacing: gap,
+            children: [
+              for (var i = 0; i < kHarakatLetters.length; i++)
+                Container(
+                  width: cw,
+                  height: ch,
+                  padding: const EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+                  decoration: BoxDecoration(
+                    color: _palette[i % _palette.length].withValues(alpha: .14),
+                    borderRadius: BorderRadius.circular(R.lg),
+                    border: Border.all(color: _palette[i % _palette.length].withValues(alpha: .55), width: 2),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      for (final f in kHarakatLetters[i].forms)
+                        _SoundCell(form: f, color: _palette[i % _palette.length], width: cellW, height: cellH),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SoundCell extends StatefulWidget {
+  final HarakatForm form;
+  final Color color;
+  final double width, height;
+  const _SoundCell({required this.form, required this.color, required this.width, required this.height});
+  @override
+  State<_SoundCell> createState() => _SoundCellState();
+}
+
+class _SoundCellState extends State<_SoundCell> {
+  bool _down = false;
+
+  @override
+  Widget build(BuildContext context) {
+    // Only this cell rebuilds when its own clip starts/stops playing.
+    final speaking = context.select<VoService, bool>((v) => v.isActive(widget.form.id));
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _down = true),
+      onTapUp: (_) => setState(() => _down = false),
+      onTapCancel: () => setState(() => _down = false),
+      onTap: () => context.read<VoService>().play(widget.form.id, widget.form.label),
+      child: AnimatedScale(
+        scale: _down ? 0.9 : 1,
+        duration: const Duration(milliseconds: 100),
+        child: Container(
+          width: widget.width,
+          height: widget.height,
+          decoration: BoxDecoration(
+            color: C.card,
+            borderRadius: BorderRadius.circular(R.md),
+            boxShadow: Sh.sm,
+            border: Border.all(color: speaking ? widget.color : Colors.transparent, width: 3),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                widget.form.glyph,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: widget.height * 0.42, height: 1.0, fontWeight: FontWeight.w700, color: widget.color),
+              ),
+              SizedBox(height: widget.height * 0.03),
+              SizedBox(
+                width: widget.width - 6,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(widget.form.label,
+                      style: AppText.body(size: widget.height * 0.14, weight: FontWeight.w800, color: C.muted)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

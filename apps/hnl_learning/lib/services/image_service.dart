@@ -128,6 +128,8 @@ List<String> _gameTokens(Game g) {
       case GameType.alphabet:
       case GameType.trace:
       case GameType.arabicOrder:
+      case GameType.arabicFlip:
+      case GameType.arabicSounds:
       case GameType.produceQuiz:
         break; // Arabic glyphs + produce items aren't game-round image slots.
     }

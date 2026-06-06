@@ -25,16 +25,18 @@ import 'package:hnl_learning/widgets/sea.dart';
 import 'package:hnl_learning/widgets/village.dart';
 
 void main() {
-  test('all 12 games present (7 mini-games + 3 Arabic + 2 produce)', () {
-    expect(kGames.length, 12);
-    // 11 distinct types — Fruits + Veggies share GameType.produceQuiz.
-    expect(kGames.map((g) => g.type).toSet().length, 11);
+  test('all 14 games present (7 mini-games + 5 Arabic + 2 produce)', () {
+    expect(kGames.length, 14);
+    // 13 distinct types — Fruits + Veggies share GameType.produceQuiz.
+    expect(kGames.map((g) => g.type).toSet().length, 13);
     // The Arabic-world games are explore-only (never join a mission).
     expect(kGames.firstWhere((g) => g.type == GameType.alphabet).mission, isFalse);
     expect(kGames.firstWhere((g) => g.type == GameType.trace).mission, isFalse);
     expect(kGames.firstWhere((g) => g.type == GameType.arabicOrder).mission, isFalse);
-    // All three Arabic games live in the Arabic world.
-    expect(gamesInWorld('arabic').length, 3);
+    expect(kGames.firstWhere((g) => g.type == GameType.arabicFlip).mission, isFalse);
+    expect(kGames.firstWhere((g) => g.type == GameType.arabicSounds).mission, isFalse);
+    // All five Arabic games live in the Arabic world.
+    expect(gamesInWorld('arabic').length, 5);
     expect(gamesInWorld('produce').length, 2); // Fruits + Veggies
     expect(kGames.firstWhere((g) => g.type == GameType.produceQuiz).mission, isFalse);
   });
@@ -59,13 +61,15 @@ void main() {
     expect(find.byType(IconTile), findsNWidgets(kGames.length));
   });
 
-  test('voiceover registry: 16 groups, every line id unique', () {
+  test('voiceover registry: 20 groups, every line id unique', () {
     final groups = buildVoRegistry();
-    expect(groups.length, 18); // one VO group per game + the Splash screen group
-    // 45 original + Splash (1 background music + 3 names) + Arabic group
-    // (1 instruction + 28 letters) + trace + letter-order + 2 produce instructions.
+    expect(groups.length, 20); // one VO group per game (14) + 5 flow groups + rewards
+    // 45 original + Splash (1 background music + 3 names) + Arabic alphabet group
+    // (1 instruction + 28 letters) + trace + order + flip + sounds instructions +
+    // 2 produce instructions. (The 84 harakat sounds live in their own Studio
+    // section, not the flat registry.)
     final total = groups.fold<int>(0, (sum, g) => sum + g.lines.length);
-    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 2);
+    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 1 + 1 + 2);
     final ids = groups.expand((g) => g.lines.map((l) => l.id)).toList();
     expect(ids.toSet().length, ids.length);
     // the splash names are recordable
@@ -104,6 +108,80 @@ void main() {
     // 28 empty target boxes + 28 shuffled draggable letter tiles.
     expect(find.byType(DragTarget<int>), findsNWidgets(kArabicLetters.length));
     expect(find.byType(Draggable<int>), findsNWidgets(kArabicLetters.length));
+  });
+
+  test('Arabic harakat: 28 letters × 3 vowels = 84 unique recordable sounds', () {
+    expect(kHarakatLetters.length, 28);
+    expect(kHarakatForms.length, 84);
+    final ids = kHarakatForms.map((f) => f.id).toList();
+    expect(ids.toSet().length, 84, reason: 'every vowelled form has a unique id');
+    // Sound ids must NOT collide with the alphabet board / flip game ids, so
+    // recording a syllable never overwrites a whole-letter recording.
+    final letterIds = kArabicLetters.map((l) => l.id).toSet();
+    expect(ids.where(letterIds.contains), isEmpty);
+    // Each form's id is its letter's id + a vowel suffix, and each glyph carries
+    // a diacritic (base consonant + one combining mark = 2+ code units).
+    for (final h in kHarakatLetters) {
+      expect(h.forms.length, 3);
+      for (final f in h.forms) {
+        expect(f.id.startsWith('${h.id}-'), isTrue);
+        expect(f.glyph.runes.length, greaterThanOrEqualTo(2));
+      }
+    }
+  });
+
+  testWidgets('Flip the Letters: 28 cards render face-down, Alif present, no overflow', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1366, 1024));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: AppState(prefs)),
+          ChangeNotifierProvider.value(value: VoService(prefs)),
+          ChangeNotifierProvider.value(value: GifService(prefs)),
+          ChangeNotifierProvider.value(value: FxController()),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: Padding(padding: EdgeInsets.fromLTRB(40, 140, 40, 40), child: ArabicFlipGame()),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull); // fits the stage, no overflow
+    // Every card starts "turned around" → 28 flip-hint icons on the back faces.
+    expect(find.byIcon(Icons.cached_rounded), findsNWidgets(kArabicLetters.length));
+    expect(find.text('Flipped 0 / 28'), findsOneWidget);
+    expect(find.text('أ'), findsOneWidget); // Alif's card
+  });
+
+  testWidgets('Letter Sounds: the 84-cell harakat grid renders without overflow', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1366, 1024));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: AppState(prefs)),
+          ChangeNotifierProvider.value(value: VoService(prefs)),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: Padding(padding: EdgeInsets.fromLTRB(40, 140, 40, 40), child: ArabicSoundsGame()),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull); // 4×7 cards, 3 cells each, all fit
+    // Baa's three vowel forms (بَ بِ بُ) each render as their own tappable cell.
+    expect(find.text(kHarakatLetters[1].forms[0].glyph), findsOneWidget); // بَ
+    expect(find.text(kHarakatLetters[1].forms[1].glyph), findsOneWidget); // بِ
+    expect(find.text(kHarakatLetters[1].forms[2].glyph), findsOneWidget); // بُ
   });
 
   test('image registry: 11 groups, 79 unique slots (one upload syncs everywhere)', () {
