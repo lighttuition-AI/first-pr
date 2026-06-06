@@ -82,6 +82,19 @@ class _VoiceStudioState extends State<VoiceStudio> {
                             recordedCount: g.lines.where((l) => vo.has(l.id)).length,
                             onToggle: () => setState(() => _open = _open == g.group ? null : g.group),
                           ),
+                        // ---- Arabic letter sounds: 28 letters × a/i/u = 84.
+                        // Kept up here, right with the Arabic game groups, so the
+                        // 84 recordable sounds are easy to find (was at the bottom). ----
+                        const Padding(
+                          padding: EdgeInsets.fromLTRB(4, 18, 4, 10),
+                          child: _SectionLabel('ARABIC — LETTER SOUNDS (HARAKAT)'),
+                        ),
+                        for (final h in kHarakatLetters)
+                          _HarakatTile(
+                            letter: h,
+                            open: _open == 'harakat:${h.id}',
+                            onToggle: () => setState(() => _open = _open == 'harakat:${h.id}' ? null : 'harakat:${h.id}'),
+                          ),
                         // ---- Animals: every continent's sounds + names ----
                         const Padding(
                           padding: EdgeInsets.fromLTRB(4, 18, 4, 10),
@@ -112,17 +125,6 @@ class _VoiceStudioState extends State<VoiceStudio> {
                           open: _open == 'prod:veggie',
                           onToggle: () => setState(() => _open = _open == 'prod:veggie' ? null : 'prod:veggie'),
                         ),
-                        // ---- Arabic letter sounds: 28 letters × a/i/u = 84 ----
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(4, 18, 4, 10),
-                          child: _SectionLabel('ARABIC — LETTER SOUNDS (HARAKAT)'),
-                        ),
-                        for (final h in kHarakatLetters)
-                          _HarakatTile(
-                            letter: h,
-                            open: _open == 'harakat:${h.id}',
-                            onToggle: () => setState(() => _open = _open == 'harakat:${h.id}' ? null : 'harakat:${h.id}'),
-                          ),
                       ],
                     ),
                   ),

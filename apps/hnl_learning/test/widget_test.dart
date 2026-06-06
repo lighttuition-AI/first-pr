@@ -682,4 +682,30 @@ void main() {
     expect(find.text('English name'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Voiceover Studio keeps all 3 Arabic areas: Letters + Flip + the 84 harakat sounds',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1366, 1024));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: AppState(prefs)),
+          ChangeNotifierProvider.value(value: VoService(prefs)),
+        ],
+        child: const MaterialApp(home: Scaffold(body: VoiceStudio())),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // None of these replaced another — all three Arabic recording areas coexist.
+    expect(find.text('Arabic Letters'), findsOneWidget); // alphabet board (28)
+    expect(find.text('Flip the Letters'), findsOneWidget); // flip game's own 28
+    expect(find.text('ARABIC — LETTER SOUNDS (HARAKAT)'), findsOneWidget); // 84 sounds
+    // The harakat section really renders its 28 consonant tiles (Baa's header).
+    expect(find.text('Baa'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 }
