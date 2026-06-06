@@ -121,7 +121,7 @@ const List<OnboardingStep> kOnboarding = [
 ];
 
 // ---------------- Games ----------------
-enum GameType { pick, count, pattern, memory, letter, sort, science, alphabet, trace, arabicOrder, produceQuiz }
+enum GameType { pick, count, pattern, memory, letter, sort, science, alphabet, trace, arabicOrder, arabicFlip, arabicSounds, produceQuiz }
 
 class PickOption {
   final String emoji;
@@ -285,11 +285,21 @@ final List<Game> kGames = [
   Game('arabic-order', GameType.arabicOrder, 'arabic', 'letters', 'Letter Order', '', [
     Round(id: 'ar-order', vo: 'The letters are all mixed up! Drag each one up into the right box, in order.', bg: Color(0xFF1F3A63)),
   ], mission: false),
-  // 11 — FRUIT & VEGGIES WORLD · game 1: guess the fruit (EN + Somali).
+  // 11 — ARABIC WORLD · game 4: flip the cards the right way & hear each letter.
+  // Reuses the 28 alphabet voice lines (record them under "Arabic Letters").
+  Game('arabic-flip', GameType.arabicFlip, 'arabic', 'letters', 'Flip the Letters', '', [
+    Round(id: 'ar-flip', vo: 'Tap a card to flip it the right way and hear the letter. Flip them all!', bg: Color(0xFF21386E)),
+  ], mission: false),
+  // 12 — ARABIC WORLD · game 5: tap any vowelled letter to hear its own sound.
+  // 84 sounds (28 letters × a/i/u), each separately recordable in the Studio.
+  Game('arabic-sounds', GameType.arabicSounds, 'arabic', 'letters', 'Letter Sounds', '', [
+    Round(id: 'ar-sounds', vo: 'Tap any letter to hear its sound — with a, i, or u!', bg: Color(0xFF173A5E)),
+  ], mission: false),
+  // 13 — FRUIT & VEGGIES WORLD · game 1: guess the fruit (EN + Somali).
   Game('fruit-quiz', GameType.produceQuiz, 'produce', 'fruit', 'Fruits', '', [
     Round(id: 'pq-fruit', vo: "Yummy fruits! Tap a button to hear the name, in English or Somali.", bg: Color(0xFFFFF1E6)),
   ], mission: false),
-  // 12 — FRUIT & VEGGIES WORLD · game 2: guess the vegetable (EN + Somali).
+  // 14 — FRUIT & VEGGIES WORLD · game 2: guess the vegetable (EN + Somali).
   Game('veggie-quiz', GameType.produceQuiz, 'produce', 'veggie', 'Veggies', '', [
     Round(id: 'pq-veggie', vo: "Healthy veggies! Tap a button to hear the name, in English or Somali.", bg: Color(0xFFEFF6E8)),
   ], mission: false),
@@ -335,6 +345,89 @@ const List<ArabicLetter> kArabicLetters = [
   ArabicLetter('ar-waaw', 'و', 'Waaw'),
   ArabicLetter('ar-yaa', 'ي', 'Yaa'),
 ];
+
+// ---------------- Arabic harakat (short-vowel) forms ----------------
+// The "Letter Sounds" game shows every consonant with the three short vowels
+// — fatha (a), kasra (i), damma (u) — i.e. 28 × 3 = 84 syllables. Each is its
+// own tappable cell with its own recordable sound in the Voiceover Studio.
+
+// Combining diacritics: fatha (a) · kasra (i) · damma (u). Unicode escapes so
+// the marks don't attach to surrounding source characters in editors/diffs.
+const String _fatha = 'َ', _kasra = 'ِ', _damma = 'ُ';
+
+// Romanised syllables [a, i, u] per consonant — order matches kArabicLetters,
+// following the classic wall-chart (emphatic/back letters take 'o' for fatha).
+const List<List<String>> _kHarakatSyllables = [
+  ['A', 'I', 'U'], // Alif (the vowel carrier)
+  ['Ba', 'Bi', 'Bu'], // Baa
+  ['Ta', 'Ti', 'Tu'], // Taa
+  ['Tsa', 'Tsi', 'Tsu'], // Thaa
+  ['Ja', 'Ji', 'Ju'], // Jiim
+  ['Ha', 'Hi', 'Hu'], // Haa (deep)
+  ['Kho', 'Khi', 'Khu'], // Khaa
+  ['Da', 'Di', 'Du'], // Daal
+  ['Dza', 'Dzi', 'Dzu'], // Dhaal
+  ['Ro', 'Ri', 'Ru'], // Raa
+  ['Za', 'Zi', 'Zu'], // Zaay
+  ['Sa', 'Si', 'Su'], // Siin
+  ['Sya', 'Syi', 'Syu'], // Shiin
+  ['Sho', 'Shi', 'Shu'], // Saad
+  ['Dho', 'Dhi', 'Dhu'], // Daad
+  ['Tho', 'Thi', 'Thu'], // Taa (heavy)
+  ['Zho', 'Zhi', 'Zhu'], // Dhaa (heavy)
+  ["'A", "'I", "'U"], // Ayn
+  ['Gho', 'Ghi', 'Ghu'], // Ghayn
+  ['Fa', 'Fi', 'Fu'], // Faa
+  ['Qo', 'Qi', 'Qu'], // Qaaf
+  ['Ka', 'Ki', 'Ku'], // Kaaf
+  ['La', 'Li', 'Lu'], // Laam
+  ['Ma', 'Mi', 'Mu'], // Miim
+  ['Na', 'Ni', 'Nu'], // Nuun
+  ['Ha', 'Hi', 'Hu'], // Haa (soft)
+  ['Wa', 'Wi', 'Wu'], // Waaw
+  ['Ya', 'Yi', 'Yu'], // Yaa
+];
+
+// Clean base glyph for diacritic placement where the board glyph carries an
+// extra mark (e.g. soft Haa is shown 'هـ' with a tatweel on the board).
+const Map<String, String> _kHarakatBase = {'ar-haa2': 'ه'};
+
+/// One vowelled form of a letter: the glyph (consonant + diacritic), a
+/// romanised label, and a stable id for its own recordable sound.
+class HarakatForm {
+  final String id; // e.g. 'ar-baa-a'
+  final String glyph; // e.g. 'بَ'
+  final String label; // e.g. 'Ba'
+  const HarakatForm(this.id, this.glyph, this.label);
+}
+
+/// One consonant card for the Letter Sounds game / Studio: its 3 vowel forms,
+/// stored in reading order [fatha(a), kasra(i), damma(u)] (render right-to-left
+/// so they read a · i · u, matching the wall-chart's "…u …i …a" layout).
+class HarakatLetter {
+  final String id; // base letter id, e.g. 'ar-baa'
+  final String name; // 'Baa' — Studio group label
+  final String glyph; // base consonant, e.g. 'ب'
+  final List<HarakatForm> forms; // [a, i, u]
+  const HarakatLetter(this.id, this.name, this.glyph, this.forms);
+}
+
+HarakatLetter _harakatFor(ArabicLetter l, List<String> syl) {
+  final base = _kHarakatBase[l.id] ?? l.glyph;
+  return HarakatLetter(l.id, l.name, base, [
+    HarakatForm('${l.id}-a', '$base$_fatha', syl[0]),
+    HarakatForm('${l.id}-i', '$base$_kasra', syl[1]),
+    HarakatForm('${l.id}-u', '$base$_damma', syl[2]),
+  ]);
+}
+
+/// 28 consonants × 3 short vowels = the Letter Sounds board.
+final List<HarakatLetter> kHarakatLetters = [
+  for (var i = 0; i < kArabicLetters.length; i++) _harakatFor(kArabicLetters[i], _kHarakatSyllables[i]),
+];
+
+/// All 84 vowelled forms, flattened (used for counts / tests).
+List<HarakatForm> get kHarakatForms => [for (final h in kHarakatLetters) ...h.forms];
 
 Game gameById(String id) => kGames.firstWhere((g) => g.id == id);
 List<Game> gamesInWorld(String world) => kGames.where((g) => g.world == world).toList();
@@ -434,6 +527,13 @@ List<VoGroup> buildVoRegistry() {
         lines.add(VoLineData(l.id, l.name, 'Arabic letter · ${l.glyph}'));
       }
     }
+    // The flip game has its OWN 28 letter recordings (separate ids), so a
+    // grown-up can voice the flip cards independently of the alphabet board.
+    if (g.type == GameType.arabicFlip) {
+      for (final l in kArabicLetters) {
+        lines.add(VoLineData(flipVoId(l), l.name, 'Flip card · ${l.glyph}'));
+      }
+    }
     groups.add(VoGroup(g.title, lines));
   }
   groups.add(VoGroup('Planet rewards', kRewardVo.values.toList()));
@@ -442,3 +542,7 @@ List<VoGroup> buildVoRegistry() {
 
 /// The floating in-game speaker must use the SAME id the Studio registers.
 String voIdForRound(Round r) => r.vo != null ? r.id : '${r.id}-fact';
+
+/// The Flip game's own recordable id for a letter — distinct from the alphabet
+/// board's `l.id` so each flip card can be voiced separately in the Studio.
+String flipVoId(ArabicLetter l) => '${l.id}-flip';

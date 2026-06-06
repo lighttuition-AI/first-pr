@@ -493,6 +493,12 @@ class _GameCard extends StatelessWidget {
       case GameType.arabicOrder:
         subtitle = 'Drag them in order';
         trailing = customGameTrailing(game.id) ?? const Text('🔀', style: TextStyle(fontSize: 34));
+      case GameType.arabicFlip:
+        subtitle = 'Flip & hear · ${kArabicLetters.length} cards';
+        trailing = customGameTrailing(game.id) ?? const Text('🔄', style: TextStyle(fontSize: 34));
+      case GameType.arabicSounds:
+        subtitle = '${kHarakatForms.length} sounds · tap to hear';
+        trailing = customGameTrailing(game.id) ?? const Text('🔊', style: TextStyle(fontSize: 34));
       case GameType.produceQuiz:
         subtitle = 'Guess & hear · EN + Somali';
         trailing = customGameTrailing(game.id) ?? Text(game.topic == 'fruit' ? '🍎' : '🥕', style: const TextStyle(fontSize: 34));
