@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# App Store Connect API secrets — NEVER commit (real keys live in ~/.appstoreconnect/)
+*.p8
+*.mobileprovision
+*-asc.env
+.testflight*.env
