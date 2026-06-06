@@ -190,26 +190,48 @@ flutter run -d 9C1A4EAC-B929-46AD-912D-6D29B9704D56
 # screenshot the sim:  xcrun simctl io booted screenshot out.png
 ```
 
-## TestFlight — prep DONE, upload is the user's step
-Build-side prep is complete (the user now has the paid Apple Developer account):
-- **Bundle ID** `com.hnllearning.app` (set in all 6 pbxproj configs incl. RunnerTests).
-  Permanent — must match the App Store Connect record.
-- **Display name** `HNL Learning`; **version** `1.0.0+1`.
-- **App icon**: branded Robo mascot on a sunshine ground (no alpha — App-Store safe).
-  Built by rendering the in-app `Robo` art to a 1024 master, then resizing into every
-  `AppIcon.appiconset` slot (alpha stripped). The throwaway generator (a test that
-  briefly made `_RoboPainter` public + `Picture.toImage`'d Robo on a warm radial, then
-  PIL-resized) was removed after use. To re-skin the icon, re-render a 1024 PNG and resize.
-- **Export compliance** declared: `ITSAppUsesNonExemptEncryption=false` in Info.plist
-  (only standard HTTPS) — no per-upload encryption prompt.
-- Permissions (mic + photo) present; `flutter build ios --release --no-codesign` is green.
+## TestFlight — SHIPPED (first build uploaded 2026-06-06)
+A signed App Store IPA has been **built and delivered to App Store Connect → TestFlight**.
+Locked-in identity (all permanent / must match App Store Connect):
+- **Bundle ID `com.hnllearning.com`** — the App ID registered under the PAID team.
+  (Earlier we briefly used `com.hnllearning.app`; that profile was auto-created under a
+  FREE *personal* team, so the registered/uploadable id is `.com`. Don't revert.)
+- **Paid signing team `4696KN59VV`** = "Khadar Ainashe" (Individual). Set as
+  `DEVELOPMENT_TEAM` on the 3 Runner configs + automatic signing. ⚠️ Gotcha: the cert
+  name shows "Khadar Ainashe (BLGU4D968K)" — `BLGU4D968K` is a CERT id, **not** the team;
+  the team is `4696KN59VV` (confirmed by the issued provisioning profile + Xcode plist).
+- **Display name** `HNL Learning`; **version `1.0.0+1`** (bump the `+build` in pubspec
+  before each new upload — App Store Connect rejects a reused build number).
+- **App icon**: branded Robo on a sunshine ground (alpha stripped). To re-skin: re-render
+  the in-app `Robo` to a 1024 PNG and resize into every `AppIcon.appiconset` slot.
+- **Info.plist purpose strings**: mic + photo (used) AND camera + location (NOT used —
+  required only because bundled `file_picker` references those APIs; without them the
+  upload fails with App Store error **90683**). Also `ITSAppUsesNonExemptEncryption=false`.
+- Xcode 26 upgraded the project (objectVersion 60, UIScene manifest); `SceneDelegate.swift`
+  is present so launch is fine.
 
-**What only the user can do (Apple login):** open `ios/Runner.xcworkspace` in Xcode →
-Runner target → Signing & Capabilities → tick *Automatically manage signing* → pick their
-**Team** (their Apple ID). Then **Product ▸ Archive** → **Distribute App ▸ App Store Connect ▸
-Upload** (Xcode auto-creates certs/profiles, and the app record if missing). In App Store
-Connect ▸ TestFlight: fill the test details + add testers. Possible follow-up only if Apple
-emails about it: a `PrivacyInfo.xcprivacy` manifest (UserDefaults reason) — not blocking.
+**Build + upload a new build:** bump `version:` build in `pubspec.yaml` (e.g. `1.0.0+2`) →
+`flutter build ipa --export-method app-store` (needs the user logged into Xcode for the
+paid team) → IPA at `build/ios/ipa/hnl_learning.ipa` → upload by dragging it into the
+**Transporter** app (or Xcode Organizer). Automatic signing creates the distribution
+cert + App Store profile on the fly.
+
+**Privacy policy** (required for external testing + App Store): lives at `docs/privacy.html`,
+hosted free on **GitHub Pages** → **https://lighttuition-ai.github.io/first-pr/privacy.html**
+(repo is public; Pages serves `main` `/docs`). It's honest: the app collects nothing,
+everything stays on-device.
+
+**Still pending (user-side in App Store Connect):**
+- *Internal testing* (fastest, no review): TestFlight ▸ Internal Testing ▸ add testers
+  (self + up to 100), install via the TestFlight app. No Beta App Review needed.
+- *External testing / public*: needs Beta App Description + Feedback Email + the Privacy
+  Policy URL above + **screenshots** + submit for **Beta App Review**. Sign-In required =
+  **OFF** (no login). Review note: the Settings/parent area is behind a child-lock —
+  tap the gear, enter **1-2-3-4**.
+- *Full App Store release* (later): screenshots per device, description, category
+  (Education / made-for-kids), age rating, "Data Not Collected" privacy answers.
+- If Apple emails about a missing `PrivacyInfo.xcprivacy` (UserDefaults reason) — add it;
+  not blocking for TestFlight.
 
 ## Possible next ideas (not started)
 - Default letter voice via **Arabic TTS** locale (currently English TTS says the
