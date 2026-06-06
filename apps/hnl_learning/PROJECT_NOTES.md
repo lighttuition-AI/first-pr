@@ -231,11 +231,18 @@ Locked-in identity (all permanent / must match App Store Connect):
 - Xcode 26 upgraded the project (objectVersion 60, UIScene manifest); `SceneDelegate.swift`
   is present so launch is fine.
 
-**Build + upload a new build:** bump `version:` build in `pubspec.yaml` (e.g. `1.0.0+2`) →
+**Build + upload a new build:** bump `version:` build in `pubspec.yaml` (e.g. `1.1.0+4`) →
 `flutter build ipa --export-method app-store` (needs the user logged into Xcode for the
-paid team) → IPA at `build/ios/ipa/hnl_learning.ipa` → upload by dragging it into the
-**Transporter** app (or Xcode Organizer). Automatic signing creates the distribution
-cert + App Store profile on the fly.
+paid team) → IPA at `build/ios/ipa/hnl_learning.ipa`. Automatic signing creates the
+distribution cert + App Store profile on the fly.
+
+**Upload (scripted, no Transporter):** an App Store Connect **API key** drives uploads via
+`xcrun altool`. One-time: `scripts/setup-asc-key.sh ~/Downloads/AuthKey_XXXX.p8 <ISSUER_ID>`
+(stores the `.p8` + Key/Issuer IDs in `~/.appstoreconnect/`, **outside git**). Then either
+`scripts/ship-testflight.sh` (build + upload) or `scripts/upload-testflight.sh` (upload an
+existing IPA). See `scripts/README.md`. Secrets never touch the repo (`.gitignore` blocks
+`*.p8` / `*-asc.env`). The old manual path (drag the IPA into the **Transporter** app) still
+works as a fallback.
 
 **Privacy policy** (required for external testing + App Store): lives at `docs/privacy.html`,
 hosted free on **GitHub Pages** → **https://lighttuition-ai.github.io/first-pr/privacy.html**
