@@ -1,0 +1,14 @@
+{
+  "name": "hpark-tool",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Admin scripts for Hargeisa Parking — seed Firestore and grant admin claims.",
+  "scripts": {
+    "seed": "node seed_firestore.mjs",
+    "grant-admin": "node grant_admin.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}
