@@ -1,28 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
-import 'package:intl/intl.dart';
 
 import '../models/pay_models.dart';
-
-final _money = NumberFormat.decimalPattern('en');
-
-String slsh(int amount) => 'SLSH ${_money.format(amount)}';
+import '../screens/citation_detail.dart';
+import '../util/format.dart';
+import '../widgets/pay_sheet.dart';
 
 class HomeTab extends StatelessWidget {
   const HomeTab({
     super.key,
     required this.citizen,
     required this.citations,
-    required this.onPaidAll,
+    required this.onChanged,
   });
 
   final Citizen citizen;
   final List<Citation> citations;
-  final VoidCallback onPaidAll;
+
+  /// Called whenever a citation's state changes (paid / appealed) so the shell
+  /// can rebuild the balance + lists.
+  final VoidCallback onChanged;
 
   int get _outstanding => citations
       .where((c) => c.status == CitationStatus.outstanding)
       .fold(0, (sum, c) => sum + c.amount);
+
+  void _payAll(BuildContext context) {
+    final amount = _outstanding;
+    showPaySheet(context, amount: amount, onPaid: (method) {
+      for (final c in citations) {
+        if (c.status == CitationStatus.outstanding) c.status = CitationStatus.paid;
+      }
+      onChanged();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: HpColors.elevated,
+          content: Row(children: [
+            const Icon(Icons.check_circle, color: HpColors.success, size: 18),
+            const SizedBox(width: HpSpace.x3),
+            Text('Paid ${slsh(amount)} via $method', style: const TextStyle(color: HpColors.text)),
+          ]),
+        ),
+      );
+    });
+  }
+
+  void _openDetail(BuildContext context, Citation c) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => CitationDetailScreen(citation: c, onChanged: onChanged)),
+    ).then((_) => onChanged());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,51 +74,16 @@ class HomeTab extends StatelessWidget {
           ],
         ),
         const SizedBox(height: HpSpace.x5),
-        _BalanceCard(
-          outstanding: outstanding,
-          onPay: outstanding > 0 ? () => _openPaySheet(context, outstanding) : null,
-        ),
+        _BalanceCard(outstanding: outstanding, onPay: outstanding > 0 ? () => _payAll(context) : null),
         const SizedBox(height: HpSpace.x6),
         Text('Your citations', style: HpType.heading(size: 18)),
         const SizedBox(height: HpSpace.x3),
         for (final c in citations)
           Padding(
             padding: const EdgeInsets.only(bottom: HpSpace.x3),
-            child: _CitationCard(citation: c),
+            child: _CitationCard(citation: c, onTap: () => _openDetail(context, c)),
           ),
       ],
-    );
-  }
-
-  void _openPaySheet(BuildContext context, int amount) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: HpColors.elevated,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(HpRadius.xl)),
-      ),
-      builder: (sheetCtx) => _PaySheet(
-        amount: amount,
-        onPaid: (method) {
-          Navigator.pop(sheetCtx);
-          onPaidAll();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: HpColors.elevated,
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: HpColors.success, size: 18),
-                  const SizedBox(width: HpSpace.x3),
-                  Text('Paid ${slsh(amount)} via $method',
-                      style: const TextStyle(color: HpColors.text)),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }
@@ -112,18 +105,15 @@ class _BalanceCard extends StatelessWidget {
           Text('OUTSTANDING BALANCE', style: HpType.eyebrow),
           const SizedBox(height: HpSpace.x3),
           if (settled)
-            Row(
-              children: [
-                const Icon(Icons.check_circle, color: HpColors.success, size: 26),
-                const SizedBox(width: HpSpace.x3),
-                Text('All settled', style: HpType.heading(size: 26, color: HpColors.success)),
-              ],
-            )
+            Row(children: [
+              const Icon(Icons.check_circle, color: HpColors.success, size: 26),
+              const SizedBox(width: HpSpace.x3),
+              Text('All settled', style: HpType.heading(size: 26, color: HpColors.success)),
+            ])
           else
             ShaderMask(
               shaderCallback: (b) => HpColors.gradient.createShader(b),
-              child: Text(slsh(outstanding),
-                  style: HpType.mono(size: 34, weight: FontWeight.w700, color: Colors.white)),
+              child: Text(slsh(outstanding), style: HpType.mono(size: 34, weight: FontWeight.w700, color: Colors.white)),
             ),
           const SizedBox(height: HpSpace.x5),
           HpButton(
@@ -140,8 +130,9 @@ class _BalanceCard extends StatelessWidget {
 }
 
 class _CitationCard extends StatelessWidget {
-  const _CitationCard({required this.citation});
+  const _CitationCard({required this.citation, required this.onTap});
   final Citation citation;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -152,6 +143,7 @@ class _CitationCard extends StatelessWidget {
     };
 
     return HpCard(
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -159,11 +151,7 @@ class _CitationCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: HpSpace.x2, vertical: 3),
-                decoration: BoxDecoration(
-                  color: HpColors.overlay,
-                  borderRadius: BorderRadius.circular(HpRadius.sm),
-                  border: Border.all(color: HpColors.borderStrong),
-                ),
+                decoration: BoxDecoration(color: HpColors.overlay, borderRadius: BorderRadius.circular(HpRadius.sm), border: Border.all(color: HpColors.borderStrong)),
                 child: Text(citation.plate, style: HpType.mono(size: 13, weight: FontWeight.w700)),
               ),
               const Spacer(),
@@ -171,111 +159,17 @@ class _CitationCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: HpSpace.x3),
-          Text(citation.violation,
-              style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
+          Text(citation.violation, style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
           const SizedBox(height: 4),
-          Text('${citation.districtName} · ${citation.id}',
-              style: HpType.body(size: 12.5, color: HpColors.textMuted)),
+          Text('${citation.districtName} · ${citation.id}', style: HpType.body(size: 12.5, color: HpColors.textMuted)),
           const SizedBox(height: HpSpace.x3),
-          Text(slsh(citation.amount),
-              style: HpType.mono(size: 18, weight: FontWeight.w700, color: HpColors.text)),
-        ],
-      ),
-    );
-  }
-}
-
-class _PaySheet extends StatelessWidget {
-  const _PaySheet({required this.amount, required this.onPaid});
-  final int amount;
-  final ValueChanged<String> onPaid;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: HpSpace.x5,
-        right: HpSpace.x5,
-        top: HpSpace.x5,
-        bottom: HpSpace.x6 + MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(
-            child: Container(
-              width: 40, height: 4,
-              decoration: BoxDecoration(
-                color: HpColors.borderStrong,
-                borderRadius: BorderRadius.circular(HpRadius.pill),
-              ),
-            ),
+          Row(
+            children: [
+              Text(slsh(citation.amount), style: HpType.mono(size: 18, weight: FontWeight.w700, color: HpColors.text)),
+              const Spacer(),
+              const Icon(Icons.chevron_right, color: HpColors.textMuted, size: 20),
+            ],
           ),
-          const SizedBox(height: HpSpace.x5),
-          Text('Pay ${slsh(amount)}', style: HpType.heading(size: 22)),
-          const SizedBox(height: HpSpace.x2),
-          Text('Choose a mobile money provider.', style: HpType.body(size: 14)),
-          const SizedBox(height: HpSpace.x5),
-          _ProviderTile(
-            name: 'ZAAD',
-            provider: 'Telesom',
-            color: HpColors.teal,
-            onTap: () => onPaid('ZAAD'),
-          ),
-          const SizedBox(height: HpSpace.x3),
-          _ProviderTile(
-            name: 'eDahab',
-            provider: 'Dahabshiil',
-            color: HpColors.purple300,
-            onTap: () => onPaid('eDahab'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProviderTile extends StatelessWidget {
-  const _ProviderTile({
-    required this.name,
-    required this.provider,
-    required this.color,
-    required this.onTap,
-  });
-
-  final String name;
-  final String provider;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return HpCard(
-      onTap: onTap,
-      child: Row(
-        children: [
-          Container(
-            width: 46, height: 46,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(HpRadius.md),
-            ),
-            child: Icon(Icons.smartphone_rounded, color: color),
-          ),
-          const SizedBox(width: HpSpace.x4),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name,
-                    style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w700, fontSize: 16)),
-                Text(provider, style: HpType.body(size: 12.5, color: HpColors.textMuted)),
-              ],
-            ),
-          ),
-          const Icon(Icons.chevron_right, color: HpColors.textMuted),
         ],
       ),
     );

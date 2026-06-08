@@ -12,10 +12,14 @@ export 'src/theme/hp_theme.dart';
 export 'src/models/approval_status.dart';
 export 'src/models/officer.dart';
 export 'src/models/district.dart';
+export 'src/models/vehicle.dart';
+export 'src/models/violation.dart';
+export 'src/models/appeal.dart';
 
 // Data
 export 'src/data/districts.dart';
 export 'src/data/officer_repository.dart';
+export 'src/data/enforcement_data.dart';
 
 // Widgets
 export 'src/widgets/hp_card.dart';

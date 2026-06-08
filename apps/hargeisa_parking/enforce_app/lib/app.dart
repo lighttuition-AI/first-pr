@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 
-import 'screens/home_screen.dart';
+import 'screens/officer_shell.dart';
 import 'screens/pending_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/welcome_screen.dart';
@@ -67,7 +67,7 @@ class _EnforceRootState extends State<EnforceRoot> {
           return const SizedBox.shrink();
         }
         if (officer.canUseOfficerApp) {
-          return HomeScreen(officer: officer, onSignOut: _signOut);
+          return OfficerShell(officer: officer, onSignOut: _signOut);
         }
         return PendingScreen(officer: officer, repo: repo, onSignOut: _signOut);
       },

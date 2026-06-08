@@ -21,22 +21,20 @@ class _MainShellState extends State<MainShell> {
   int _index = 0;
   late final List<Citation> _citations = seedCitations();
 
-  void _payAllOutstanding() {
-    setState(() {
-      for (final c in _citations) {
-        if (c.status == CitationStatus.outstanding) {
-          c.status = CitationStatus.paid;
-        }
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final tabs = [
-      HomeTab(citizen: widget.citizen, citations: _citations, onPaidAll: _payAllOutstanding),
+      HomeTab(
+        citizen: widget.citizen,
+        citations: _citations,
+        onChanged: () => setState(() {}),
+      ),
       const DistrictsTab(),
-      ProfileTab(citizen: widget.citizen, onSignOut: widget.onSignOut),
+      ProfileTab(
+        citizen: widget.citizen,
+        citations: _citations,
+        onSignOut: widget.onSignOut,
+      ),
     ];
 
     return Scaffold(
