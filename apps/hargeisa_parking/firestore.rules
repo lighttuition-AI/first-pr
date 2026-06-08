@@ -1,0 +1,74 @@
+rules_version = '2';
+
+// Hargeisa Parking — Firestore security rules.
+//
+// These enforce the officer-approval gate at the database level (not just in the
+// UI): an officer can register themselves only as PENDING, and only an admin can
+// move them to approved/rejected/suspended. Only APPROVED officers can issue
+// citations. Admins are identified by the custom auth claim `admin == true`
+// (set once via the Admin SDK / a Cloud Function — see FIREBASE_SETUP.md).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin()    { return isSignedIn() && request.auth.token.admin == true; }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // True only when the signed-in user is an officer whose record is approved.
+    function isApprovedOfficer() {
+      return isSignedIn()
+        && userDoc().role == 'officer'
+        && get(/databases/$(database)/documents/officers/$(userDoc().officerId)).data.status == 'approved';
+    }
+
+    // User profiles: uid -> { role: 'officer'|'citizen', officerId? }.
+    // A user manages their own profile but can never self-assign admin.
+    match /users/{uid} {
+      allow read:   if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == uid
+                    && request.resource.data.role in ['officer', 'citizen'];
+      allow update: if isSignedIn() && request.auth.uid == uid
+                    && request.resource.data.role == resource.data.role;
+      allow delete: if isAdmin();
+    }
+
+    // Officer records. Self-register as PENDING; only an admin changes status.
+    match /officers/{officerId} {
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.status == 'pending';
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Sequential officer-id counter (used by registration transactions).
+    match /counters/{id} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Vehicle database — any officer/admin may look up; only admins import/manage.
+    match /vehicles/{plate} {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Citations — only an APPROVED officer may issue; admins may amend.
+    match /citations/{citationId} {
+      allow read:   if isSignedIn();
+      allow create: if isApprovedOfficer();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Appeals — a citizen submits (must start as 'review'); admins decide.
+    match /appeals/{appealId} {
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.status == 'review';
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}

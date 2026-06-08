@@ -48,6 +48,46 @@ class Officer {
         .toUpperCase();
   }
 
+  /// Firestore-agnostic serialization (dates as epoch millis, enums by name).
+  /// The Firebase layer maps these to/from document data.
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'fullName': fullName,
+        'nationalId': nationalId,
+        'phone': phone,
+        'dateOfBirth': dateOfBirth.millisecondsSinceEpoch,
+        'badgeNumber': badgeNumber,
+        'status': status.name,
+        'appliedAt': appliedAt.millisecondsSinceEpoch,
+        'assignedDistrictId': assignedDistrictId,
+        'approvedAt': approvedAt?.millisecondsSinceEpoch,
+        'approvedBy': approvedBy,
+        'reviewNote': reviewNote,
+        'citationsIssued': citationsIssued,
+        'photoUrl': photoUrl,
+      };
+
+  static Officer fromMap(Map<String, dynamic> map) {
+    DateTime? ms(Object? v) =>
+        v == null ? null : DateTime.fromMillisecondsSinceEpoch((v as num).toInt());
+    return Officer(
+      id: map['id'] as String,
+      fullName: map['fullName'] as String? ?? '',
+      nationalId: map['nationalId'] as String? ?? '',
+      phone: map['phone'] as String? ?? '',
+      dateOfBirth: ms(map['dateOfBirth']) ?? DateTime(1990),
+      badgeNumber: map['badgeNumber'] as String? ?? '',
+      status: ApprovalStatus.values.byName(map['status'] as String? ?? 'pending'),
+      appliedAt: ms(map['appliedAt']) ?? DateTime.now(),
+      assignedDistrictId: map['assignedDistrictId'] as String?,
+      approvedAt: ms(map['approvedAt']),
+      approvedBy: map['approvedBy'] as String?,
+      reviewNote: map['reviewNote'] as String?,
+      citationsIssued: (map['citationsIssued'] as num?)?.toInt() ?? 0,
+      photoUrl: map['photoUrl'] as String?,
+    );
+  }
+
   Officer copyWith({
     ApprovalStatus? status,
     String? assignedDistrictId,
