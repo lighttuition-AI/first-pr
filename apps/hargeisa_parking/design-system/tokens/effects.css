@@ -1,0 +1,28 @@
+/* ============================================================
+   Hargeisa Parking — Effects: glow, elevation, blur, motion
+   No drop shadows. Depth comes from borders, glow & layering.
+   ============================================================ */
+
+:root {
+  /* ---- Glow (replaces shadows) ---- */
+  --glow-purple:  0 0 0 1px rgba(124,108,248,0.40), 0 8px 30px -8px rgba(124,108,248,0.45);
+  --glow-purple-sm: 0 0 0 1px rgba(124,108,248,0.35), 0 4px 16px -6px rgba(124,108,248,0.40);
+  --glow-teal:    0 0 0 1px rgba(0,216,214,0.40), 0 8px 30px -8px rgba(0,216,214,0.40);
+  --glow-danger:  0 0 0 1px rgba(255,82,82,0.40), 0 8px 24px -8px rgba(255,82,82,0.40);
+
+  /* ---- Focus ring ---- */
+  --ring-focus: 0 0 0 3px rgba(124,108,248,0.35);
+
+  /* ---- Subtle elevation (used sparingly, e.g. popovers) ---- */
+  --elev-popover: 0 12px 40px -12px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.06);
+
+  /* ---- Glass / blur ---- */
+  --blur-bg: saturate(140%) blur(16px); /* @kind other */
+
+  /* ---- Motion — fast, subtle, functional ---- */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1); /* @kind other */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1); /* @kind other */
+  --dur-fast:    120ms; /* @kind other */
+  --dur-base:    180ms; /* @kind other */
+  --dur-slow:    260ms; /* @kind other */
+}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HPark Command — Admin Dashboard</title>
+<link rel="stylesheet" href="design-system/styles.css" />
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 28px; overflow: hidden;
+    background:
+      radial-gradient(900px 600px at 50% -10%, rgba(124,108,248,0.10), transparent 70%),
+      #060609;
+  }
+  #scaler { transform-origin: center center; }
+  h3, h4 { white-space: nowrap; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+  <div id="scaler"><div id="app"></div></div>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="design-system/_ds_bundle.js"></script>
+  <script>Object.assign(window, window.HargeisaParkingDesignSystem_0eb67a || {});</script>
+
+  <script type="text/babel" src="shared/browser-window.jsx"></script>
+  <script type="text/babel" src="command/command-core.jsx"></script>
+  <script type="text/babel" src="command/command-map.jsx"></script>
+  <script type="text/babel" src="command/command-dashboard.jsx"></script>
+  <script type="text/babel" src="command/command-pages-a.jsx"></script>
+  <script type="text/babel" src="command/command-pages-b.jsx"></script>
+  <script type="text/babel" src="command/command-app.jsx"></script>
+
+  <script type="text/babel">
+    const W = 1440, H = 900;
+    (function mount() {
+      const ChromeWindow = window.ChromeWindow, CommandApp = window.CommandApp;
+      if (!ChromeWindow || !CommandApp || !window.HargeisaParkingDesignSystem_0eb67a) { return setTimeout(mount, 30); }
+      function Root() {
+        return (
+          <ChromeWindow width={W} height={H} url="command.hargeisaparking.so/dashboard" tabs={[{ title: 'HPark Command' }, { title: 'Hargeisa City Portal' }]}>
+            <div style={{ width: '100%', height: '100%', background: 'var(--hp-bg)' }}>
+              <CommandApp />
+            </div>
+          </ChromeWindow>
+        );
+      }
+      ReactDOM.createRoot(document.getElementById('app')).render(<Root />);
+      const fit = () => {
+        const s = Math.min((window.innerWidth - 56) / W, (window.innerHeight - 56) / H);
+        document.getElementById('scaler').style.transform = `scale(${Math.min(s, 1)})`;
+      };
+      fit(); window.addEventListener('resize', fit);
+    })();
+  </script>
+
+  <template id="__bundler_thumbnail">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" rx="22" fill="#0A0A0F"/>
+      <rect x="22" y="28" width="56" height="44" rx="6" fill="none" stroke="#7C6CF8" stroke-width="2.5"/>
+      <line x1="40" y1="28" x2="40" y2="72" stroke="#7C6CF8" stroke-width="2.5"/>
+      <rect x="48" y="38" width="22" height="5" rx="2.5" fill="#00D8D6"/>
+      <rect x="48" y="50" width="16" height="5" rx="2.5" fill="#00D8D6" opacity="0.6"/>
+    </svg>
+  </template>
+</body>
+</html>

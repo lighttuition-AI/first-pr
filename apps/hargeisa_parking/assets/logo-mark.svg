@@ -1,0 +1,10 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Hargeisa Parking">
+  <defs>
+    <linearGradient id="hpGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C6CF8"></stop>
+      <stop offset="1" stop-color="#00D8D6"></stop>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="#141420" stroke="url(#hpGrad)" stroke-width="2.5"></rect>
+  <path d="M24 17h11.5c6.9 0 11.5 4.2 11.5 10.4 0 6.3-4.6 10.5-11.6 10.5H30v9.1h-6V17Zm6 5.4v10h5.1c3.4 0 5.6-2 5.6-5s-2.2-5-5.6-5H30Z" fill="url(#hpGrad)"></path>
+</svg>
