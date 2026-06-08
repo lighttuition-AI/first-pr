@@ -20,9 +20,13 @@ hargeisa_parking/
 │   ├── lib/src/models/    #   Officer, ApprovalStatus, District
 │   ├── lib/src/data/      #   OfficerRepository (+ seeded mock), 8 Hargeisa districts
 │   └── lib/src/widgets/   #   HpButton, HpCard, HpBadge, HpKpiCard, HpAvatar, HpInput, HpLogoMark
+├── packages/hpark_firebase/ # Firebase Auth + Firestore impls of the backend seams (ready to flip)
 ├── enforce_app/           # HPark Enforce  (Flutter, Android/iOS)
 ├── pay_app/               # HPark Pay      (Flutter, Android/iOS)
 ├── command_app/           # HPark Command  (Flutter, web)
+├── firestore.rules        # DB security rules — enforce the approval gate server-side
+├── firebase.json          # Firebase project config
+├── FIREBASE_SETUP.md       # step-by-step: turn on the real backend
 │
 ├── index.html             # design prototype launcher (the original HTML/React mockups)
 ├── HPark *.html + */*.jsx  # the high-fidelity web prototypes — the visual reference
@@ -88,10 +92,23 @@ simulated camera / map / file I/O):
 - **Command** — dashboard, officer approvals, officers, **vehicle import w/ dedupe**,
   zones, **live map**, **appeals review** (watch → uphold/dismiss), **reports**.
 
+## Backend (Firebase) — built, ready to flip
+
+The real backend is written and tested in `packages/hpark_firebase/`:
+`FirebaseOfficerRepository` (Firestore, live-synced) and `FirebaseAuthService`
+implement the same `hpark_core` seams the apps already use, plus `firestore.rules`
+that enforce the **approval gate in the database** (officers can only self-register
+as `pending`; only admins approve; only approved officers can write citations).
+
+It's deliberately not switched on yet — that needs your Firebase project. Follow
+[`FIREBASE_SETUP.md`](FIREBASE_SETUP.md): create the project, run `flutterfire
+configure`, deploy the rules, and flip each app with a one-line `initBackend(...)`.
+If Firebase isn't configured, the apps fall back to the in-memory demo backend, so
+they never break mid-setup.
+
 ## Next steps
-- **Backend (Firebase):** swap the in-memory repositories for Firebase Auth + Firestore
-  so approvals/citations/appeals sync across devices; real officer & citizen auth;
-  Firestore security rules. `OfficerRepository` is the first seam.
+- Run the `FIREBASE_SETUP.md` steps, then I'll wire the officer & citizen **login
+  screens** and move citations/appeals/vehicles onto Firestore too.
 - Real device integrations: camera/LPR, GPS, a maps SDK, file picker for imports,
   ZAAD/eDahab payment APIs.
 - Bilingual English / Somali toggle; replace stylized data with live data.

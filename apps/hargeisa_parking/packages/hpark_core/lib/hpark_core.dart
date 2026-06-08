@@ -20,6 +20,7 @@ export 'src/models/appeal.dart';
 export 'src/data/districts.dart';
 export 'src/data/officer_repository.dart';
 export 'src/data/enforcement_data.dart';
+export 'src/data/auth_service.dart';
 
 // Widgets
 export 'src/widgets/hp_card.dart';
