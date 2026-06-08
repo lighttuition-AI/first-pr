@@ -56,13 +56,12 @@ class DefaultFirebaseOptions {
     projectId: 'hargeisa-parking',
     storageBucket: 'hargeisa-parking.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBj5S0mW-SagQxKUfr3ecZFcQZ2VRH9Uy8',
-    appId: '1:45528548227:ios:504c9fd818a95a4e41acb6',
+    appId: '1:45528548227:ios:1520632156c97d7b41acb6',
     messagingSenderId: '45528548227',
     projectId: 'hargeisa-parking',
     storageBucket: 'hargeisa-parking.firebasestorage.app',
-    iosBundleId: 'so.hargeisaparking.hparkEnforce',
+    iosBundleId: 'com.hargeisaparking.enforce',
   );
 }
