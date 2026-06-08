@@ -13,6 +13,7 @@ class Officer {
     required this.badgeNumber,
     required this.status,
     required this.appliedAt,
+    this.email = '',
     this.assignedDistrictId,
     this.approvedAt,
     this.approvedBy,
@@ -29,6 +30,7 @@ class Officer {
   final String badgeNumber; // e.g. HG-OFR-118
   final ApprovalStatus status;
   final DateTime appliedAt;
+  final String email; // auth email this officer signs in with
 
   final String? assignedDistrictId;
   final DateTime? approvedAt;
@@ -59,6 +61,7 @@ class Officer {
         'badgeNumber': badgeNumber,
         'status': status.name,
         'appliedAt': appliedAt.millisecondsSinceEpoch,
+        'email': email,
         'assignedDistrictId': assignedDistrictId,
         'approvedAt': approvedAt?.millisecondsSinceEpoch,
         'approvedBy': approvedBy,
@@ -79,6 +82,7 @@ class Officer {
       badgeNumber: map['badgeNumber'] as String? ?? '',
       status: ApprovalStatus.values.byName(map['status'] as String? ?? 'pending'),
       appliedAt: ms(map['appliedAt']) ?? DateTime.now(),
+      email: map['email'] as String? ?? '',
       assignedDistrictId: map['assignedDistrictId'] as String?,
       approvedAt: ms(map['approvedAt']),
       approvedBy: map['approvedBy'] as String?,
