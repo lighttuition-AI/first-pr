@@ -9,7 +9,7 @@ intake. Kept tidy so it's easy to navigate as more apps are added.
 .
 ├── apps/                 # one folder per shippable application
 │   ├── hnl_learning/      # HNL Learning — kids' educational learning app (Flutter)
-│   └── hargeisa_parking/  # Hargeisa Parking — smart-city parking ecosystem (web prototype)
+│   └── hargeisa_parking/  # Hargeisa Parking — 3 Flutter apps + shared core + web prototype
 ├── design-refs/          # incoming design ideas + intake checklist
 └── README.md             # you are here
 ```
@@ -19,7 +19,7 @@ intake. Kept tidy so it's easy to navigate as more apps are added.
 | App | What it is | Stack | Status |
 |-----|------------|-------|--------|
 | [`apps/hnl_learning`](apps/hnl_learning) | Audio-first educational app for kids 2–8 (3 worlds · 7 games · record-your-voice + upload-your-art studios) | Flutter | Playable build |
-| [`apps/hargeisa_parking`](apps/hargeisa_parking) | Smart-city parking ecosystem — officer app, citizen app & admin dashboard, linked from one launcher | HTML/React (web prototype) | Design prototype |
+| [`apps/hargeisa_parking`](apps/hargeisa_parking) | Smart-city parking ecosystem — officer app, citizen app & admin dashboard (with officer-approval gate) on a shared design-system package | Flutter (+ HTML/React design prototype) | MVP scaffold |
 
 ## Conventions
 

@@ -1,0 +1,16 @@
+# Umbrella ignore for the Hargeisa Parking project.
+# Each Flutter sub-project (enforce_app/, pay_app/, command_app/, packages/hpark_core/)
+# also has its own .gitignore; this catches stray artifacts at the project root.
+
+# Flutter / Dart build output
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# IDE / OS
+.DS_Store
+*.iml
