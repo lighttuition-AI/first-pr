@@ -10,9 +10,6 @@ import '../pages/reports_page.dart';
 import '../pages/vehicle_import_page.dart';
 import '../pages/zones_page.dart';
 
-/// The signed-in admin (mock). Used as the actor on approval decisions.
-const String kAdminName = 'Hodan Ali';
-
 enum CommandPage {
   dashboard('Dashboard', Icons.grid_view_rounded),
   approvals('Officer approvals', Icons.verified_user_outlined),
@@ -29,22 +26,25 @@ enum CommandPage {
 }
 
 class CommandShell extends StatefulWidget {
-  const CommandShell({super.key});
+  const CommandShell({
+    super.key,
+    required this.repo,
+    required this.adminName,
+    required this.onSignOut,
+  });
+
+  final OfficerRepository repo;
+  final String adminName;
+  final VoidCallback onSignOut;
 
   @override
   State<CommandShell> createState() => _CommandShellState();
 }
 
 class _CommandShellState extends State<CommandShell> {
-  final OfficerRepository repo = OfficerRepository.demo();
+  OfficerRepository get repo => widget.repo;
   late final List<Appeal> appeals = seedAppeals();
   CommandPage _page = CommandPage.dashboard;
-
-  @override
-  void dispose() {
-    repo.dispose();
-    super.dispose();
-  }
 
   void _go(CommandPage p) => setState(() => _page = p);
 
@@ -53,7 +53,7 @@ class _CommandShellState extends State<CommandShell> {
       case CommandPage.dashboard:
         return DashboardPage(repo: repo, onSeeApprovals: () => _go(CommandPage.approvals));
       case CommandPage.approvals:
-        return ApprovalsPage(repo: repo, adminName: kAdminName);
+        return ApprovalsPage(repo: repo, adminName: widget.adminName);
       case CommandPage.officers:
         return OfficersPage(repo: repo);
       case CommandPage.vehicles:
@@ -65,7 +65,7 @@ class _CommandShellState extends State<CommandShell> {
       case CommandPage.appeals:
         return AppealsReviewPage(
           appeals: appeals,
-          adminName: kAdminName,
+          adminName: widget.adminName,
           onChanged: () => setState(() {}),
         );
       case CommandPage.reports:
@@ -86,6 +86,8 @@ class _CommandShellState extends State<CommandShell> {
                 current: _page,
                 pendingCount: repo.pending.length,
                 appealsCount: appeals.where((a) => a.status == AppealStatus.review).length,
+                adminName: widget.adminName,
+                onSignOut: widget.onSignOut,
                 onSelect: _go,
               ),
               Expanded(
@@ -114,13 +116,24 @@ class _Sidebar extends StatelessWidget {
     required this.current,
     required this.pendingCount,
     required this.appealsCount,
+    required this.adminName,
+    required this.onSignOut,
     required this.onSelect,
   });
 
   final CommandPage current;
   final int pendingCount;
   final int appealsCount;
+  final String adminName;
+  final VoidCallback onSignOut;
   final ValueChanged<CommandPage> onSelect;
+
+  String get _initials {
+    final parts = adminName.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    if (parts.isEmpty) return 'A';
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
+  }
 
   int? _badgeFor(CommandPage p) {
     if (p == CommandPage.approvals && pendingCount > 0) return pendingCount;
@@ -158,25 +171,31 @@ class _Sidebar extends StatelessWidget {
             ),
           ),
           const Divider(height: 1),
-          const Padding(
-            padding: EdgeInsets.all(HpSpace.x4),
+          Padding(
+            padding: const EdgeInsets.all(HpSpace.x4),
             child: Row(
               children: [
-                HpAvatar(initials: 'HA', size: 38, statusColor: HpColors.success),
-                SizedBox(width: HpSpace.x3),
+                HpAvatar(initials: _initials, size: 38, statusColor: HpColors.success),
+                const SizedBox(width: HpSpace.x3),
                 Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(kAdminName,
-                          style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 14)),
-                      Text('City operations',
+                      Text(adminName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 14)),
+                      const Text('City operations',
                           style: TextStyle(color: HpColors.textMuted, fontSize: 12)),
                     ],
                   ),
                 ),
-                Icon(Icons.more_horiz, color: HpColors.textMuted, size: 18),
+                IconButton(
+                  tooltip: 'Sign out',
+                  onPressed: onSignOut,
+                  icon: const Icon(Icons.logout_rounded, color: HpColors.textMuted, size: 18),
+                ),
               ],
             ),
           ),

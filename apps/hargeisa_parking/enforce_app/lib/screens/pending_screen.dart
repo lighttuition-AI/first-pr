@@ -5,17 +5,16 @@ import '../widgets/auth_scaffold.dart';
 
 /// Shown whenever a signed-in officer is not [ApprovalStatus.approved].
 /// This is the visible half of the approval gate — the officer cannot reach any
-/// enforcement feature until an admin clears them in HPark Command.
+/// enforcement feature until an admin clears them in HPark Command. The record is
+/// watched live, so this screen unlocks the moment an admin approves.
 class PendingScreen extends StatelessWidget {
   const PendingScreen({
     super.key,
     required this.officer,
-    required this.repo,
     required this.onSignOut,
   });
 
   final Officer officer;
-  final OfficerRepository repo;
   final VoidCallback onSignOut;
 
   @override
@@ -49,7 +48,7 @@ class PendingScreen extends StatelessWidget {
               children: [
                 _row('Name', officer.fullName),
                 const Divider(height: HpSpace.x6),
-                _row('Officer ID', officer.id, mono: true),
+                _row('National ID', officer.nationalId, mono: true),
                 const Divider(height: HpSpace.x6),
                 _row('Badge', officer.badgeNumber, mono: true),
               ],
@@ -72,37 +71,28 @@ class PendingScreen extends StatelessWidget {
               ),
             ),
           ],
+          if (status == ApprovalStatus.pending) ...[
+            const SizedBox(height: HpSpace.x5),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: HpColors.warning),
+                ),
+                const SizedBox(width: HpSpace.x3),
+                Text('Waiting for an admin to approve…',
+                    style: HpType.body(size: 12.5, color: HpColors.textMuted)),
+              ],
+            ),
+          ],
           const SizedBox(height: HpSpace.x6),
           TextButton(
             onPressed: onSignOut,
             child: Text('Sign out',
                 style: HpType.body(size: 14, weight: FontWeight.w600, color: HpColors.text2)),
           ),
-          if (status == ApprovalStatus.pending) ...[
-            const SizedBox(height: HpSpace.x4),
-            const Divider(),
-            const SizedBox(height: HpSpace.x3),
-            Text('DEMO — STANDS IN FOR THE ADMIN', style: HpType.eyebrow, textAlign: TextAlign.center),
-            const SizedBox(height: HpSpace.x2),
-            Text(
-              'In production an admin approves you from HPark Command. Tap below to '
-              'simulate that and watch this screen unlock the patrol home.',
-              textAlign: TextAlign.center,
-              style: HpType.body(size: 12.5, color: HpColors.textMuted),
-            ),
-            const SizedBox(height: HpSpace.x3),
-            HpButton(
-              label: 'Simulate admin approval',
-              variant: HpButtonVariant.secondary,
-              expand: true,
-              icon: Icons.verified_user_outlined,
-              onPressed: () => repo.approve(
-                officer.id,
-                by: 'Demo admin',
-                districtId: kHargeisaDistricts.first.id,
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -113,11 +103,14 @@ class PendingScreen extends StatelessWidget {
       children: [
         Text(label, style: HpType.body(size: 13.5, color: HpColors.textMuted)),
         const Spacer(),
-        Text(
-          value,
-          style: mono
-              ? HpType.mono(size: 14, color: HpColors.text)
-              : HpType.body(size: 14, weight: FontWeight.w600, color: HpColors.text),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: mono
+                ? HpType.mono(size: 14, color: HpColors.text)
+                : HpType.body(size: 14, weight: FontWeight.w600, color: HpColors.text),
+          ),
         ),
       ],
     );

@@ -2,11 +2,12 @@ rules_version = '2';
 
 // Hargeisa Parking — Firestore security rules.
 //
-// These enforce the officer-approval gate at the database level (not just in the
-// UI): an officer can register themselves only as PENDING, and only an admin can
-// move them to approved/rejected/suspended. Only APPROVED officers can issue
-// citations. Admins are identified by the custom auth claim `admin == true`
-// (set once via the Admin SDK / a Cloud Function — see FIREBASE_SETUP.md).
+// Enforces the officer-approval gate in the database (not just the UI):
+//  - Officer records are keyed by the officer's auth UID.
+//  - An officer can create ONLY their own record, and only as `pending`.
+//  - Only an admin (custom claim `admin == true`) can approve/reject/suspend.
+//  - Only an APPROVED officer can write citations.
+// See FIREBASE_SETUP.md for granting the admin claim.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -14,42 +15,26 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function isAdmin()    { return isSignedIn() && request.auth.token.admin == true; }
 
-    function userDoc() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
-    // True only when the signed-in user is an officer whose record is approved.
     function isApprovedOfficer() {
       return isSignedIn()
-        && userDoc().role == 'officer'
-        && get(/databases/$(database)/documents/officers/$(userDoc().officerId)).data.status == 'approved';
+        && exists(/databases/$(database)/documents/officers/$(request.auth.uid))
+        && get(/databases/$(database)/documents/officers/$(request.auth.uid)).data.status == 'approved';
     }
 
-    // User profiles: uid -> { role: 'officer'|'citizen', officerId? }.
-    // A user manages their own profile but can never self-assign admin.
-    match /users/{uid} {
-      allow read:   if isSignedIn() && (request.auth.uid == uid || isAdmin());
-      allow create: if isSignedIn() && request.auth.uid == uid
-                    && request.resource.data.role in ['officer', 'citizen'];
-      allow update: if isSignedIn() && request.auth.uid == uid
-                    && request.resource.data.role == resource.data.role;
-      allow delete: if isAdmin();
-    }
-
-    // Officer records. Self-register as PENDING; only an admin changes status.
+    // Officer records, keyed by auth UID. Self-create as pending; admins decide.
     match /officers/{officerId} {
-      allow read:   if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.status == 'pending';
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read:           if isAdmin() || (isSignedIn() && request.auth.uid == officerId);
+      allow create:         if isSignedIn() && request.auth.uid == officerId
+                            && request.resource.data.status == 'pending';
+      allow update, delete: if isAdmin();
     }
 
-    // Sequential officer-id counter (used by registration transactions).
+    // Sequential badge-number counter (written during signup).
     match /counters/{id} {
       allow read, write: if isSignedIn();
     }
 
-    // Vehicle database — any officer/admin may look up; only admins import/manage.
+    // Vehicle database — any signed-in user may look up; only admins manage.
     match /vehicles/{plate} {
       allow read:  if isSignedIn();
       allow write: if isAdmin();
@@ -57,18 +42,16 @@ service cloud.firestore {
 
     // Citations — only an APPROVED officer may issue; admins may amend.
     match /citations/{citationId} {
-      allow read:   if isSignedIn();
-      allow create: if isApprovedOfficer();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read:           if isSignedIn();
+      allow create:         if isApprovedOfficer();
+      allow update, delete: if isAdmin();
     }
 
     // Appeals — a citizen submits (must start as 'review'); admins decide.
     match /appeals/{appealId} {
-      allow read:   if isSignedIn();
-      allow create: if isSignedIn() && request.resource.data.status == 'review';
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read:           if isSignedIn();
+      allow create:         if isSignedIn() && request.resource.data.status == 'review';
+      allow update, delete: if isAdmin();
     }
   }
 }
