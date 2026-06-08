@@ -2,63 +2,81 @@
 
 Smart-city parking platform for Hargeisa — a three-product ecosystem built on the
 **Hargeisa Parking design system** (dark-first, "Linear meets Stripe for smart-city
-parking"). This folder holds the **launcher** (`index.html`) plus the three product
-prototypes it links to.
+parking"). Two mobile apps + one admin dashboard, plus the shared design-system
+package they're built on.
 
 | Product | Surface | Who | What |
 |---|---|---|---|
-| **HPark Enforce** | Officer mobile app | Parking officers | Badge login, district assignment, LPR plate scan, photo + video evidence, offline queue + sync |
-| **HPark Pay** | Citizen mobile app | Drivers / residents | Somaliland-ID registration, outstanding fees, pay via **ZAAD / eDahab**, video appeals, interactive 9-district deals map |
-| **HPark Command** | Admin web dashboard | Operations / city | Live officer-tracking map, compliance & revenue KPIs, zone management, bulk vehicle-data import with dedupe, appeals review, reports |
+| **HPark Enforce** | Officer app (iOS/Android) | Parking officers | Registration → **admin approval gate** → patrol home, plate scan, evidence, offline sync |
+| **HPark Pay** | Citizen app (iOS/Android) | Drivers / residents | Somaliland-ID registration, citations, pay via **ZAAD / eDahab**, **district deals** with scannable coupon QR |
+| **HPark Command** | Admin dashboard (web) | Operations / city | **Officer approvals**, dashboard KPIs, officer roster, 8-district zones, (live map / appeals / reports scaffolded) |
 
-`index.html` is the entry point — a landing page that introduces the ecosystem and
-links to each app, with a scannable QR that opens **HPark Pay** on a phone.
+## Two builds in this folder
 
-## Run it
+```
+hargeisa_parking/
+├── packages/hpark_core/   # shared Flutter package — design system + models + data
+│   ├── lib/src/theme/     #   HpColors, HpType, HpSpace/Radius/Size, HParkTheme.dark
+│   ├── lib/src/models/    #   Officer, ApprovalStatus, District
+│   ├── lib/src/data/      #   OfficerRepository (+ seeded mock), 8 Hargeisa districts
+│   └── lib/src/widgets/   #   HpButton, HpCard, HpBadge, HpKpiCard, HpAvatar, HpInput, HpLogoMark
+├── enforce_app/           # HPark Enforce  (Flutter, Android/iOS)
+├── pay_app/               # HPark Pay      (Flutter, Android/iOS)
+├── command_app/           # HPark Command  (Flutter, web)
+│
+├── index.html             # design prototype launcher (the original HTML/React mockups)
+├── HPark *.html + */*.jsx  # the high-fidelity web prototypes — the visual reference
+└── design-system/         # the prototype's CSS design tokens + component bundle
+```
 
-The launcher is plain HTML and opens on its own, but the three apps are React
-prototypes that load `.jsx` over HTTP (in-browser Babel), so they need a local
-static server — `file://` won't fetch them.
+The **Flutter apps are the real build**; the **HTML/React files are the design prototype**
+(the pixel target) exported from Claude Design. See `docs/design-chat.md` for the
+original intent.
+
+## The officer approval workflow ⭐
+
+Officers must be **approved before they can operate** — this keeps unauthorized people
+from claiming to be officers:
+
+1. An officer self-registers in **HPark Enforce** → their account is created **pending**
+   and they're held on a locked "waiting for approval" screen.
+2. An admin opens **HPark Command → Officer approvals**, verifies the national ID /
+   badge, and **approves** (assigning a district) or **rejects**.
+3. Approval flips the account to `approved`; the officer app unlocks the patrol home.
+   Rejected / suspended officers stay locked out.
+
+This is modelled in `hpark_core`'s `OfficerRepository` + `ApprovalStatus`, with unit
+tests in `packages/hpark_core/test/`. The current build uses a **seeded in-memory mock**
+so each app runs and the flow is demoable on its own (the officer app even has a
+clearly-labelled "simulate admin approval" button). To make an approval in Command
+unlock Enforce **across devices**, swap the mock for a shared backend — **Firebase
+Auth + Firestore** is the recommended fit; `OfficerRepository` is the seam to implement.
+
+## Run
 
 ```bash
-cd "apps/hargeisa_parking"
-python3 -m http.server 8000
-# open http://localhost:8000/  → click through to each app
+# Admin dashboard (web)
+cd command_app && flutter run -d chrome
+
+# Officer app  (emulator/simulator or device)
+cd enforce_app && flutter run        # demo logins: HG-OFR-118 (approved) · HG-OFR-127 (pending)
+
+# Citizen app
+cd pay_app && flutter run
 ```
 
-An internet connection is required: React, Babel, Lucide icons and the QR library
-load from CDNs.
+Fonts (Inter / Inter Tight / JetBrains Mono) load via `google_fonts` on first run, so
+the first launch needs internet. Tooling: Flutter 3.44.1 / Dart 3.12.1.
 
-## Structure
+## Districts
 
-```
-apps/hargeisa_parking/
-├── index.html              # ← launcher / landing page (the entry point)
-├── HPark Enforce.html      # officer-app prototype
-├── HPark Pay.html          # citizen-app prototype
-├── HPark Command.html      # admin-dashboard prototype
-├── assets/                 # logo-mark.svg, logo-wordmark.svg
-├── design-system/          # the bound design system — tokens + compiled component bundle
-│   ├── styles.css          #   global entry (@imports the tokens)
-│   ├── tokens/             #   colors · fonts · typography · spacing · effects · base
-│   ├── _ds_bundle.js       #   compiled React primitives (Button, Card, Badge, KpiCard, Input…)
-│   └── readme.md           #   full design-system guide
-├── shared/                 # phone-frame.jsx, browser-window.jsx (device chrome)
-├── pay/  enforce/  command/ # per-app React screens (core / auth / flow / etc.)
-└── docs/                   # design-handoff-README.md, design-chat.md (provenance)
-```
+The brief listed 9 entries but **Maxamuud Haybe = Mohamoud Haibe** (one district, two
+spellings), so the canonical list is **8 distinct districts** — see
+`packages/hpark_core/lib/src/data/districts.dart`. Swap in the official map + boundaries
+when available.
 
-## Status
-
-**Web prototype.** These are high-fidelity, interactive HTML/React prototypes exported
-from Claude Design — they define the visual + interaction target. They are **not** the
-production apps yet: the plan is to rebuild **HPark Enforce** and **HPark Pay** (mobile)
-and **HPark Command** (web) for real, matching these pixel-for-pixel. See
-[`docs/design-chat.md`](docs/design-chat.md) for the full design conversation and intent.
-
-### Known follow-ups (from the design brief)
-- Drop in the real Hargeisa map + district boundaries (the 9-district map is stylized).
-- Confirm the district list — the brief had a likely duplicate (Maxamuud Haybe /
-  Mohamoud Haibe); all 9 are kept as written for now.
-- Deepen DMV-integration / collections escalation, multi-vehicle management, and a
-  bilingual English / Somali toggle.
+## Next steps
+- Wire a real backend (Firebase) so approvals sync across devices; add real auth.
+- Build out officer flow (LPR scan, photo/video evidence, citation issue), citizen
+  appeals (video), and Command's live map / appeals / reports.
+- Bilingual English / Somali toggle; replace stylized data with live data.
