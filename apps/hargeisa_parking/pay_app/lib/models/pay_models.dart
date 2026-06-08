@@ -5,11 +5,13 @@ class Citizen {
     required this.fullName,
     required this.nationalId,
     required this.dateOfBirth,
+    this.email = '',
   });
 
   final String fullName;
   final String nationalId;
   final DateTime dateOfBirth;
+  final String email;
 
   String get initials {
     final parts =
@@ -18,6 +20,22 @@ class Citizen {
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
     return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
   }
+
+  Map<String, dynamic> toMap() => {
+        'fullName': fullName,
+        'nationalId': nationalId,
+        'dateOfBirth': dateOfBirth.millisecondsSinceEpoch,
+        'email': email,
+      };
+
+  static Citizen fromMap(Map<String, dynamic> map) => Citizen(
+        fullName: map['fullName'] as String? ?? '',
+        nationalId: map['nationalId'] as String? ?? '',
+        dateOfBirth: DateTime.fromMillisecondsSinceEpoch(
+            (map['dateOfBirth'] as num?)?.toInt() ??
+                DateTime(1990).millisecondsSinceEpoch),
+        email: map['email'] as String? ?? '',
+      );
 }
 
 enum CitationStatus { outstanding, paid, appealReview }
