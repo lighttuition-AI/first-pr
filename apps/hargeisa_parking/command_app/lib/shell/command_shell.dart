@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 
+import '../pages/appeals_review_page.dart';
 import '../pages/approvals_page.dart';
 import '../pages/dashboard_page.dart';
+import '../pages/live_map_page.dart';
 import '../pages/officers_page.dart';
-import '../pages/placeholder_page.dart';
+import '../pages/reports_page.dart';
+import '../pages/vehicle_import_page.dart';
 import '../pages/zones_page.dart';
 
 /// The signed-in admin (mock). Used as the actor on approval decisions.
@@ -14,6 +17,7 @@ enum CommandPage {
   dashboard('Dashboard', Icons.grid_view_rounded),
   approvals('Officer approvals', Icons.verified_user_outlined),
   officers('Officers', Icons.badge_outlined),
+  vehicles('Vehicles', Icons.directions_car_outlined),
   zones('Zones', Icons.map_outlined),
   liveMap('Live map', Icons.my_location_outlined),
   appeals('Appeals', Icons.gavel_outlined),
@@ -33,6 +37,7 @@ class CommandShell extends StatefulWidget {
 
 class _CommandShellState extends State<CommandShell> {
   final OfficerRepository repo = OfficerRepository.demo();
+  late final List<Appeal> appeals = seedAppeals();
   CommandPage _page = CommandPage.dashboard;
 
   @override
@@ -51,29 +56,20 @@ class _CommandShellState extends State<CommandShell> {
         return ApprovalsPage(repo: repo, adminName: kAdminName);
       case CommandPage.officers:
         return OfficersPage(repo: repo);
+      case CommandPage.vehicles:
+        return const VehicleImportPage();
       case CommandPage.zones:
         return const ZonesPage();
       case CommandPage.liveMap:
-        return const PlaceholderPage(
-          title: 'Live map',
-          icon: Icons.my_location_outlined,
-          message:
-              'Mission-control map with live officer GPS tracking, colour-coded parking markers and patrol routes. Wire to your map provider + officer location stream.',
-        );
+        return LiveMapPage(repo: repo);
       case CommandPage.appeals:
-        return const PlaceholderPage(
-          title: 'Appeals',
-          icon: Icons.gavel_outlined,
-          message:
-              'Video-appeal review queue — watch a driver\'s recorded challenge, then uphold or dismiss the citation.',
+        return AppealsReviewPage(
+          appeals: appeals,
+          adminName: kAdminName,
+          onChanged: () => setState(() {}),
         );
       case CommandPage.reports:
-        return const PlaceholderPage(
-          title: 'Reports',
-          icon: Icons.bar_chart_rounded,
-          message:
-              'Citations trend, ZAAD vs eDahab payment split, and revenue by district. Minimal, no chart-junk.',
-        );
+        return const ReportsPage();
     }
   }
 
@@ -89,6 +85,7 @@ class _CommandShellState extends State<CommandShell> {
               _Sidebar(
                 current: _page,
                 pendingCount: repo.pending.length,
+                appealsCount: appeals.where((a) => a.status == AppealStatus.review).length,
                 onSelect: _go,
               ),
               Expanded(
@@ -116,12 +113,20 @@ class _Sidebar extends StatelessWidget {
   const _Sidebar({
     required this.current,
     required this.pendingCount,
+    required this.appealsCount,
     required this.onSelect,
   });
 
   final CommandPage current;
   final int pendingCount;
+  final int appealsCount;
   final ValueChanged<CommandPage> onSelect;
+
+  int? _badgeFor(CommandPage p) {
+    if (p == CommandPage.approvals && pendingCount > 0) return pendingCount;
+    if (p == CommandPage.appeals && appealsCount > 0) return appealsCount;
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,9 +151,7 @@ class _Sidebar extends StatelessWidget {
                   _NavItem(
                     page: p,
                     active: p == current,
-                    badge: p == CommandPage.approvals && pendingCount > 0
-                        ? pendingCount
-                        : null,
+                    badge: _badgeFor(p),
                     onTap: () => onSelect(p),
                   ),
               ],

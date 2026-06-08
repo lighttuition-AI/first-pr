@@ -3,11 +3,18 @@ import 'package:hpark_core/hpark_core.dart';
 import 'package:intl/intl.dart';
 
 import '../models/pay_models.dart';
+import '../screens/payment_history.dart';
 
 class ProfileTab extends StatelessWidget {
-  const ProfileTab({super.key, required this.citizen, required this.onSignOut});
+  const ProfileTab({
+    super.key,
+    required this.citizen,
+    required this.citations,
+    required this.onSignOut,
+  });
 
   final Citizen citizen;
+  final List<Citation> citations;
   final VoidCallback onSignOut;
 
   @override
@@ -30,8 +37,15 @@ class ProfileTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: HpSpace.x5),
-        _NavRow(icon: Icons.gavel_outlined, label: 'Appeals', subtitle: 'Challenge a citation by video'),
-        _NavRow(icon: Icons.receipt_long_outlined, label: 'Payment history', subtitle: 'Past ZAAD & eDahab payments'),
+        _NavRow(
+          icon: Icons.receipt_long_outlined,
+          label: 'Payment history',
+          subtitle: 'Past ZAAD & eDahab payments',
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => PaymentHistoryScreen(citations: citations)),
+          ),
+        ),
+        _NavRow(icon: Icons.gavel_outlined, label: 'Appeals', subtitle: 'Track your video appeals'),
         _NavRow(icon: Icons.translate_rounded, label: 'Language', subtitle: 'English · Somali'),
         _NavRow(icon: Icons.help_outline_rounded, label: 'Help & support', subtitle: 'Contact the city office'),
         const SizedBox(height: HpSpace.x5),
@@ -63,17 +77,18 @@ class ProfileTab extends StatelessWidget {
 }
 
 class _NavRow extends StatelessWidget {
-  const _NavRow({required this.icon, required this.label, required this.subtitle});
+  const _NavRow({required this.icon, required this.label, required this.subtitle, this.onTap});
   final IconData icon;
   final String label;
   final String subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: HpSpace.x3),
       child: HpCard(
-        onTap: () {},
+        onTap: onTap ?? () {},
         padding: const EdgeInsets.all(HpSpace.x4),
         child: Row(
           children: [

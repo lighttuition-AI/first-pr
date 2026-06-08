@@ -8,8 +8,8 @@ package they're built on.
 | Product | Surface | Who | What |
 |---|---|---|---|
 | **HPark Enforce** | Officer app (iOS/Android) | Parking officers | Registration → **admin approval gate** → patrol home, plate scan, evidence, offline sync |
-| **HPark Pay** | Citizen app (iOS/Android) | Drivers / residents | Somaliland-ID registration, citations, pay via **ZAAD / eDahab**, **district deals** with scannable coupon QR |
-| **HPark Command** | Admin dashboard (web) | Operations / city | **Officer approvals**, dashboard KPIs, officer roster, 8-district zones, (live map / appeals / reports scaffolded) |
+| **HPark Pay** | Citizen app (iOS/Android) | Drivers / residents | Somaliland-ID registration, citations, pay via **ZAAD / eDahab**, **video appeals**, payment history, **district deals** with scannable coupon QR |
+| **HPark Command** | Admin dashboard (web) | Operations / city | **Officer approvals**, KPIs, officer roster, vehicle-data import (dedupe), 8-district zones, live map, appeals review, reports |
 
 ## Two builds in this folder
 
@@ -75,8 +75,23 @@ spellings), so the canonical list is **8 distinct districts** — see
 `packages/hpark_core/lib/src/data/districts.dart`. Swap in the official map + boundaries
 when available.
 
+## What's built
+
+All three apps are now functionally complete as interactive prototypes (real state,
+simulated camera / map / file I/O):
+
+- **Enforce** — register → approval gate → patrol shell (Patrol / Activity / Profile);
+  full citation flow (scan or simulated LPR → vehicle lookup → violation → photo/video
+  evidence with GPS+timestamp → review → issued); offline toggle that queues + syncs.
+- **Pay** — register → home (balance + ZAAD/eDahab pay) → citation detail → **video
+  appeal** (record → review → submit) → payment history; districts → deals → coupon QR.
+- **Command** — dashboard, officer approvals, officers, **vehicle import w/ dedupe**,
+  zones, **live map**, **appeals review** (watch → uphold/dismiss), **reports**.
+
 ## Next steps
-- Wire a real backend (Firebase) so approvals sync across devices; add real auth.
-- Build out officer flow (LPR scan, photo/video evidence, citation issue), citizen
-  appeals (video), and Command's live map / appeals / reports.
+- **Backend (Firebase):** swap the in-memory repositories for Firebase Auth + Firestore
+  so approvals/citations/appeals sync across devices; real officer & citizen auth;
+  Firestore security rules. `OfficerRepository` is the first seam.
+- Real device integrations: camera/LPR, GPS, a maps SDK, file picker for imports,
+  ZAAD/eDahab payment APIs.
 - Bilingual English / Somali toggle; replace stylized data with live data.

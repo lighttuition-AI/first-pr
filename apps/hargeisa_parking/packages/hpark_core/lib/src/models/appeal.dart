@@ -1,0 +1,70 @@
+import 'package:flutter/widgets.dart';
+
+import '../theme/hp_colors.dart';
+
+/// State of a citizen's video appeal against a citation.
+enum AppealStatus {
+  review,
+  upheld, // citation stands
+  dismissed; // citation cancelled
+
+  String get label => switch (this) {
+        AppealStatus.review => 'Under review',
+        AppealStatus.upheld => 'Upheld',
+        AppealStatus.dismissed => 'Dismissed',
+      };
+
+  String get glyph => switch (this) {
+        AppealStatus.review => '◌',
+        AppealStatus.upheld => '▲',
+        AppealStatus.dismissed => '✓',
+      };
+
+  Color get color => switch (this) {
+        AppealStatus.review => HpColors.purple300,
+        AppealStatus.upheld => HpColors.warning,
+        AppealStatus.dismissed => HpColors.success,
+      };
+
+  Color get tint => switch (this) {
+        AppealStatus.review => HpColors.purpleTint,
+        AppealStatus.upheld => HpColors.warningTint,
+        AppealStatus.dismissed => HpColors.successTint,
+      };
+}
+
+/// A video appeal: a driver records an explanation challenging a citation;
+/// staff review it in HPark Command and uphold or dismiss the citation.
+class Appeal {
+  Appeal({
+    required this.id,
+    required this.citationId,
+    required this.plate,
+    required this.violation,
+    required this.fine,
+    required this.reason,
+    required this.videoSeconds,
+    required this.submittedAt,
+    this.appellantName = '',
+    this.status = AppealStatus.review,
+    this.decidedBy,
+  });
+
+  final String id; // APL-2026-0142
+  final String citationId;
+  final String plate;
+  final String violation;
+  final int fine;
+  final String reason;
+  final int videoSeconds; // length of the recorded explanation
+  final DateTime submittedAt;
+  final String appellantName;
+  AppealStatus status;
+  String? decidedBy;
+
+  String get videoLabel {
+    final m = videoSeconds ~/ 60;
+    final s = videoSeconds % 60;
+    return '${m.toString().padLeft(1, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+}
