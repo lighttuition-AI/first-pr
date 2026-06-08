@@ -29,6 +29,11 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // Citizen profiles — each citizen owns only their own record.
+    match /citizens/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
     // Sequential badge-number counter (written during signup).
     match /counters/{id} {
       allow read, write: if isSignedIn();
