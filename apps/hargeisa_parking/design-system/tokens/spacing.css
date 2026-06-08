@@ -1,0 +1,41 @@
+/* ============================================================
+   Hargeisa Parking — Spacing, Radius & Sizing Tokens
+   8px base grid. Spacious, mobile-first, large touch targets.
+   ============================================================ */
+
+:root {
+  /* ---- Spacing scale (8px grid, with 4px half-steps) ---- */
+  --space-0:   0;
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+  --space-20:  80px;
+  --space-24:  96px;
+
+  /* ---- Radius ---- */
+  --radius-sm:   6px;   /* inputs, tags */
+  --radius-md:   8px;   /* buttons */
+  --radius-lg:   12px;  /* cards */
+  --radius-xl:   16px;  /* large panels / sheets */
+  --radius-2xl:  24px;  /* hero surfaces */
+  --radius-pill: 999px; /* pills, avatars */
+
+  /* ---- Touch / control sizing (min 44px hit targets) ---- */
+  --control-sm:  36px;
+  --control-md:  44px;  /* default — meets mobile minimum */
+  --control-lg:  52px;
+  --control-xl:  60px;  /* primary mobile actions */
+
+  /* ---- Layout ---- */
+  --sidebar-w:    248px;
+  --bottomnav-h:  72px;
+  --topbar-h:     64px;
+  --container:    1200px;
+}

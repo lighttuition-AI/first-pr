@@ -1,0 +1,78 @@
+/* ============================================================
+   Hargeisa Parking — Color Tokens
+   Dark-first civic-tech palette. "Linear meets Stripe."
+   ============================================================ */
+
+:root {
+  /* ---- Brand ---- */
+  --hp-purple: #7C6CF8;        /* Primary — Electric Purple */
+  --hp-purple-600: #6655F0;    /* Pressed / deeper */
+  --hp-purple-300: #A99EFB;    /* Light accent / text-on-dark links */
+  --hp-teal: #00D8D6;          /* Secondary — Bright Teal */
+  --hp-teal-600: #00B6B4;
+
+  /* ---- Semantic status ---- */
+  --hp-success: #00C853;
+  --hp-warning: #FFB300;
+  --hp-danger:  #FF5252;
+  --hp-info:    #00D8D6;       /* alias of teal */
+
+  /* ---- Surfaces (dark stack) ---- */
+  --hp-bg:        #0A0A0F;     /* App background */
+  --hp-surface:   #141420;     /* Card / surface */
+  --hp-elevated:  #1B1B2B;     /* Elevated surface / popover */
+  --hp-overlay:   #21212F;     /* Hover row / input fill */
+
+  /* ---- Borders & lines ---- */
+  --hp-border:        rgba(255, 255, 255, 0.08);
+  --hp-border-strong: rgba(255, 255, 255, 0.14);
+  --hp-border-focus:  rgba(124, 108, 248, 0.55);
+
+  /* ---- Text ---- */
+  --hp-text:        #FFFFFF;   /* Primary text */
+  --hp-text-2:      #A0A0B8;   /* Secondary text */
+  --hp-text-muted:  #7A7A90;   /* Muted text */
+  --hp-text-on-accent: #FFFFFF;
+
+  /* ---- Map markers (operations) ---- */
+  --hp-map-paid:     #00C853;  /* green  — paid parking */
+  --hp-map-expiring: #FFB300;  /* yellow — expiring soon */
+  --hp-map-violation:#FF5252;  /* red    — violation */
+  --hp-map-officer:  #3D9DF6;  /* blue   — officer */
+  --hp-map-route:    #7C6CF8;  /* purple — patrol route */
+
+  /* ---- Tints (status badge fills, 12–16% on dark) ---- */
+  --hp-purple-tint:  rgba(124, 108, 248, 0.16);
+  --hp-teal-tint:    rgba(0, 216, 214, 0.14);
+  --hp-success-tint: rgba(0, 200, 83, 0.15);
+  --hp-warning-tint: rgba(255, 179, 0, 0.15);
+  --hp-danger-tint:  rgba(255, 82, 82, 0.15);
+  --hp-blue-tint:    rgba(61, 157, 246, 0.15);
+
+  /* ---- Accent gradient ---- */
+  --hp-gradient: linear-gradient(135deg, #7C6CF8 0%, #00D8D6 100%); /* @kind color */
+  --hp-gradient-soft: linear-gradient(135deg, rgba(124,108,248,0.18) 0%, rgba(0,216,214,0.18) 100%); /* @kind color */
+
+  /* ============================================================
+     Semantic aliases — prefer these in components
+     ============================================================ */
+  --color-bg:            var(--hp-bg);
+  --color-surface:       var(--hp-surface);
+  --color-elevated:      var(--hp-elevated);
+  --color-overlay:       var(--hp-overlay);
+
+  --color-text:          var(--hp-text);
+  --color-text-secondary:var(--hp-text-2);
+  --color-text-muted:    var(--hp-text-muted);
+
+  --color-primary:       var(--hp-purple);
+  --color-primary-hover: var(--hp-purple-600);
+  --color-accent:        var(--hp-teal);
+
+  --color-border:        var(--hp-border);
+  --color-border-strong: var(--hp-border-strong);
+
+  --color-success:       var(--hp-success);
+  --color-warning:       var(--hp-warning);
+  --color-danger:        var(--hp-danger);
+}
