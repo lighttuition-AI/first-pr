@@ -9,3 +9,12 @@
 # Logs & temp
 *.log
 *.tmp
+
+# Claude Code local settings
+.claude/settings.local.json
+.claude/*.lock
+
+# Flutter / Dart build artifacts
+**/build/
+**/.dart_tool/
+**/.flutter-plugins-dependencies
