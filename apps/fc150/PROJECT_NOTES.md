@@ -58,7 +58,19 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
 - **Screens:** Home, Arena (Pool/Active/History + **"New challenge"** flow + result submit),
   League (competition-aware), Cards (collection + detail + half-season Reveal), **Roster**
   (admin squad-builder), Admin (KPIs + Approvals/Disputes/Season). Top-3 winners overlay
-  shows once per session. The bottom nav has **6 tabs**.
+  shows once per session.
+- **Admin auth & tab gating** (`flows/admin_login.dart`, `AppState.isAdmin`): players see a
+  **4-tab** nav (Home/Arena/League/Cards); the **Roster + Admin** tabs appear only after an
+  admin signs in via the lock icon in the Home header. Two prototype admin accounts
+  (`AppState.adminEmails` = admin@fc150.com / admin2@fc150.com, password `AppState.adminPassword`)
+  — in production this is Firebase Auth + an `admin` claim. `isAdmin` persists; QA: build with
+  `--dart-define=FC_QA_ADMIN=true` (also implied by `FC_QA_TAB>=4`).
+- **Broadcast** (`flows/broadcast.dart`): Admin → Season → **Broadcast** composes a message and
+  `AppState.pushBroadcast`es it; every device shows it once as a popup on next open
+  (`pendingBroadcast` / `markBroadcastSeen`, tracked by id, checked in `AppShell.initState`).
+- **Admin Season** generates fixtures for **all three competitions** (Premier League / Champions
+  League / World Cup) with per-competition state; **disputes** clear from the queue when
+  Upheld or sent to Replay.
 - **Roster — admin squad-builder** (`screens/roster_screen.dart`): approved players land in
   one shared pool (`Seed.roster`, ~50 — more than a competition holds). The admin drafts
   them into a competition via a **Premier League / World Cup** switcher; each has a **cap**

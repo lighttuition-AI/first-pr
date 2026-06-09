@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../data/seed_data.dart';
+import '../flows/admin_login.dart';
 import '../flows/challenge_flow.dart';
 import '../flows/notifications_sheet.dart';
 import '../flows/profile_sheet.dart';
@@ -43,29 +44,18 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            GestureDetector(
+            // Admin lock — players see a plain lock to sign in; admins see a lit
+            // shield that signs out. This is the only entry to the admin tabs.
+            _HeaderIcon(
+              icon: app.isAdmin ? LucideIcons.shieldCheck : LucideIcons.lock,
+              active: app.isAdmin,
+              onTap: () => app.isAdmin ? showAdminLogout(context) : showAdminLogin(context),
+            ),
+            const SizedBox(width: 10),
+            _HeaderIcon(
+              icon: LucideIcons.bell,
+              showDot: unread > 0,
               onTap: () => showNotificationsSheet(context),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: FC.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: FC.border),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    const Icon(LucideIcons.bell, size: 20, color: FC.text),
-                    if (unread > 0)
-                      const Positioned(
-                        top: 8,
-                        right: 9,
-                        child: _Dot(),
-                      ),
-                  ],
-                ),
-              ),
             ),
           ],
         ),
@@ -226,17 +216,52 @@ class _Dot extends StatelessWidget {
       );
 }
 
+class _HeaderIcon extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool showDot;
+  final bool active;
+  const _HeaderIcon({required this.icon, required this.onTap, this.showDot = false, this.active = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: active ? FC.purpleTint : FC.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: active ? const Color(0x737C6CF8) : FC.border),
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(icon, size: 20, color: active ? FC.purple300 : FC.text),
+            if (showDot) const Positioned(top: 8, right: 9, child: _Dot()),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _QuickGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final app = context.read<AppState>();
+    final app = context.watch<AppState>();
     final items = <(String, IconData, VoidCallback)>[
       ('Challenge pool', LucideIcons.swords, () => app.setTab(1)),
       ('My cards', LucideIcons.layers, () => app.setTab(3)),
       ('Standings', LucideIcons.listOrdered, () { app.setCompetition('pl'); app.setTab(2, leagueSubTab: 'table'); }),
       ('Fixtures', LucideIcons.calendar, () { app.setCompetition('pl'); app.setTab(2, leagueSubTab: 'fixtures'); }),
-      ('Roster', LucideIcons.clipboardList, () => app.setTab(4)),
-      ('Admin panel', LucideIcons.shield, () => app.setTab(5)),
+      // Admin-only shortcuts map to the Roster/Admin tabs (indices 4/5); players
+      // get player-relevant actions instead.
+      if (app.isAdmin) ('Roster', LucideIcons.clipboardList, () => app.setTab(4)),
+      if (app.isAdmin) ('Admin panel', LucideIcons.shield, () => app.setTab(5)),
+      if (!app.isAdmin) ('Results', LucideIcons.flag, () { app.setCompetition('pl'); app.setTab(2, leagueSubTab: 'results'); }),
+      if (!app.isAdmin) ('Alerts', LucideIcons.bell, () => showNotificationsSheet(context)),
     ];
     return GridView.count(
       crossAxisCount: 3,

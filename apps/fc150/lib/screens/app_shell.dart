@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
+import '../flows/broadcast.dart';
 import '../flows/challenge_flow.dart';
 import '../flows/top3_popup.dart';
 import '../state/app_state.dart';
@@ -26,10 +27,32 @@ class _AppShellState extends State<AppShell> {
   @override
   void initState() {
     super.initState();
+    final app = context.read<AppState>();
+
+    // Broadcast popup: once per launch, after persisted state has loaded, show
+    // any announcement this device hasn't seen yet.
+    void checkBroadcast() {
+      if (!app.restored) return;
+      app.removeListener(checkBroadcast);
+      final msg = app.pendingBroadcast;
+      if (msg == null) return;
+      app.markBroadcastSeen();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) showBroadcastPopup(context, msg);
+      });
+    }
+
+    if (app.restored) {
+      checkBroadcast();
+    } else {
+      app.addListener(checkBroadcast);
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final app = context.read<AppState>();
       // QA hooks (compile-time, default off): jump to a tab / skip the overlay.
+      const qaAdmin = bool.fromEnvironment('FC_QA_ADMIN');
       const qaTab = int.fromEnvironment('FC_QA_TAB', defaultValue: -1);
+      if (qaAdmin || qaTab >= 4) app.setAdmin(true); // admin-only tabs need admin
       if (qaTab >= 0) app.setTab(qaTab);
       const qaComp = String.fromEnvironment('FC_QA_COMP');
       if (qaComp.isNotEmpty) app.setCompetition(qaComp);
@@ -46,18 +69,10 @@ class _AppShellState extends State<AppShell> {
     });
   }
 
-  static const _tabs = [
-    (LucideIcons.home, 'Home'),
-    (LucideIcons.swords, 'Arena'),
-    (LucideIcons.trophy, 'League'),
-    (LucideIcons.layers, 'Cards'),
-    (LucideIcons.clipboardList, 'Roster'),
-    (LucideIcons.shield, 'Admin'),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
+    final isAdmin = app.isAdmin;
     final bottomPad = MediaQuery.of(context).padding.bottom + 88;
 
     Widget page(Widget child) => SafeArea(
@@ -68,24 +83,33 @@ class _AppShellState extends State<AppShell> {
           ),
         );
 
+    // Admin-only tabs (Roster + Admin) appear only for signed-in admins.
+    final tabs = <(IconData, String)>[
+      (LucideIcons.home, 'Home'),
+      (LucideIcons.swords, 'Arena'),
+      (LucideIcons.trophy, 'League'),
+      (LucideIcons.layers, 'Cards'),
+      if (isAdmin) (LucideIcons.clipboardList, 'Roster'),
+      if (isAdmin) (LucideIcons.shield, 'Admin'),
+    ];
+    final pages = <Widget>[
+      page(const HomeScreen()),
+      page(const ArenaScreen()),
+      page(const LeagueScreen()),
+      page(const CardsScreen()),
+      if (isAdmin) page(const RosterScreen()),
+      if (isAdmin) page(const AdminScreen()),
+    ];
+    final index = app.activeTab.clamp(0, tabs.length - 1);
+
     return Scaffold(
       extendBody: true,
       backgroundColor: FC.bg,
-      body: IndexedStack(
-        index: app.activeTab,
-        children: [
-          page(const HomeScreen()),
-          page(const ArenaScreen()),
-          page(const LeagueScreen()),
-          page(const CardsScreen()),
-          page(const RosterScreen()),
-          page(const AdminScreen()),
-        ],
-      ),
+      body: IndexedStack(index: index, children: pages),
       bottomNavigationBar: _BlurNav(
-        index: app.activeTab,
+        index: index,
         onTap: (i) => context.read<AppState>().setTab(i),
-        tabs: _tabs,
+        tabs: tabs,
       ),
     );
   }

@@ -24,11 +24,13 @@ void main() {
     await tester.pump(); // first frame
     await tester.pump(); // run the post-frame Top-3 overlay callback
 
-    // The middle bottom-nav tabs (unique labels) plus the new Roster tab.
+    // A fresh boot is a player: the four player tabs show, and the admin-only
+    // tabs (Roster / Admin) are hidden until an admin signs in.
     expect(find.text('Arena'), findsOneWidget);
     expect(find.text('League'), findsOneWidget);
     expect(find.text('Cards'), findsOneWidget);
-    expect(find.text('Roster'), findsWidgets);
+    expect(find.text('Roster'), findsNothing);
+    expect(find.text('Admin'), findsNothing);
 
     // Let the Top-3 overlay's confetti timer fire so none are pending at teardown.
     await tester.pump(const Duration(seconds: 3));

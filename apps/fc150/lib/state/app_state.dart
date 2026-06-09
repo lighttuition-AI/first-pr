@@ -59,13 +59,83 @@ class AppState extends ChangeNotifier {
 
   bool top3Seen = false;
 
+  // ---- Admin auth (prototype) -----------------------------------------------
+  // In production this is Firebase Auth + a custom "admin" claim. Here two fixed
+  // admin accounts unlock the Admin + Roster tabs; everyone else is a player and
+  // never sees them.
+  static const Set<String> adminEmails = {'admin@fc150.com', 'admin2@fc150.com'};
+  static const String adminPassword = '150!2026*fc';
+
+  bool _isAdmin = false;
+  bool get isAdmin => _isAdmin;
+  bool _adminTouched = false; // guard: don't let a late prefs load clobber a session change
+
+  /// Validate credentials and, on success, unlock the admin tabs. Returns whether
+  /// the login was accepted.
+  bool tryAdminLogin(String email, String password) {
+    final ok = adminEmails.contains(email.trim().toLowerCase()) && password == adminPassword;
+    if (ok) {
+      _adminTouched = true;
+      _isAdmin = true;
+      _prefs?.setBool('isAdmin', true);
+      notifyListeners();
+    }
+    return ok;
+  }
+
+  void logoutAdmin() {
+    _adminTouched = true;
+    _isAdmin = false;
+    _prefs?.setBool('isAdmin', false);
+    if (_activeTab > 3) _activeTab = 0; // leave the now-hidden admin-only tabs
+    notifyListeners();
+  }
+
+  /// QA/testing convenience (compile-time hooks only).
+  void setAdmin(bool v) {
+    _adminTouched = true;
+    _isAdmin = v;
+    notifyListeners();
+  }
+
+  // ---- Broadcast ------------------------------------------------------------
+  // Admin pushes a message; every player gets it as a popup the next time they
+  // open the app. Tracked by id so it shows exactly once per device.
+  String? _broadcastMsg;
+  int _broadcastId = 0;
+  int _lastSeenBroadcast = 0;
+
+  String? get pendingBroadcast =>
+      (_broadcastMsg != null && _broadcastMsg!.isNotEmpty && _broadcastId != _lastSeenBroadcast) ? _broadcastMsg : null;
+
+  void pushBroadcast(String msg) {
+    _broadcastMsg = msg.trim();
+    _broadcastId = DateTime.now().millisecondsSinceEpoch;
+    _prefs?.setString('broadcastMsg', _broadcastMsg!);
+    _prefs?.setInt('broadcastId', _broadcastId);
+    notifyListeners();
+  }
+
+  void markBroadcastSeen() {
+    _lastSeenBroadcast = _broadcastId;
+    _prefs?.setInt('lastSeenBroadcast', _broadcastId);
+  }
+
   SharedPreferences? _prefs;
   bool _tabTouched = false; // guard: don't let a late prefs load clobber a deep-link
+
+  bool _restored = false;
+  bool get restored => _restored;
 
   Future<void> _restore() async {
     _prefs = await SharedPreferences.getInstance();
     // Only apply the persisted tab if the user (or a deep-link) hasn't navigated yet.
     if (!_tabTouched) _activeTab = _prefs?.getInt('activeTab') ?? 0;
+    if (!_adminTouched) _isAdmin = _prefs?.getBool('isAdmin') ?? false;
+    _broadcastMsg = _prefs?.getString('broadcastMsg');
+    _broadcastId = _prefs?.getInt('broadcastId') ?? 0;
+    _lastSeenBroadcast = _prefs?.getInt('lastSeenBroadcast') ?? 0;
+    _restored = true;
     notifyListeners();
   }
 

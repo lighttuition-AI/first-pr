@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
 
 import '../data/seed_data.dart';
+import '../flows/broadcast.dart';
 import '../models/models.dart';
+import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
@@ -18,18 +21,25 @@ class AdminScreen extends StatefulWidget {
 
 class _AdminScreenState extends State<AdminScreen> {
   late List<PendingReg> _reg = List.of(Seed.pendingReg);
+  late List<Dispute> _disputes = List.of(Seed.disputes);
   String _tab = 'queue';
   bool _running = true;
-  int _gen = 0; // 0 idle · 1 generating · 2 done
+  final Map<String, int> _gen = {}; // compId → 0 idle · 1 generating · 2 done
 
   void _decide(String id) => setState(() => _reg = _reg.where((x) => x.id != id).toList());
 
-  void _generate() {
-    setState(() => _gen = 1);
+  void _resolveDispute(String id, String msg) {
+    setState(() => _disputes = _disputes.where((d) => d.id != id).toList());
+    flashToast(context, msg);
+  }
+
+  void _generate(String compId, String doneMsg) {
+    if (_gen[compId] == 1) return;
+    setState(() => _gen[compId] = 1);
     Timer(const Duration(milliseconds: 1600), () {
       if (!mounted) return;
-      setState(() => _gen = 2);
-      flashToast(context, 'Season fixtures generated · 38 rounds');
+      setState(() => _gen[compId] = 2);
+      flashToast(context, doneMsg);
     });
   }
 
@@ -38,7 +48,7 @@ class _AdminScreenState extends State<AdminScreen> {
     final kpis = <(String, String, IconData)>[
       ('Players', '38', LucideIcons.users),
       ('Pending', '${_reg.length}', LucideIcons.userPlus),
-      ('Disputes', '${Seed.disputes.length}', LucideIcons.alertTriangle),
+      ('Disputes', '${_disputes.length}', LucideIcons.alertTriangle),
       ('Today', '6', LucideIcons.calendar),
     ];
 
@@ -156,7 +166,9 @@ class _AdminScreenState extends State<AdminScreen> {
       children: [
         const SectionTitle('Disputed results'),
         const SizedBox(height: 9),
-        for (final d in Seed.disputes) ...[
+        if (_disputes.isEmpty)
+          Surface(child: Center(child: Text('No open disputes · all resolved', style: FCType.body(size: 13, color: FC.text2)))),
+        for (final d in _disputes) ...[
           Builder(builder: (context) {
             final a = Seed.byId(d.a), b = Seed.byId(d.b);
             return Surface(
@@ -182,9 +194,9 @@ class _AdminScreenState extends State<AdminScreen> {
                   const SizedBox(height: 11),
                   Row(
                     children: [
-                      Expanded(child: GButton('Uphold ${a.short.split(' ').first}', size: 'sm', variant: GBtn.secondary, full: true, onTap: () => flashToast(context, 'Upheld: ${a.short} 3–0'))),
+                      Expanded(child: GButton('Uphold ${a.short.split(' ').first}', size: 'sm', variant: GBtn.secondary, full: true, onTap: () => _resolveDispute(d.id, 'Upheld: ${a.short} 3–0'))),
                       const SizedBox(width: 8),
-                      Expanded(child: GButton('Replay', size: 'sm', variant: GBtn.secondary, full: true, onTap: () => flashToast(context, 'Match set to replay'))),
+                      Expanded(child: GButton('Replay', size: 'sm', variant: GBtn.secondary, full: true, onTap: () => _resolveDispute(d.id, 'Match set to replay'))),
                     ],
                   ),
                 ],
@@ -214,53 +226,67 @@ class _AdminScreenState extends State<AdminScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Surface(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  const Icon(LucideIcons.shuffle, size: 18, color: FC.teal),
-                  const SizedBox(width: 11),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Generate season', style: FCType.body(size: 14, weight: FontWeight.w700)),
-                        Text('38 approved players · auto-shuffle fixtures', style: FCType.body(size: 11.5, color: FC.text2)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              if (_gen == 1)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(3),
-                  child: const LinearProgressIndicator(minHeight: 5, backgroundColor: FC.overlay, valueColor: AlwaysStoppedAnimation(FC.purple)),
-                )
-              else
-                GButton(
-                  _gen == 2 ? 'Fixtures generated' : 'Generate fixtures',
-                  full: true,
-                  size: 'md',
-                  variant: _gen == 2 ? GBtn.secondary : GBtn.primary,
-                  icon: _gen == 2 ? LucideIcons.check : LucideIcons.shuffle,
-                  onTap: _generate,
-                ),
-            ],
-          ),
-        ),
+        const SectionTitle('Generate competitions'),
+        const SizedBox(height: 9),
+        _generateCard('pl', 'Premier League', '38 approved players · 38 rounds', 'Premier League fixtures generated · 38 rounds'),
         const SizedBox(height: 11),
+        _generateCard('ucl', 'Champions League', '16 teams · 4 groups + knockout', 'Champions League drawn · 4 groups + bracket'),
+        const SizedBox(height: 11),
+        _generateCard('wc', 'World Cup', '16 teams · 4 groups + knockout', 'World Cup drawn · 4 groups + bracket'),
+        const SizedBox(height: 16),
+        const SectionTitle('Season controls'),
+        const SizedBox(height: 9),
         _seasonRow(LucideIcons.pause, FC.warning, 'Season state', 'Pause or resume all fixtures', _running ? 'Pause' : 'Resume', () {
           setState(() => _running = !_running);
           flashToast(context, _running ? 'Season resumed' : 'Season paused');
         }),
         const SizedBox(height: 11),
-        _seasonRow(LucideIcons.megaphone, FC.purple300, 'Broadcast', 'Push an announcement to all players', 'Send', () => flashToast(context, 'Announcement sent to 38 players')),
+        _seasonRow(LucideIcons.megaphone, FC.purple300, 'Broadcast', 'Write a message · players get a popup', 'Compose',
+            () => showBroadcastCompose(context, (msg) => context.read<AppState>().pushBroadcast(msg))),
         const SizedBox(height: 11),
         _seasonRow(LucideIcons.award, FC.warning, 'Trigger card update', 'Re-issue cards after milestone', 'Run', () => flashToast(context, 'Card update queued for 38 players')),
       ],
+    );
+  }
+
+  Widget _generateCard(String compId, String name, String sub, String doneMsg) {
+    final state = _gen[compId] ?? 0;
+    return Surface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(LucideIcons.shuffle, size: 18, color: FC.teal),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name, style: FCType.body(size: 14, weight: FontWeight.w700)),
+                    Text(sub, style: FCType.body(size: 11.5, color: FC.text2)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (state == 1)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: const LinearProgressIndicator(minHeight: 5, backgroundColor: FC.overlay, valueColor: AlwaysStoppedAnimation(FC.purple)),
+            )
+          else
+            GButton(
+              state == 2 ? 'Fixtures generated' : 'Generate fixtures',
+              full: true,
+              size: 'md',
+              variant: state == 2 ? GBtn.secondary : GBtn.primary,
+              icon: state == 2 ? LucideIcons.check : LucideIcons.shuffle,
+              onTap: () => _generate(compId, doneMsg),
+            ),
+        ],
+      ),
     );
   }
 
