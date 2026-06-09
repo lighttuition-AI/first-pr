@@ -8,7 +8,10 @@ import '../models/models.dart';
 class Seed {
   Seed._();
 
-  static final Player me = Player(
+  // These start as the bundled defaults and are replaced at launch with live
+  // Firestore data (see lib/data/backend.dart). They stay mutable so the
+  // backend can swap in real documents while the UI keeps reading `Seed.*`.
+  static Player me = Player(
     id: 'p01',
     name: 'KHADAR AGAB',
     short: 'Khadar Agab',
@@ -21,7 +24,9 @@ class Seed {
     stats: const Stats(pac: 92, sho: 95, pas: 78, dri: 90, def: 42, phy: 84),
   );
 
-  static final List<Player> players = [
+  // The full approved pool (named + generated). `players` and `roster` are the
+  // same list; the league/fixtures reference the first 12 by id.
+  static List<Player> players = [
     me,
     Player(id: 'p02', name: 'HODAN ALI', short: 'Hodan Ali', country: 'SO', pos: 'MID', psn: 'HODA_07', rating: 93, stats: const Stats(pac: 84, sho: 80, pas: 91, dri: 88, def: 70, phy: 79)),
     Player(id: 'p03', name: 'GULED FARAH', short: 'Guled Farah', country: 'SO', pos: 'DEF', psn: 'GULED_FC', rating: 91, stats: const Stats(pac: 78, sho: 55, pas: 75, dri: 74, def: 90, phy: 88)),
@@ -34,20 +39,15 @@ class Seed {
     Player(id: 'p10', name: 'KENJI SATO', short: 'Kenji Sato', country: 'JP', pos: 'MID', psn: 'SATO_K', rating: 84, stats: const Stats(pac: 83, sho: 72, pas: 84, dri: 86, def: 64, phy: 70)),
     Player(id: 'p11', name: 'TOMAS NOVAK', short: 'Tomas Novak', country: 'CZ', pos: 'DEF', psn: 'NOVAK_CZ', rating: 83, stats: const Stats(pac: 72, sho: 48, pas: 70, dri: 68, def: 85, phy: 84)),
     Player(id: 'p12', name: 'BILAL HASSAN', short: 'Bilal Hassan', country: 'SO', pos: 'ATT', psn: 'BILAL_H', rating: 82, stats: const Stats(pac: 85, sho: 80, pas: 66, dri: 80, def: 34, phy: 73)),
+    ..._generatedRoster(),
   ];
 
   static Player byId(String id) =>
       players.firstWhere((p) => p.id == id, orElse: () => players.first);
 
-  /// Approved registrants the admin can draft into competitions. More players
-  /// register than a competition can hold — the admin picks the line-up
-  /// (Premier League caps at 38, World Cup at 32) and leaves the rest out. The
-  /// first 12 are the named roster above; the remainder are generated fillers
-  /// so the cap is meaningful (50 approved · only 38 fit the league).
-  static final List<Player> roster = [
-    ...players,
-    ..._generatedRoster(),
-  ];
+  /// Approved registrants the admin can draft into competitions (= the whole
+  /// `players` pool; more register than a competition can hold).
+  static List<Player> get roster => players;
 
   static Stats _statsFor(String pos, int ovr) {
     int c(int v) => v.clamp(34, 99);
@@ -117,7 +117,7 @@ class Seed {
   static List<Color> flagOf(String code) => flags[code] ?? flags['NL']!;
 
   // League table (38-game season — mid-season snapshot).
-  static const List<LeagueRow> league = [
+  static List<LeagueRow> league = [
     LeagueRow(pos: 1, id: 'p02', p: 19, w: 14, d: 3, l: 2, gf: 41, ga: 16, pts: 45, form: ['W', 'W', 'D', 'W', 'W']),
     LeagueRow(pos: 2, id: 'p01', p: 19, w: 13, d: 4, l: 2, gf: 44, ga: 19, pts: 43, form: ['W', 'W', 'W', 'D', 'W']),
     LeagueRow(pos: 3, id: 'p03', p: 19, w: 12, d: 5, l: 2, gf: 30, ga: 13, pts: 41, form: ['D', 'W', 'W', 'W', 'D']),
@@ -132,21 +132,21 @@ class Seed {
     LeagueRow(pos: 12, id: 'p12', p: 19, w: 3, d: 4, l: 12, gf: 17, ga: 38, pts: 13, form: ['L', 'L', 'D', 'L', 'L']),
   ];
 
-  static const List<Fixture> fixtures = [
+  static List<Fixture> fixtures = [
     Fixture(id: 'f1', a: 'p01', b: 'p06', when: 'Today · 20:30', comp: 'Premier League', md: 20, status: 'locked'),
     Fixture(id: 'f2', a: 'p03', b: 'p05', when: 'Today · 21:00', comp: 'Premier League', md: 20, status: 'scheduled'),
     Fixture(id: 'f3', a: 'p02', b: 'p04', when: 'Tomorrow · 19:00', comp: 'Premier League', md: 20, status: 'scheduled'),
     Fixture(id: 'f4', a: 'p01', b: 'p09', when: 'Sat · 18:30', comp: 'Premier League', md: 21, status: 'scheduled'),
   ];
 
-  static const List<MatchResult> results = [
+  static List<MatchResult> results = [
     MatchResult(id: 'r1', a: 'p01', b: 'p10', sa: 4, sb: 1, comp: 'Premier League', when: 'Yesterday', status: 'confirmed'),
     MatchResult(id: 'r2', a: 'p02', b: 'p07', sa: 2, sb: 0, comp: 'Premier League', when: 'Yesterday', status: 'confirmed'),
     MatchResult(id: 'r3', a: 'p08', b: 'p03', sa: 1, sb: 1, comp: 'Premier League', when: '2 days ago', status: 'confirmed'),
     MatchResult(id: 'r4', a: 'p06', b: 'p12', sa: 3, sb: 0, comp: 'Premier League', when: '2 days ago', status: 'noshow'),
   ];
 
-  static const List<Invite> invites = [
+  static List<Invite> invites = [
     Invite(id: 'inv1', from: 'p06', mode: '1v1', when: 'Today · 20:30', comp: 'Friendly', status: 'pending'),
     Invite(id: 'inv2', from: 'p10', mode: '1v1', when: 'Fri · 21:30', comp: 'Friendly', status: 'pending'),
   ];
@@ -166,13 +166,13 @@ class Seed {
     AppNotification(id: 'n5', kind: 'top3', text: 'Top 3 announced for Premier League', time: '2d', unread: false),
   ];
 
-  static const List<PendingReg> pendingReg = [
+  static List<PendingReg> pendingReg = [
     PendingReg(id: 'pr1', name: 'Ismail Warsame', psn: 'WARSAME_10', country: 'SO', when: '12m ago'),
     PendingReg(id: 'pr2', name: 'Sven Eriksson', psn: 'SVEN_E', country: 'SE', when: '1h ago'),
     PendingReg(id: 'pr3', name: 'Diego Santos', psn: 'SANTOS_BR', country: 'BR', when: '3h ago'),
   ];
 
-  static const List<Dispute> disputes = [
+  static List<Dispute> disputes = [
     Dispute(id: 'd1', a: 'p06', b: 'p12', claimA: '3–0 win', claimB: 'No-show, replay', when: '20m ago'),
   ];
 }

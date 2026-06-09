@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:fc150/data/backend.dart';
 import 'package:fc150/data/seed_data.dart';
 import 'package:fc150/screens/roster_screen.dart';
 import 'package:fc150/state/app_state.dart';
@@ -19,7 +20,11 @@ void main() {
   // AppState restores the last tab from SharedPreferences on construction;
   // give the test binding a mock store so that call doesn't leave a timer.
   TestWidgetsFlutterBinding.ensureInitialized();
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    Backend.rosters.clear(); // reset cross-test backend state
+    Backend.latestBroadcast = null;
+  });
 
   test('approved pool is larger than the Premier League can hold', () {
     expect(Seed.roster.length, greaterThan(AppState.rosterCaps['pl']!));

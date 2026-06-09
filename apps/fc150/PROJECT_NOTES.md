@@ -112,36 +112,37 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
   (league: table/fixtures/results), **Champions League** and **World Cup** (cups: group-stage
   tables + a knockout bracket — QF/SF/Final). Active competition lives in `AppState`.
 
-## Persistence & data model (read before "real app" work)
-- **What persists today (single device):** all mutable state is written to `shared_preferences`
-  as it changes and reloaded in `AppState._restore()` on launch — active tab + competition, the
-  **card photo** (`photo`), **admin sign-in** (`isAdmin`), **broadcasts** (`broadcast*`), the admin
-  **roster draft** (`rosters`, JSON), accepted/declined **invitations** (`invitesAccepted/Declined`),
-  and the **friendly record** (`friendly`, JSON). So close-and-reopen remembers everything **for that
-  device/player**. Guards: `_tabTouched` / `_adminTouched` stop a late prefs load from clobbering a
-  session change.
-- **Still seed-backed (not yet real):** the player identity (`Seed.me` = Khadar), the 12 named
-  players + ~38 generated roster fillers, the league table, fixtures, cup brackets, disputes and
-  pending registrations all come from `lib/data/seed_data.dart` + `lib/data/competitions.dart`.
-  These are in-memory demo content — they are the same on every device and don't sync.
+## Firebase backend (LIVE — `lib/data/backend.dart`)
+- **Project:** `fc150-arena` (Firebase console → that project). Auth account: app.jeeble@gmail.com.
+  Config committed: `lib/firebase_options.dart`, `ios/Runner/GoogleService-Info.plist`,
+  `android/app/google-services.json`. iOS plugins resolve via **Swift Package Manager** (no Podfile).
+- **What's live in Firestore** (collections, seeded — see below): `players` (50), `league` (12),
+  `fixtures`, `results`, `invites`, `disputes`, `pendingReg`, `rosters/{pl,ucl,wc}`, `broadcasts`.
+  Note: `Stats.def` is stored as **`defe`** (Firestore-safe key); `Stats.fromMap` reads it.
+- **How it loads:** `main()` calls `Backend.init()` then `Backend.load()` (each bounded by an 8s
+  timeout) BEFORE `runApp`. `load()` reads the collections into the (now-mutable) `Seed.*` lists the
+  UI already reads. **Bulletproof fallback:** if Firebase is unavailable / the DB is empty / anything
+  throws, it keeps the bundled seed content — the app always works, just not live.
+- **Writes:** admin **roster** toggles → `Backend.setRoster` (Firestore `rosters/{comp}`) + local cache;
+  **broadcasts** → `Backend.pushBroadcast` (Firestore `broadcasts`), and `load()` pulls the newest one
+  so a broadcast from one device pops on others. Roster prefers Firestore when `Backend.ready`,
+  else the local `shared_preferences` cache.
+- **Seeding (idempotent):** `python3 tool/seed_firestore.py` (re-)writes all collections from the
+  bundled defaults using the local Firebase CLI credentials. Run after changing seed content.
+- **Security rules:** `firestore.rules` — **currently OPEN** (read/write for everyone) so the
+  TestFlight build works without an auth step. Deploy with `firebase deploy --only firestore:rules`.
 
-## Roadmap — turning this into a real multi-user app (the big next milestone)
-The current build is a **polished, fully-persistent single-device prototype**. A real product that
-players register for and use against each other needs a **backend** — this is the next major task:
-1. **Firebase**: `flutterfire configure` (project + `GoogleService-Info.plist` / `google-services.json`).
-2. **Auth**: real sign-up/sign-in (email or Sign in with Apple). Admins = a Firestore custom claim,
-   replacing the hardcoded `AppState.adminEmails`/`adminPassword`.
-3. **Firestore collections**: `users` (profile, PSN, photo URL, position, ratings), `competitions`,
-   `rosters` (entrant sets per competition), `challenges`/`results` (the friendly + league/cup match
-   results — the **source of truth** the cards and rankings compute from), `broadcasts`.
-4. **Storage**: move the cropped card photo off the device into Cloud Storage (URL on the user doc).
-5. **Cloud Functions / rules**: rankings (incl. friendly "most games played"), card upgrades at
-   milestones, dispute resolution, the approve→roster→season flow; security rules so players can only
-   write their own data and only admins can write rosters/broadcasts/season.
-6. **FCM**: push for challenge/locked/result/card/broadcast.
-Replace the `Seed.*` accessors with Firestore repositories behind the same shapes; the UI is already
-built against those shapes, so it's mostly a data-layer swap. Until then, "no dummy data" is only
-possible per-device (the player's own progress), not across players.
+## Still local / bundled (next steps to be fully "real")
+- **Per-device user data stays in `shared_preferences`:** the card **photo** path and the **friendly
+  record** (played/W-D-L). Move these to a Firestore `users/{uid}` doc + Cloud Storage for the photo.
+- **Cup structures** (Champions League / World Cup groups + brackets) are still bundled in
+  `lib/data/competitions.dart` — migrate to a `competitions` collection.
+- **No auth yet.** Enable Firebase Auth (anonymous + email / Sign in with Apple) in the console, then:
+  per-device identity (each player picks/creates their own player doc instead of everyone being `p01`),
+  an `admin` custom claim to replace `AppState.adminEmails`/`adminPassword`, and **tighten the rules**
+  (players write only their own doc; rosters/broadcasts/season require admin). Then `FCM` for pushes.
+- Once auth + per-user docs land, the friendly **cross-player ranking** ("most games played") becomes a
+  real query/aggregation; today the Friendly card shows the device player's own record.
 
 ## Run
 ```

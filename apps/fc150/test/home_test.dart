@@ -1,5 +1,4 @@
 // Home screen — upcoming matches are grouped by competition (not a single card).
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
