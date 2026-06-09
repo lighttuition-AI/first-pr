@@ -79,6 +79,24 @@ First run on Google Fonts needs network to fetch the font files (cached after).
   (Debug/Release/Profile). Simulator runs do not need signing.
 - IPA: `flutter build ipa --export-method development`.
 
+## Releasing to TestFlight
+- **Version & build number** live in `pubspec.yaml` as `version: X.Y.Z+build` →
+  CFBundleShortVersionString `X.Y.Z` + CFBundleVersion `build`. **Bump the `+build`
+  number on every upload** (TestFlight rejects a re-used build number for the same
+  version). First TestFlight upload was `1.0.0+1`.
+- **Build the App Store IPA:** `flutter build ipa --export-method app-store`
+  → output at `build/ios/ipa/fc150.ipa`. Signs with the paid team `4696KN59VV`.
+- **Distribution signing:** TestFlight needs an **Apple Distribution** certificate +
+  an App Store provisioning profile. If the build fails with a signing/provisioning
+  error, open `ios/Runner.xcworkspace` in Xcode once (Signing & Capabilities → the
+  4696KN59VV team, automatic signing) so Xcode can create the distribution assets, or
+  archive via **Product → Archive → Distribute App → App Store Connect**.
+- **Upload to TestFlight:** the app must exist in App Store Connect with bundle id
+  `com.fc150.fc150`. Then upload the `.ipa` with the **Transporter** app (App Store →
+  free) — sign in, drag the `.ipa`, Deliver — or `xcrun altool --upload-app -f
+  build/ios/ipa/fc150.ipa -t ios -u <apple-id> -p <app-specific-password>`. After
+  processing it appears under TestFlight.
+
 ## TODO / follow-ups (not blocking the prototype)
 1. **Firebase**: `flutterfire configure`, then wire Auth + Firestore repositories behind
    the current seed accessors; move card photo to Storage; FCM for the notification kinds
