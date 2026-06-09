@@ -137,12 +137,19 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
   record** (played/W-D-L). Move these to a Firestore `users/{uid}` doc + Cloud Storage for the photo.
 - **Cup structures** (Champions League / World Cup groups + brackets) are still bundled in
   `lib/data/competitions.dart` — migrate to a `competitions` collection.
-- **No auth yet.** Enable Firebase Auth (anonymous + email / Sign in with Apple) in the console, then:
-  per-device identity (each player picks/creates their own player doc instead of everyone being `p01`),
-  an `admin` custom claim to replace `AppState.adminEmails`/`adminPassword`, and **tighten the rules**
-  (players write only their own doc; rosters/broadcasts/season require admin). Then `FCM` for pushes.
-- Once auth + per-user docs land, the friendly **cross-player ranking** ("most games played") becomes a
-  real query/aggregation; today the Friendly card shows the device player's own record.
+- **Auth is wired but dormant until you flip the console switch** (v1.3.1). `firebase_auth` is added;
+  `Backend.init()` signs in **anonymously** (best-effort), and admin sign-in calls
+  `Backend.adminSignIn` (real Email/Password, self-provisioning the 2 admin accounts on first use) —
+  all behind the instant local credential gate, all graceful if the providers are off.
+  **To ACTIVATE (Firebase console → `fc150-arena` → Authentication → Get started → Sign-in method):**
+  enable **Anonymous** and **Email/Password**. No app rebuild needed — the installed build starts
+  authenticating immediately. Then **tighten the rules**: `cp firestore.rules.authed firestore.rules
+  && firebase deploy --only firestore:rules --project fc150-arena`.
+- **Remaining (next milestone, do with a device to test):** per-player **registration/identity** so each
+  player is their own `players/{uid}` doc instead of everyone being `p01` (currently `AppState.currentUser`
+  = `Seed.me` = p01); an `admin` **custom claim** to replace `AppState.adminEmails`/`adminPassword` and
+  restrict roster/broadcast writes; move the **photo** to Cloud Storage; **FCM** pushes. Once per-user docs
+  land, the friendly **cross-player ranking** ("most games played") becomes a real query.
 
 ## Run
 ```

@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // TIGHTENED rules — require a signed-in session (anonymous or admin) for all
+    // access. Deploy this ONCE Anonymous (+ Email/Password) sign-in is enabled in
+    // the Firebase console and confirmed working on a device, otherwise reads will
+    // fail and the app silently falls back to bundled seed data.
+    //
+    //   cp firestore.rules.authed firestore.rules
+    //   firebase deploy --only firestore:rules --project fc150-arena
+    //
+    // Next refinement (needs an `admin` custom claim on the admin accounts):
+    //   match /rosters/{c}    { allow write: if request.auth.token.admin == true; }
+    //   match /broadcasts/{b} { allow write: if request.auth.token.admin == true; }
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

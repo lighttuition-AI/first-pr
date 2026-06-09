@@ -89,6 +89,9 @@ class AppState extends ChangeNotifier {
       _adminTouched = true;
       _isAdmin = true;
       _prefs?.setBool('isAdmin', true);
+      // Establish a real Firebase Auth session for this admin (when the
+      // Email/Password provider is enabled); local gate above keeps it instant.
+      Backend.adminSignIn(email.trim().toLowerCase(), password);
       notifyListeners();
     }
     return ok;
