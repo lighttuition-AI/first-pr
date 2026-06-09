@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import '../firebase_options.dart';
@@ -21,14 +22,41 @@ class Backend {
   /// Most recent broadcast, for cross-device delivery.
   static ({String message, int id})? latestBroadcast;
 
+  /// True once a Firebase Auth session exists (anonymous or admin).
+  static bool get signedIn => ready && FirebaseAuth.instance.currentUser != null;
+
   static Future<void> init() async {
     try {
       await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
       _db = FirebaseFirestore.instance;
       ready = true;
+      // Give every device an authenticated session. Best-effort: if the
+      // Anonymous provider isn't enabled in the Firebase console yet, this throws
+      // and we carry on (reads still work under the current rules).
+      try {
+        if (FirebaseAuth.instance.currentUser == null) {
+          await FirebaseAuth.instance.signInAnonymously();
+        }
+      } catch (_) {}
     } catch (_) {
       ready = false; // fall back to bundled seed
     }
+  }
+
+  /// Real admin sign-in (fire-and-forget). The caller has already checked the
+  /// credentials locally; this establishes a Firebase Auth session for the admin
+  /// account (creating it on first use). No-op if Email/Password isn't enabled.
+  static Future<void> adminSignIn(String email, String password) async {
+    if (!ready) return;
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found' || e.code == 'invalid-credential') {
+        try {
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
+        } catch (_) {}
+      }
+    } catch (_) {}
   }
 
   /// Load shared data from Firestore into `Seed.*`. No-op (keeps bundled seed)
