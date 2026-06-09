@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/competitions.dart';
 import '../data/seed_data.dart';
+import '../models/competition.dart';
 import '../models/models.dart';
 
 /// Lightweight app state. In production this is backed by Firebase Auth +
@@ -19,6 +21,10 @@ class AppState extends ChangeNotifier {
 
   String _leagueSubTab = 'table';
   String get leagueSubTab => _leagueSubTab;
+
+  // Active competition shown on the League screen (pl / ucl / wc).
+  String _competitionId = 'pl';
+  Competition get competition => Comps.byId(_competitionId);
 
   bool top3Seen = false;
 
@@ -42,6 +48,13 @@ class AppState extends ChangeNotifier {
 
   void setLeagueSubTab(String t) {
     _leagueSubTab = t;
+    notifyListeners();
+  }
+
+  /// Switch competition and reset the sub-tab to that format's default.
+  void setCompetition(String id) {
+    _competitionId = id;
+    _leagueSubTab = Comps.byId(id).isCup ? 'groups' : 'table';
     notifyListeners();
   }
 

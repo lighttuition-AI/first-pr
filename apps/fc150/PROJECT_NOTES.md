@@ -52,9 +52,17 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
   Idle shine-sweep + holo rotation are disabled under reduced motion. All sizing is
   width-relative so the same widget renders crisply from 102px podium cards to 232px hero.
 - **Stat→colour:** ≥85 success · ≥70 teal · ≥55 warning · <55 danger.
-- **Screens:** Home, Arena (Pool/Active/History + 4-step challenge flow + result submit),
-  League (Table/Fixtures/Results), Cards (collection + detail + half-season Reveal), Admin
+- **Screens:** Home, Arena (Pool/Active/History + **"New challenge"** flow + result submit),
+  League (competition-aware), Cards (collection + detail + half-season Reveal), Admin
   (KPIs + Approvals/Disputes/Season). Top-3 winners overlay shows once per session.
+- **Challenge flow** supports **1v1** and full **2v2 team matches**: Type → (2v2: pick
+  teammate → pick two opponents | 1v1: pick opponent) → Time → Confirm. The confirm and
+  "match locked" screens show the full roster. Reach it via Arena → **New challenge**
+  (challenging a player's card stays a quick 1v1 path). Code: `lib/flows/challenge_flow.dart`.
+- **Competitions** (`lib/models/competition.dart`, `lib/data/competitions.dart`): the League
+  screen has a header **switcher** (`flows/competition_picker.dart`) between **Premier League**
+  (league: table/fixtures/results), **Champions League** and **World Cup** (cups: group-stage
+  tables + a knockout bracket — QF/SF/Final). Active competition lives in `AppState`.
 
 ## Run
 ```

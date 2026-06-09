@@ -11,9 +11,10 @@ import '../widgets/common.dart';
 import '../widgets/primitives.dart';
 import '../widgets/sheet.dart';
 
-/// Opens the multi-step challenge bottom sheet. [preset] skips the opponent
-/// step (launched from a player's card); [autoLock] jumps straight to the
-/// "match locked" confirmation (accepting an invite).
+/// Opens the challenge bottom sheet.
+/// - [preset]: quick 1v1 from a player's card — skips type/opponent → time.
+/// - generic (no preset): starts at the type step, where 2v2 can be chosen.
+/// - [autoLock]: jump straight to the "match locked" confirmation (accept invite).
 Future<void> showChallengeFlow(
   BuildContext context, {
   Player? preset,
@@ -38,17 +39,29 @@ class _ChallengeSheet extends StatefulWidget {
 }
 
 class _ChallengeSheetState extends State<_ChallengeSheet> {
-  late int _step = widget.preset != null ? 2 : 0;
   String _mode = '1v1';
-  late Player? _opp = widget.preset;
+  Player? _teammate;
+  final List<Player> _opponents = [];
   late String _slot = widget.presetSlot ?? 'Today · 20:30';
   late bool _sent = widget.autoLock;
+  int _index = 0;
 
   static const _slots = ['Today · 20:30', 'Today · 22:00', 'Tomorrow · 19:00', 'Tomorrow · 21:30', 'Sat · 18:00'];
+
+  // Step keys vary by mode.
+  List<String> get _steps => _mode == '2v2'
+      ? const ['type', 'teammate', 'opponents', 'time', 'confirm']
+      : const ['type', 'opponent', 'time', 'confirm'];
+
+  String get _step => _steps[_index.clamp(0, _steps.length - 1)];
 
   @override
   void initState() {
     super.initState();
+    if (widget.preset != null) {
+      _opponents.add(widget.preset!);
+      _index = _steps.indexOf('time'); // quick 1v1 path
+    }
     if (widget.autoLock) {
       Timer(const Duration(milliseconds: 1800), _closeIfMounted);
     }
@@ -63,6 +76,21 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
     Timer(const Duration(milliseconds: 1700), _closeIfMounted);
   }
 
+  void _next() => setState(() => _index++);
+
+  bool get _canContinue {
+    switch (_step) {
+      case 'teammate':
+        return _teammate != null;
+      case 'opponent':
+        return _opponents.isNotEmpty;
+      case 'opponents':
+        return _opponents.length == 2;
+      default:
+        return true;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_sent) return _locked();
@@ -71,31 +99,38 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
       children: [
         _stepper(),
         const SizedBox(height: 16),
-        if (_step == 0) _typeStep(),
-        if (_step == 1) _opponentStep(),
-        if (_step == 2) _timeStep(),
-        if (_step == 3) _confirmStep(),
+        switch (_step) {
+          'type' => _typeStep(),
+          'teammate' => _teammateStep(),
+          'opponent' => _opponentStep(),
+          'opponents' => _opponentsStep(),
+          'time' => _timeStep(),
+          _ => _confirmStep(),
+        },
       ],
     );
   }
 
-  Widget _stepper() => Row(
-        children: [
-          for (int i = 0; i < 4; i++) ...[
-            Expanded(
-              child: Container(
-                height: 3,
-                decoration: BoxDecoration(
-                  gradient: i <= _step ? FC.gradient : null,
-                  color: i <= _step ? null : FC.overlay,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+  Widget _stepper() {
+    final n = _steps.length;
+    return Row(
+      children: [
+        for (int i = 0; i < n; i++) ...[
+          Expanded(
+            child: Container(
+              height: 3,
+              decoration: BoxDecoration(
+                gradient: i <= _index ? FC.gradient : null,
+                color: i <= _index ? null : FC.overlay,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-            if (i < 3) const SizedBox(width: 6),
-          ],
+          ),
+          if (i < n - 1) const SizedBox(width: 6),
         ],
-      );
+      ],
+    );
+  }
 
   Widget _heading(String title, [String? sub]) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -113,7 +148,12 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
       final sel = _mode == m;
       return Expanded(
         child: GestureDetector(
-          onTap: () => setState(() => _mode = m),
+          onTap: () => setState(() {
+            _mode = m;
+            // reset roster when switching mode
+            _teammate = null;
+            _opponents.clear();
+          }),
           child: Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
@@ -146,7 +186,34 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
           tile('2v2', LucideIcons.users, 'Team match'),
         ]),
         const SizedBox(height: 18),
-        GButton('Continue', full: true, icon: LucideIcons.arrowRight, onTap: () => setState(() => _step = 1)),
+        GButton('Continue', full: true, icon: LucideIcons.arrowRight, onTap: _next),
+      ],
+    );
+  }
+
+  Widget _teammateStep() {
+    final pool = Seed.players.where((p) => p.id != 'p01').toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _heading('Pick your teammate', 'They play on your side in the 2v2'),
+        const SizedBox(height: 14),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 290),
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: pool.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (_, i) => _PoolPickRow(
+              p: pool[i],
+              selected: _teammate?.id == pool[i].id,
+              accent: FC.teal,
+              onTap: () => setState(() => _teammate = pool[i]),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        GButton('Continue', full: true, icon: LucideIcons.arrowRight, disabled: !_canContinue, onTap: _next),
       ],
     );
   }
@@ -156,32 +223,77 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _heading('Pick opponent', 'Available in the $_mode pool right now'),
+        _heading('Pick opponent', 'Available in the 1v1 pool right now'),
         const SizedBox(height: 14),
         ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 300),
           child: ListView.separated(
             shrinkWrap: true,
             itemCount: pool.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (_, i) => _PoolPickRow(
               p: pool[i],
-              selected: _opp?.id == pool[i].id,
-              onTap: () => setState(() => _opp = pool[i]),
+              selected: _opponents.isNotEmpty && _opponents.first.id == pool[i].id,
+              onTap: () => setState(() {
+                _opponents
+                  ..clear()
+                  ..add(pool[i]);
+              }),
             ),
           ),
         ),
         const SizedBox(height: 16),
-        GButton('Continue', full: true, icon: LucideIcons.arrowRight, disabled: _opp == null, onTap: () => setState(() => _step = 2)),
+        GButton('Continue', full: true, icon: LucideIcons.arrowRight, disabled: !_canContinue, onTap: _next),
+      ],
+    );
+  }
+
+  Widget _opponentsStep() {
+    // exclude me + teammate
+    final pool = Seed.players.where((p) => p.id != 'p01' && p.id != _teammate?.id).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _heading('Pick two opponents', 'Choose the opposing pair (${_opponents.length}/2)'),
+        const SizedBox(height: 14),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 290),
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: pool.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (_, i) {
+              final p = pool[i];
+              final selected = _opponents.any((o) => o.id == p.id);
+              return _PoolPickRow(
+                p: p,
+                selected: selected,
+                multi: true,
+                onTap: () => setState(() {
+                  if (selected) {
+                    _opponents.removeWhere((o) => o.id == p.id);
+                  } else if (_opponents.length < 2) {
+                    _opponents.add(p);
+                  }
+                }),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        GButton('Continue', full: true, icon: LucideIcons.arrowRight, disabled: !_canContinue, onTap: _next),
       ],
     );
   }
 
   Widget _timeStep() {
+    final sub = _mode == '2v2'
+        ? 'You & ${_teammate?.short ?? '—'} vs ${_opponents.map((o) => o.short.split(' ').first).join(' & ')}'
+        : 'vs ${_opponents.isNotEmpty ? _opponents.first.short : '—'} · $_mode';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _heading('Propose a time', 'vs ${_opp?.short ?? '—'} · $_mode'),
+        _heading('Propose a time', sub),
         const SizedBox(height: 14),
         for (final s in _slots) ...[
           GestureDetector(
@@ -205,19 +317,28 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
           const SizedBox(height: 8),
         ],
         const SizedBox(height: 8),
-        GButton('Review', full: true, icon: LucideIcons.arrowRight, onTap: () => setState(() => _step = 3)),
+        GButton('Review', full: true, icon: LucideIcons.arrowRight, onTap: _next),
       ],
     );
   }
 
   Widget _confirmStep() {
-    final rows = [
-      ('Type', _mode),
-      ('Opponent', _opp?.short ?? '—'),
-      ('When', _slot),
-      ('Console', 'PlayStation 5'),
-      ('Competition', 'Friendly'),
-    ];
+    final rows = _mode == '2v2'
+        ? [
+            ('Type', '2v2 · Team match'),
+            ('Your team', 'You & ${_teammate?.short ?? '—'}'),
+            ('Opponents', _opponents.map((o) => o.short).join(' & ')),
+            ('When', _slot),
+            ('Console', 'PlayStation 5'),
+            ('Competition', 'Friendly'),
+          ]
+        : [
+            ('Type', '1v1 · Solo duel'),
+            ('Opponent', _opponents.isNotEmpty ? _opponents.first.short : '—'),
+            ('When', _slot),
+            ('Console', 'PlayStation 5'),
+            ('Competition', 'Friendly'),
+          ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -239,10 +360,11 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
                     border: i < rows.length - 1 ? const Border(bottom: BorderSide(color: FC.border)) : null,
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(rows[i].$1, style: FCType.body(size: 13, color: FC.text2)),
-                      Text(rows[i].$2, style: FCType.body(size: 13.5, weight: FontWeight.w600)),
+                      SizedBox(width: 92, child: Text(rows[i].$1, style: FCType.body(size: 13, color: FC.text2))),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text(rows[i].$2, textAlign: TextAlign.right, style: FCType.body(size: 13.5, weight: FontWeight.w600))),
                     ],
                   ),
                 ),
@@ -251,7 +373,9 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
         ),
         const SizedBox(height: 14),
         Text(
-          "If your opponent doesn't show, you automatically win 3–0 and it counts to the league table and your card.",
+          _mode == '2v2'
+              ? "If the opposing pair doesn't show, your team automatically wins 3–0. Both teams are removed from the pool for this slot."
+              : "If your opponent doesn't show, you automatically win 3–0 and it counts to the league table and your card.",
           style: FCType.body(size: 12, color: FC.textMuted, height: 1.5),
         ),
         const SizedBox(height: 14),
@@ -261,6 +385,9 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
   }
 
   Widget _locked() {
+    final detail = _mode == '2v2'
+        ? 'You & ${_teammate?.short ?? 'your teammate'} vs ${_opponents.map((o) => o.short).join(' & ')} · $_slot. Both teams removed from the pool for this slot. Play it on PS5, then submit the score.'
+        : 'You vs ${_opponents.isNotEmpty ? _opponents.first.short : 'your opponent'} · $_slot. Both removed from the pool for this slot. Play it on PS5, then submit the score.';
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Column(
@@ -285,15 +412,11 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
           const SizedBox(height: 18),
           const Eyebrow('Match locked', color: FC.teal),
           const SizedBox(height: 6),
-          Text('Challenge confirmed', style: FCType.heading(size: 21, weight: FontWeight.w800)),
+          Text(_mode == '2v2' ? 'Team match confirmed' : 'Challenge confirmed', style: FCType.heading(size: 21, weight: FontWeight.w800)),
           const SizedBox(height: 8),
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 280),
-            child: Text(
-              'You vs ${_opp?.short ?? 'your opponent'} · $_slot. Both removed from the pool for this slot. Play it on PS5, then submit the score.',
-              textAlign: TextAlign.center,
-              style: FCType.body(size: 13.5, color: FC.text2),
-            ),
+            constraints: const BoxConstraints(maxWidth: 290),
+            child: Text(detail, textAlign: TextAlign.center, style: FCType.body(size: 13.5, color: FC.text2)),
           ),
         ],
       ),
@@ -301,12 +424,14 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
   }
 }
 
-/// Opponent picker row (avatar · name · pos·PSN · rating).
+/// Pool pick row (avatar · name · pos·PSN · rating), with single or multi-select.
 class _PoolPickRow extends StatelessWidget {
   final Player p;
   final bool selected;
+  final bool multi;
+  final Color accent;
   final VoidCallback onTap;
-  const _PoolPickRow({required this.p, required this.selected, required this.onTap});
+  const _PoolPickRow({required this.p, required this.selected, required this.onTap, this.multi = false, this.accent = FC.purple300});
 
   @override
   Widget build(BuildContext context) {
@@ -332,7 +457,19 @@ class _PoolPickRow extends StatelessWidget {
                 ],
               ),
             ),
-            Text('${p.rating}', style: FCType.mono(size: 16, weight: FontWeight.w700, color: FC.purple300)),
+            if (multi)
+              Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: selected ? FC.teal : Colors.transparent,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: selected ? FC.teal : FC.borderStrong),
+                ),
+                child: selected ? const Icon(LucideIcons.check, size: 14, color: Color(0xFF04201F)) : null,
+              )
+            else
+              Text('${p.rating}', style: FCType.mono(size: 16, weight: FontWeight.w700, color: selected ? accent : FC.purple300)),
           ],
         ),
       ),
