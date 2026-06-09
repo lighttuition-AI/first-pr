@@ -14,6 +14,7 @@ import 'arena_screen.dart';
 import 'cards_screen.dart';
 import 'home_screen.dart';
 import 'league_screen.dart';
+import 'roster_screen.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -50,6 +51,7 @@ class _AppShellState extends State<AppShell> {
     (LucideIcons.swords, 'Arena'),
     (LucideIcons.trophy, 'League'),
     (LucideIcons.layers, 'Cards'),
+    (LucideIcons.clipboardList, 'Roster'),
     (LucideIcons.shield, 'Admin'),
   ];
 
@@ -76,6 +78,7 @@ class _AppShellState extends State<AppShell> {
           page(const ArenaScreen()),
           page(const LeagueScreen()),
           page(const CardsScreen()),
+          page(const RosterScreen()),
           page(const AdminScreen()),
         ],
       ),

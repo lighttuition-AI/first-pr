@@ -38,6 +38,7 @@ class FCCard extends StatefulWidget {
   final String? photo; // local file path
   final List<Color>? flagBands;
   final VoidCallback? onTap;
+  final VoidCallback? onPhotoTap; // tap the photo to expand it full-screen
 
   const FCCard({
     super.key,
@@ -53,6 +54,7 @@ class FCCard extends StatefulWidget {
     this.photo,
     this.flagBands,
     this.onTap,
+    this.onPhotoTap,
   });
 
   @override
@@ -256,7 +258,7 @@ class _FCCardState extends State<FCCard> with TickerProviderStateMixin {
             child: Align(
               alignment: Alignment.bottomCenter,
               child: widget.photo != null
-                  ? _Photo(path: widget.photo!, s: s)
+                  ? _Photo(path: widget.photo!, s: s, onTap: widget.onPhotoTap)
                   : FractionallySizedBox(
                       widthFactor: 0.78,
                       heightFactor: 1,
@@ -391,34 +393,39 @@ class FlagBands extends StatelessWidget {
 class _Photo extends StatelessWidget {
   final String path;
   final double s;
-  const _Photo({required this.path, required this.s});
+  final VoidCallback? onTap;
+  const _Photo({required this.path, required this.s, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return FractionallySizedBox(
-      widthFactor: 0.86,
-      heightFactor: 1,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12 * s),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.file(File(path), fit: BoxFit.cover, alignment: Alignment.topCenter,
-                errorBuilder: (_, __, ___) => const ColoredBox(color: FC.overlay)),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Color(0xD908080E)],
-                  stops: [0.55, 1],
-                ),
+    Widget image = ClipRRect(
+      borderRadius: BorderRadius.circular(12 * s),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.file(File(path), fit: BoxFit.cover, alignment: Alignment.topCenter,
+              errorBuilder: (_, __, ___) => const ColoredBox(color: FC.overlay)),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.transparent, Color(0xD908080E)],
+                stops: [0.55, 1],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
+
+    if (onTap != null) {
+      // Tap to expand — shared-element transition into the full-screen viewer.
+      image = Hero(tag: 'fc-card-photo', child: image);
+      image = GestureDetector(onTap: onTap, behavior: HitTestBehavior.opaque, child: image);
+    }
+
+    return FractionallySizedBox(widthFactor: 0.86, heightFactor: 1, child: image);
   }
 }
 
