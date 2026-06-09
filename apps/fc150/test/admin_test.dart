@@ -58,6 +58,19 @@ void main() {
     expect(AppState.rosterCaps.keys.toSet(), {'pl', 'ucl', 'wc'});
   });
 
+  test('friendly record tracks played / won / drawn / lost', () {
+    final app = AppState();
+    expect(app.friendlyPlayed, 0);
+    app.recordFriendlyResult('win');
+    app.recordFriendlyResult('win');
+    app.recordFriendlyResult('draw');
+    app.recordFriendlyResult('loss');
+    expect(app.friendlyPlayed, 4);
+    expect(app.friendlyWon, 2);
+    expect(app.friendlyDrawn, 1);
+    expect(app.friendlyLost, 1);
+  });
+
   test('Champions League has four groups like the World Cup', () {
     expect(Comps.championsLeague.groups.length, 4);
     expect(Comps.worldCup.groups.length, 4);

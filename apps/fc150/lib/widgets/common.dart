@@ -3,19 +3,25 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../flows/photo_viewer.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
 
 /// Circular avatar showing initials over a soft gradient, or a photo if present.
+/// Tapping it expands the avatar full-screen (photo or large initials), unless
+/// [expandable] is false — turn it off where the avatar sits inside a tile that
+/// must handle the tap itself (e.g. a selectable list row).
 class AvatarInitials extends StatelessWidget {
   final String initials;
   final double size;
   final String? photo;
-  const AvatarInitials({super.key, required this.initials, this.size = 38, this.photo});
+  final bool expandable;
+  final String? name;
+  const AvatarInitials({super.key, required this.initials, this.size = 38, this.photo, this.expandable = true, this.name});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final avatar = Container(
       width: size,
       height: size,
       clipBehavior: Clip.antiAlias,
@@ -25,8 +31,13 @@ class AvatarInitials extends StatelessWidget {
         border: Border.all(color: FC.borderStrong),
       ),
       child: photo != null
-          ? Image.file(File(photo!), fit: BoxFit.cover, errorBuilder: (_, __, ___) => _label())
+          ? Image.file(File(photo!), fit: BoxFit.cover, errorBuilder: (_, _, _) => _label())
           : _label(),
+    );
+    if (!expandable) return avatar;
+    return GestureDetector(
+      onTap: () => showAvatarViewer(context, photo: photo, initials: initials, name: name),
+      child: avatar,
     );
   }
 

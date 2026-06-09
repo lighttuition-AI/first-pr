@@ -90,7 +90,7 @@ class _AppShellState extends State<AppShell> {
       (LucideIcons.trophy, 'League'),
       (LucideIcons.layers, 'Cards'),
       if (isAdmin) (LucideIcons.clipboardList, 'Roster'),
-      if (isAdmin) (LucideIcons.shield, 'Admin'),
+      if (isAdmin) (LucideIcons.shield, 'Control'),
     ];
     final pages = <Widget>[
       page(const HomeScreen()),
