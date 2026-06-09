@@ -23,11 +23,12 @@ class AppState extends ChangeNotifier {
   // Which approved players the admin has placed into each competition. More
   // players register than a competition can hold, so this is the admin's pick.
   // In production these become the competition's entrant documents.
-  static const Map<String, int> rosterCaps = {'pl': 38, 'wc': 32};
+  static const Map<String, int> rosterCaps = {'pl': 38, 'ucl': 32, 'wc': 32};
 
   final Map<String, Set<String>> _rosters = {
     // Start with the 12 named players already placed in the league.
     'pl': {for (final p in Seed.players) p.id},
+    'ucl': <String>{},
     'wc': <String>{},
   };
 
@@ -119,6 +120,26 @@ class AppState extends ChangeNotifier {
   void markBroadcastSeen() {
     _lastSeenBroadcast = _broadcastId;
     _prefs?.setInt('lastSeenBroadcast', _broadcastId);
+  }
+
+  // ---- Challenge invitations -------------------------------------------------
+  // Pending invites the player can accept (→ becomes an upcoming friendly) or
+  // decline (→ just removed). Session-only in the prototype.
+  final List<Invite> _invites = List.of(Seed.invites);
+  List<Invite> get invites => List.unmodifiable(_invites);
+
+  final List<Invite> _acceptedFriendlies = [];
+  List<Invite> get acceptedFriendlies => List.unmodifiable(_acceptedFriendlies);
+
+  void acceptInvite(Invite inv) {
+    _invites.removeWhere((i) => i.id == inv.id);
+    if (_acceptedFriendlies.every((i) => i.id != inv.id)) _acceptedFriendlies.add(inv);
+    notifyListeners();
+  }
+
+  void declineInvite(Invite inv) {
+    _invites.removeWhere((i) => i.id == inv.id);
+    notifyListeners();
   }
 
   SharedPreferences? _prefs;
