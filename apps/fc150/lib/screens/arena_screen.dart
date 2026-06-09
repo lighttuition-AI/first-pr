@@ -34,7 +34,10 @@ class _ArenaScreenState extends State<ArenaScreen> {
         const Eyebrow('The arena'),
         const SizedBox(height: 2),
         Text('Challenge pool', style: FCType.heading(size: 23, weight: FontWeight.w800)),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
+        // Generic entry — opens the 1v1 / 2v2 (team match) chooser.
+        GButton('New challenge', full: true, icon: LucideIcons.swords, onTap: () => showChallengeFlow(context)),
+        const SizedBox(height: 14),
         Segmented(
           tabs: const [MapEntry('pool', 'Pool'), MapEntry('active', 'Active'), MapEntry('done', 'History')],
           value: _tab,

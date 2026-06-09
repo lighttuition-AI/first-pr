@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
+import '../flows/challenge_flow.dart';
 import '../flows/top3_popup.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
@@ -29,6 +30,12 @@ class _AppShellState extends State<AppShell> {
       // QA hooks (compile-time, default off): jump to a tab / skip the overlay.
       const qaTab = int.fromEnvironment('FC_QA_TAB', defaultValue: -1);
       if (qaTab >= 0) app.setTab(qaTab);
+      const qaComp = String.fromEnvironment('FC_QA_COMP');
+      if (qaComp.isNotEmpty) app.setCompetition(qaComp);
+      const qaSub = String.fromEnvironment('FC_QA_SUB');
+      if (qaSub.isNotEmpty) app.setLeagueSubTab(qaSub);
+      const qa2v2 = bool.fromEnvironment('FC_QA_2V2');
+      if (qa2v2) showChallengeFlow(context);
       const skipTop3 = bool.fromEnvironment('FC_SKIP_TOP3');
       // Top-3 winners overlay — once per session on login.
       if (!skipTop3 && !app.top3Seen) {

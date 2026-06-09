@@ -233,9 +233,9 @@ class _QuickGrid extends StatelessWidget {
     final items = <(String, IconData, VoidCallback)>[
       ('Challenge pool', LucideIcons.swords, () => app.setTab(1)),
       ('My cards', LucideIcons.layers, () => app.setTab(3)),
-      ('Standings', LucideIcons.listOrdered, () => app.setTab(2, leagueSubTab: 'table')),
-      ('Fixtures', LucideIcons.calendar, () => app.setTab(2, leagueSubTab: 'fixtures')),
-      ('Results', LucideIcons.flag, () => app.setTab(2, leagueSubTab: 'results')),
+      ('Standings', LucideIcons.listOrdered, () { app.setCompetition('pl'); app.setTab(2, leagueSubTab: 'table'); }),
+      ('Fixtures', LucideIcons.calendar, () { app.setCompetition('pl'); app.setTab(2, leagueSubTab: 'fixtures'); }),
+      ('Results', LucideIcons.flag, () { app.setCompetition('pl'); app.setTab(2, leagueSubTab: 'results'); }),
       ('Admin panel', LucideIcons.shield, () => app.setTab(4)),
     ];
     return GridView.count(

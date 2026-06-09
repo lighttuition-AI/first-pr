@@ -49,6 +49,8 @@ class Seed {
     'CZ': [Color(0xFF11457E), Color(0xFFFFFFFF), Color(0xFFD7141A)],
     'SE': [Color(0xFF006AA7), Color(0xFFFECC00), Color(0xFF006AA7)],
     'BR': [Color(0xFF009C3B), Color(0xFFFFDF00), Color(0xFF009C3B)],
+    'PT': [Color(0xFF046A38), Color(0xFFDA291C), Color(0xFFFFE900)],
+    'MX': [Color(0xFF006847), Color(0xFFFFFFFF), Color(0xFFCE1126)],
   };
 
   static List<Color> flagOf(String code) => flags[code] ?? flags['NL']!;
