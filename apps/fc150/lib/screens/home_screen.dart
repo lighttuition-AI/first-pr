@@ -6,6 +6,7 @@ import '../data/competitions.dart';
 import '../data/seed_data.dart';
 import '../models/competition.dart';
 import '../flows/admin_login.dart';
+import '../flows/friendly_result.dart';
 import '../flows/notifications_sheet.dart';
 import '../flows/profile_sheet.dart';
 import '../state/app_state.dart';
@@ -212,37 +213,38 @@ class _UpcomingMatches extends StatelessWidget {
     final ucl = cup(Comps.championsLeague);
     final wc = cup(Comps.worldCup);
 
-    // Accepted invitations become upcoming friendlies.
-    final friendly = [
-      for (final inv in app.acceptedFriendlies)
-        (opp: Seed.byId(inv.from).short, meta: inv.when, status: 'locked'),
-    ];
-
-    final groups = <(String, List<({String opp, String meta, String status})>)>[
+    final cupGroups = <(String, List<({String opp, String meta, String status})>)>[
       ('Premier League', pl),
       ('Champions League', ucl),
       ('World Cup', wc),
-      ('Friendly challenges', friendly),
     ].where((g) => g.$2.isNotEmpty).toList();
+    final friendly = app.acceptedFriendlies;
 
-    if (groups.isEmpty) return const SizedBox.shrink();
+    if (cupGroups.isEmpty && friendly.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SectionTitle('Upcoming matches'),
-        for (final g in groups) ...[
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Eyebrow(g.$1, color: FC.purple300),
-              const SizedBox(width: 8),
-              Text('${g.$2.length}', style: FCType.mono(size: 11, color: FC.textMuted)),
-            ],
-          ),
-          const SizedBox(height: 8),
+        for (final g in cupGroups) ...[
+          _groupHeader(g.$1, g.$2.length),
           for (final m in g.$2) ...[
-            _matchRow(m.opp, m.meta, m.status),
+            _matchRow(m.opp, m.meta, status: m.status),
+            const SizedBox(height: 8),
+          ],
+        ],
+        if (friendly.isNotEmpty) ...[
+          _groupHeader('Friendly challenges', friendly.length),
+          for (final inv in friendly) ...[
+            Builder(builder: (context) {
+              final opp = Seed.byId(inv.from).short;
+              return _matchRow(opp, inv.when, onLog: () {
+                showFriendlyResult(context, opp, (outcome) {
+                  context.read<AppState>().completeFriendly(inv, outcome);
+                  flashToast(context, 'Friendly logged · $opp');
+                });
+              });
+            }),
             const SizedBox(height: 8),
           ],
         ],
@@ -250,12 +252,23 @@ class _UpcomingMatches extends StatelessWidget {
     );
   }
 
-  Widget _matchRow(String opp, String meta, String status) {
+  Widget _groupHeader(String name, int count) => Padding(
+        padding: const EdgeInsets.only(top: 12, bottom: 8),
+        child: Row(
+          children: [
+            Eyebrow(name, color: FC.purple300),
+            const SizedBox(width: 8),
+            Text('$count', style: FCType.mono(size: 11, color: FC.textMuted)),
+          ],
+        ),
+      );
+
+  Widget _matchRow(String opp, String meta, {String? status, VoidCallback? onLog}) {
     final initials = opp.split(' ').map((w) => w.isEmpty ? '' : w[0]).take(2).join();
     return Surface(
       child: Row(
         children: [
-          AvatarInitials(initials: initials.isEmpty ? '?' : initials, size: 36),
+          AvatarInitials(initials: initials.isEmpty ? '?' : initials, size: 36, name: opp),
           const SizedBox(width: 11),
           Expanded(
             child: Column(
@@ -267,7 +280,10 @@ class _UpcomingMatches extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          StatusPill(status),
+          if (onLog != null)
+            GButton('Result', size: 'sm', variant: GBtn.teal, icon: LucideIcons.flag, onTap: onLog)
+          else if (status != null)
+            StatusPill(status),
         ],
       ),
     );
@@ -327,7 +343,7 @@ class _QuickGrid extends StatelessWidget {
       // Admin-only shortcuts map to the Roster/Admin tabs (indices 4/5); players
       // get player-relevant actions instead.
       if (app.isAdmin) ('Roster', LucideIcons.clipboardList, () => app.setTab(4)),
-      if (app.isAdmin) ('Admin panel', LucideIcons.shield, () => app.setTab(5)),
+      if (app.isAdmin) ('Control', LucideIcons.shield, () => app.setTab(5)),
       if (!app.isAdmin) ('Results', LucideIcons.flag, () { app.setCompetition('pl'); app.setTab(2, leagueSubTab: 'results'); }),
       if (!app.isAdmin) ('Alerts', LucideIcons.bell, () => showNotificationsSheet(context)),
     ];

@@ -62,10 +62,19 @@ class FCCard extends StatefulWidget {
 }
 
 class _FCCardState extends State<FCCard> with TickerProviderStateMixin {
-  late final AnimationController _shine =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 5000))..repeat();
-  late final AnimationController _holo =
-      AnimationController(vsync: this, duration: const Duration(seconds: 16))..repeat();
+  // Created eagerly in initState (not lazy `late`) so dispose() never triggers a
+  // first-time AnimationController creation on a deactivated element — which
+  // crashes for cards that never read the controller during their life (e.g.
+  // the mono variant with shine: false).
+  late final AnimationController _shine;
+  late final AnimationController _holo;
+
+  @override
+  void initState() {
+    super.initState();
+    _shine = AnimationController(vsync: this, duration: const Duration(milliseconds: 5000))..repeat();
+    _holo = AnimationController(vsync: this, duration: const Duration(seconds: 16))..repeat();
+  }
 
   @override
   void dispose() {

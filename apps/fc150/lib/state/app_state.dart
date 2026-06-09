@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -6,9 +8,15 @@ import '../data/seed_data.dart';
 import '../models/competition.dart';
 import '../models/models.dart';
 
-/// Lightweight app state. In production this is backed by Firebase Auth +
-/// Firestore; here it holds the seed current-user, the persisted active tab,
-/// the league sub-tab deep-link, and the per-session Top-3 flag.
+/// App state, persisted to the device so a player's data survives close/reopen.
+///
+/// Everything mutable here is written to [SharedPreferences] as it changes and
+/// reloaded on launch in [_restore]: the active tab + competition, the card
+/// photo, admin sign-in, broadcasts, the admin roster draft, which invitations
+/// were accepted/declined, and the player's friendly-challenge record.
+///
+/// This is single-device persistence. A real multi-user backend (Firebase Auth
+/// + Firestore + Storage) is the next milestone — see PROJECT_NOTES "Roadmap".
 class AppState extends ChangeNotifier {
   AppState() {
     _restore();
@@ -16,17 +24,13 @@ class AppState extends ChangeNotifier {
 
   final Player currentUser = Seed.me;
 
-  int _activeTab = 0; // 0 Home · 1 Arena · 2 League · 3 Cards · 4 Roster · 5 Admin
+  int _activeTab = 0; // 0 Home · 1 Arena · 2 League · 3 Cards · 4 Roster · 5 Control
   int get activeTab => _activeTab;
 
   // ---- Admin roster drafting -------------------------------------------------
-  // Which approved players the admin has placed into each competition. More
-  // players register than a competition can hold, so this is the admin's pick.
-  // In production these become the competition's entrant documents.
   static const Map<String, int> rosterCaps = {'pl': 38, 'ucl': 32, 'wc': 32};
 
   final Map<String, Set<String>> _rosters = {
-    // Start with the 12 named players already placed in the league.
     'pl': {for (final p in Seed.players) p.id},
     'ucl': <String>{},
     'wc': <String>{},
@@ -37,42 +41,40 @@ class AppState extends ChangeNotifier {
   bool isPlaced(String compId, String playerId) => rosterFor(compId).contains(playerId);
   bool isFull(String compId) => rosterFor(compId).length >= capOf(compId);
 
-  /// Toggle a player in/out of a competition. Returns false (without changing
-  /// anything) when adding would exceed the cap, so the UI can warn.
   bool toggleRoster(String compId, String playerId) {
     final set = rosterFor(compId);
     if (set.remove(playerId)) {
+      _saveRosters();
       notifyListeners();
       return true;
     }
     if (set.length >= capOf(compId)) return false; // full
     set.add(playerId);
+    _saveRosters();
     notifyListeners();
     return true;
   }
 
+  void _saveRosters() => _prefs?.setString('rosters', jsonEncode(_rosters.map((k, v) => MapEntry(k, v.toList()))));
+
   String _leagueSubTab = 'table';
   String get leagueSubTab => _leagueSubTab;
 
-  // Active competition shown on the League screen (pl / ucl / wc).
   String _competitionId = 'pl';
   Competition get competition => Comps.byId(_competitionId);
 
   bool top3Seen = false;
 
   // ---- Admin auth (prototype) -----------------------------------------------
-  // In production this is Firebase Auth + a custom "admin" claim. Here two fixed
-  // admin accounts unlock the Admin + Roster tabs; everyone else is a player and
-  // never sees them.
+  // In production this is Firebase Auth + a custom "admin" claim. Two fixed
+  // accounts unlock the management tabs; everyone else is a player.
   static const Set<String> adminEmails = {'admin@fc150.com', 'admin2@fc150.com'};
   static const String adminPassword = '150!2026*fc';
 
   bool _isAdmin = false;
   bool get isAdmin => _isAdmin;
-  bool _adminTouched = false; // guard: don't let a late prefs load clobber a session change
+  bool _adminTouched = false;
 
-  /// Validate credentials and, on success, unlock the admin tabs. Returns whether
-  /// the login was accepted.
   bool tryAdminLogin(String email, String password) {
     final ok = adminEmails.contains(email.trim().toLowerCase()) && password == adminPassword;
     if (ok) {
@@ -88,11 +90,10 @@ class AppState extends ChangeNotifier {
     _adminTouched = true;
     _isAdmin = false;
     _prefs?.setBool('isAdmin', false);
-    if (_activeTab > 3) _activeTab = 0; // leave the now-hidden admin-only tabs
+    if (_activeTab > 3) _activeTab = 0;
     notifyListeners();
   }
 
-  /// QA/testing convenience (compile-time hooks only).
   void setAdmin(bool v) {
     _adminTouched = true;
     _isAdmin = v;
@@ -100,8 +101,6 @@ class AppState extends ChangeNotifier {
   }
 
   // ---- Broadcast ------------------------------------------------------------
-  // Admin pushes a message; every player gets it as a popup the next time they
-  // open the app. Tracked by id so it shows exactly once per device.
   String? _broadcastMsg;
   int _broadcastId = 0;
   int _lastSeenBroadcast = 0;
@@ -123,8 +122,6 @@ class AppState extends ChangeNotifier {
   }
 
   // ---- Challenge invitations -------------------------------------------------
-  // Pending invites the player can accept (→ becomes an upcoming friendly) or
-  // decline (→ just removed). Session-only in the prototype.
   final List<Invite> _invites = List.of(Seed.invites);
   List<Invite> get invites => List.unmodifiable(_invites);
 
@@ -134,28 +131,110 @@ class AppState extends ChangeNotifier {
   void acceptInvite(Invite inv) {
     _invites.removeWhere((i) => i.id == inv.id);
     if (_acceptedFriendlies.every((i) => i.id != inv.id)) _acceptedFriendlies.add(inv);
+    _saveInvites();
     notifyListeners();
   }
 
   void declineInvite(Invite inv) {
     _invites.removeWhere((i) => i.id == inv.id);
+    _saveInvites();
     notifyListeners();
   }
 
-  SharedPreferences? _prefs;
-  bool _tabTouched = false; // guard: don't let a late prefs load clobber a deep-link
+  void _saveInvites() {
+    final accepted = _acceptedFriendlies.map((i) => i.id).toList();
+    final live = _invites.map((i) => i.id).toSet();
+    final declined = [
+      for (final i in Seed.invites)
+        if (!live.contains(i.id) && !accepted.contains(i.id)) i.id,
+    ];
+    _prefs?.setStringList('invitesAccepted', accepted);
+    _prefs?.setStringList('invitesDeclined', declined);
+  }
 
+  // ---- Friendly-challenge record (drives the Friendly card) ------------------
+  // Ranking is by games *played* — volume wins — then by results.
+  int _fPlayed = 0, _fWon = 0, _fDrawn = 0, _fLost = 0;
+  int get friendlyPlayed => _fPlayed;
+  int get friendlyWon => _fWon;
+  int get friendlyDrawn => _fDrawn;
+  int get friendlyLost => _fLost;
+
+  /// Record a friendly result. [outcome] is 'win' | 'draw' | 'loss'.
+  void recordFriendlyResult(String outcome) {
+    _fPlayed++;
+    if (outcome == 'win') {
+      _fWon++;
+    } else if (outcome == 'draw') {
+      _fDrawn++;
+    } else {
+      _fLost++;
+    }
+    _saveFriendly();
+    notifyListeners();
+  }
+
+  /// Complete an accepted friendly with a result — removes it from upcoming and
+  /// updates the record.
+  void completeFriendly(Invite inv, String outcome) {
+    _acceptedFriendlies.removeWhere((i) => i.id == inv.id);
+    _saveInvites();
+    recordFriendlyResult(outcome); // saves friendly + notifies
+  }
+
+  void _saveFriendly() => _prefs?.setString('friendly', jsonEncode({'p': _fPlayed, 'w': _fWon, 'd': _fDrawn, 'l': _fLost}));
+
+  // ---- Persistence -----------------------------------------------------------
+  SharedPreferences? _prefs;
+  bool _tabTouched = false;
   bool _restored = false;
   bool get restored => _restored;
 
   Future<void> _restore() async {
     _prefs = await SharedPreferences.getInstance();
-    // Only apply the persisted tab if the user (or a deep-link) hasn't navigated yet.
-    if (!_tabTouched) _activeTab = _prefs?.getInt('activeTab') ?? 0;
-    if (!_adminTouched) _isAdmin = _prefs?.getBool('isAdmin') ?? false;
-    _broadcastMsg = _prefs?.getString('broadcastMsg');
-    _broadcastId = _prefs?.getInt('broadcastId') ?? 0;
-    _lastSeenBroadcast = _prefs?.getInt('lastSeenBroadcast') ?? 0;
+    final p = _prefs!;
+
+    if (!_tabTouched) _activeTab = p.getInt('activeTab') ?? 0;
+    _competitionId = p.getString('competitionId') ?? 'pl';
+    if (!_adminTouched) _isAdmin = p.getBool('isAdmin') ?? false;
+
+    _broadcastMsg = p.getString('broadcastMsg');
+    _broadcastId = p.getInt('broadcastId') ?? 0;
+    _lastSeenBroadcast = p.getInt('lastSeenBroadcast') ?? 0;
+
+    currentUser.photo = p.getString('photo');
+
+    // Roster draft.
+    final rostersJson = p.getString('rosters');
+    if (rostersJson != null) {
+      final decoded = jsonDecode(rostersJson) as Map<String, dynamic>;
+      for (final entry in decoded.entries) {
+        _rosters[entry.key] = {for (final id in (entry.value as List)) id as String};
+      }
+    }
+
+    // Invitations.
+    final accepted = p.getStringList('invitesAccepted') ?? const [];
+    final declined = (p.getStringList('invitesDeclined') ?? const []).toSet();
+    if (accepted.isNotEmpty || declined.isNotEmpty) {
+      _acceptedFriendlies
+        ..clear()
+        ..addAll(Seed.invites.where((i) => accepted.contains(i.id)));
+      _invites
+        ..clear()
+        ..addAll(Seed.invites.where((i) => !accepted.contains(i.id) && !declined.contains(i.id)));
+    }
+
+    // Friendly record.
+    final friendlyJson = p.getString('friendly');
+    if (friendlyJson != null) {
+      final f = jsonDecode(friendlyJson) as Map<String, dynamic>;
+      _fPlayed = f['p'] ?? 0;
+      _fWon = f['w'] ?? 0;
+      _fDrawn = f['d'] ?? 0;
+      _fLost = f['l'] ?? 0;
+    }
+
     _restored = true;
     notifyListeners();
   }
@@ -173,15 +252,20 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Switch competition and reset the sub-tab to that format's default.
   void setCompetition(String id) {
     _competitionId = id;
     _leagueSubTab = Comps.byId(id).isCup ? 'groups' : 'table';
+    _prefs?.setString('competitionId', id);
     notifyListeners();
   }
 
   void setPhoto(String? path) {
     currentUser.photo = path;
+    if (path == null) {
+      _prefs?.remove('photo');
+    } else {
+      _prefs?.setString('photo', path);
+    }
     notifyListeners();
   }
 }

@@ -30,15 +30,15 @@ void showAdminLogout(BuildContext context) {
           ),
         ),
         const SizedBox(height: 14),
-        Center(child: Text('Admin mode is on', style: FCType.heading(size: 18, weight: FontWeight.w700))),
+        Center(child: Text("You're signed in", style: FCType.heading(size: 18, weight: FontWeight.w700))),
         const SizedBox(height: 6),
-        Text('You can manage approvals, the roster, the season and broadcasts. Sign out to return to the player view.',
+        Text('Sign out to return to the standard view.',
             textAlign: TextAlign.center, style: FCType.body(size: 12.5, color: FC.text2, height: 1.35)),
         const SizedBox(height: 18),
-        GButton('Sign out of admin', variant: GBtn.danger, icon: LucideIcons.logOut, full: true, onTap: () {
+        GButton('Sign out', variant: GBtn.danger, icon: LucideIcons.logOut, full: true, onTap: () {
           sheetCtx.read<AppState>().logoutAdmin();
           Navigator.of(sheetCtx).maybePop();
-          flashToast(sheetCtx, 'Signed out of admin');
+          flashToast(sheetCtx, 'Signed out');
         }),
         const SizedBox(height: 4),
       ],
@@ -69,7 +69,7 @@ class _AdminLoginState extends State<_AdminLogin> {
     final ok = context.read<AppState>().tryAdminLogin(_email.text, _pass.text);
     if (ok) {
       Navigator.of(context).maybePop();
-      flashToast(context, 'Admin access granted');
+      flashToast(context, 'Signed in');
     } else {
       setState(() => _error = 'Those credentials are not recognised.');
     }
@@ -93,16 +93,16 @@ class _AdminLoginState extends State<_AdminLogin> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Eyebrow('Restricted'),
+                  const Eyebrow('Account'),
                   const SizedBox(height: 2),
-                  Text('Admin sign-in', style: FCType.heading(size: 19, weight: FontWeight.w800)),
+                  Text('Sign in', style: FCType.heading(size: 19, weight: FontWeight.w800)),
                 ],
               ),
             ),
           ],
         ),
         const SizedBox(height: 6),
-        Text('Sign in with an FC150 admin account to manage approvals, the roster, the season and broadcasts.',
+        Text('Enter your account email and password to continue.',
             style: FCType.body(size: 12.5, color: FC.text2, height: 1.35)),
         const SizedBox(height: 16),
         _Field(controller: _email, hint: 'Email', icon: LucideIcons.mail, keyboardType: TextInputType.emailAddress, onChanged: _clearError),

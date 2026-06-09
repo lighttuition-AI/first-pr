@@ -446,7 +446,7 @@ class _PoolPickRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            AvatarInitials(initials: p.initials, size: 38),
+            AvatarInitials(initials: p.initials, size: 38, expandable: false),
             const SizedBox(width: 11),
             Expanded(
               child: Column(

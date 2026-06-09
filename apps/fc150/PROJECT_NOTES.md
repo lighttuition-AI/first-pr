@@ -60,11 +60,21 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
   (admin squad-builder), Admin (KPIs + Approvals/Disputes/Season). Top-3 winners overlay
   shows once per session.
 - **Admin auth & tab gating** (`flows/admin_login.dart`, `AppState.isAdmin`): players see a
-  **4-tab** nav (Home/Arena/League/Cards); the **Roster + Admin** tabs appear only after an
-  admin signs in via the lock icon in the Home header. Two prototype admin accounts
-  (`AppState.adminEmails` = admin@fc150.com / admin2@fc150.com, password `AppState.adminPassword`)
-  — in production this is Firebase Auth + an `admin` claim. `isAdmin` persists; QA: build with
-  `--dart-define=FC_QA_ADMIN=true` (also implied by `FC_QA_TAB>=4`).
+  **4-tab** nav (Home/Arena/League/Cards); the management tabs (**Roster + "Control"**) appear
+  only after an admin signs in via the lock icon in the Home header. **The portal is disguised**
+  — the sign-in/out sheets and the 6th tab say nothing about "admin"/"FC150" (the tab is labelled
+  **Control**), so a player who taps the lock just sees a generic "Sign in". Two prototype admin
+  accounts live in `AppState.adminEmails` / `adminPassword` (do NOT surface these in the UI; they
+  move to Firebase Auth + an `admin` claim). `isAdmin` persists; QA: `--dart-define=FC_QA_ADMIN=true`
+  (also implied by `FC_QA_TAB>=4`).
+- **Avatars expand** anywhere: `AvatarInitials` is tappable → full-screen viewer of the photo, or a
+  large gradient initials circle if there's no photo (`flows/photo_viewer.dart` `showAvatarViewer`).
+  Pass `expandable: false` where the avatar sits in a tile that must own the tap (challenge picker).
+- **Card collection = one card per competition** (`screens/cards_screen.dart`): Premier League /
+  Champions League / World Cup / **Friendly challenges**, each with a live progress line. The
+  Friendly card reflects the persisted record (`AppState.friendlyPlayed/Won/Drawn/Lost`); ranking is
+  by **games played** (volume first). Log a friendly result from an accepted invite on Home
+  (`flows/friendly_result.dart` → `completeFriendly`).
 - **Broadcast** (`flows/broadcast.dart`): Admin → Season → **Broadcast** composes a message and
   `AppState.pushBroadcast`es it; every device shows it once as a popup on next open
   (`pendingBroadcast` / `markBroadcastSeen`, tracked by id, checked in `AppShell.initState`).
@@ -101,6 +111,37 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
   screen has a header **switcher** (`flows/competition_picker.dart`) between **Premier League**
   (league: table/fixtures/results), **Champions League** and **World Cup** (cups: group-stage
   tables + a knockout bracket — QF/SF/Final). Active competition lives in `AppState`.
+
+## Persistence & data model (read before "real app" work)
+- **What persists today (single device):** all mutable state is written to `shared_preferences`
+  as it changes and reloaded in `AppState._restore()` on launch — active tab + competition, the
+  **card photo** (`photo`), **admin sign-in** (`isAdmin`), **broadcasts** (`broadcast*`), the admin
+  **roster draft** (`rosters`, JSON), accepted/declined **invitations** (`invitesAccepted/Declined`),
+  and the **friendly record** (`friendly`, JSON). So close-and-reopen remembers everything **for that
+  device/player**. Guards: `_tabTouched` / `_adminTouched` stop a late prefs load from clobbering a
+  session change.
+- **Still seed-backed (not yet real):** the player identity (`Seed.me` = Khadar), the 12 named
+  players + ~38 generated roster fillers, the league table, fixtures, cup brackets, disputes and
+  pending registrations all come from `lib/data/seed_data.dart` + `lib/data/competitions.dart`.
+  These are in-memory demo content — they are the same on every device and don't sync.
+
+## Roadmap — turning this into a real multi-user app (the big next milestone)
+The current build is a **polished, fully-persistent single-device prototype**. A real product that
+players register for and use against each other needs a **backend** — this is the next major task:
+1. **Firebase**: `flutterfire configure` (project + `GoogleService-Info.plist` / `google-services.json`).
+2. **Auth**: real sign-up/sign-in (email or Sign in with Apple). Admins = a Firestore custom claim,
+   replacing the hardcoded `AppState.adminEmails`/`adminPassword`.
+3. **Firestore collections**: `users` (profile, PSN, photo URL, position, ratings), `competitions`,
+   `rosters` (entrant sets per competition), `challenges`/`results` (the friendly + league/cup match
+   results — the **source of truth** the cards and rankings compute from), `broadcasts`.
+4. **Storage**: move the cropped card photo off the device into Cloud Storage (URL on the user doc).
+5. **Cloud Functions / rules**: rankings (incl. friendly "most games played"), card upgrades at
+   milestones, dispute resolution, the approve→roster→season flow; security rules so players can only
+   write their own data and only admins can write rosters/broadcasts/season.
+6. **FCM**: push for challenge/locked/result/card/broadcast.
+Replace the `Seed.*` accessors with Firestore repositories behind the same shapes; the UI is already
+built against those shapes, so it's mostly a data-layer swap. Until then, "no dummy data" is only
+possible per-device (the player's own progress), not across players.
 
 ## Run
 ```

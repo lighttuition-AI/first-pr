@@ -3,7 +3,66 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
+
+/// Full-screen avatar viewer — works for any user, with a photo or just initials.
+/// Tap any avatar in the app to expand it for a better look.
+void showAvatarViewer(BuildContext context, {String? photo, required String initials, String? name}) {
+  if (photo != null) {
+    showPhotoViewer(context, photo);
+    return;
+  }
+  Navigator.of(context, rootNavigator: true).push(
+    PageRouteBuilder(
+      opaque: false,
+      barrierColor: const Color(0xF2050509),
+      barrierDismissible: true,
+      transitionDuration: FC.durSlow,
+      reverseTransitionDuration: FC.durBase,
+      pageBuilder: (_, anim, __) => FadeTransition(
+        opacity: anim,
+        child: _InitialsViewer(initials: initials, name: name),
+      ),
+    ),
+  );
+}
+
+class _InitialsViewer extends StatelessWidget {
+  final String initials;
+  final String? name;
+  const _InitialsViewer({required this.initials, this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).maybePop(),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 220,
+              height: 220,
+              decoration: BoxDecoration(
+                gradient: FC.gradientSoft,
+                shape: BoxShape.circle,
+                border: Border.all(color: FC.borderStrong, width: 2),
+                boxShadow: FC.glowPurple,
+              ),
+              alignment: Alignment.center,
+              child: Text(initials, style: FCType.heading(size: 88, weight: FontWeight.w800, color: Colors.white)),
+            ),
+            if (name != null) ...[
+              const SizedBox(height: 20),
+              Text(name!, style: FCType.heading(size: 20, weight: FontWeight.w700)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 /// Full-screen photo viewer — tap the photo on a player card to expand it for a
 /// better look. Pinch to zoom, drag to pan, tap the backdrop (or ✕) to close.
