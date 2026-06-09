@@ -84,6 +84,15 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
   card; **tapping it expands** full-screen (`photo_viewer.dart`, Hero + zoom). **Share card**
   (`share_card.dart`) rasterises the card and offers **WhatsApp / Email** (OS share sheet via
   `share_plus`) and **Save to gallery** (`gal`).
+  - ⚠️ **`captureBoundaryPng` must NOT call `boundary.debugNeedsPaint`** — that getter throws a
+    `LateInitializationError` in release/profile builds (asserts stripped), which silently broke
+    crop + share on TestFlight while working on the debug simulator. It now `await`s
+    `WidgetsBinding.instance.endOfFrame` before rasterising. Test photo/share on a **release**
+    build, not just debug.
+- **Home — upcoming matches** are grouped by competition (Premier League / Champions League /
+  World Cup) plus **Friendly challenges**. Accepting a **Challenge invitation** removes it and
+  adds it to the friendly group; ✕ declines (state in `AppState.invites` / `acceptInvite` /
+  `declineInvite` / `acceptedFriendlies`).
 - **Challenge flow** supports **1v1** and full **2v2 team matches**: Type → (2v2: pick
   teammate → pick two opponents | 1v1: pick opponent) → Time → Confirm. The confirm and
   "match locked" screens show the full roster. Reach it via Arena → **New challenge**

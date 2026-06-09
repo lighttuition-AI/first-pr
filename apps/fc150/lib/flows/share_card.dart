@@ -16,15 +16,16 @@ import '../widgets/primitives.dart';
 import '../widgets/sheet.dart';
 
 /// Rasterise the RepaintBoundary behind [key] to PNG bytes. Used to turn the
-/// live player card into a shareable / savable image. Waits a frame if the
-/// boundary still needs painting.
+/// live player card into a shareable / savable image.
+///
+/// Note: do NOT gate on `boundary.debugNeedsPaint` here — that getter throws a
+/// LateInitializationError in release/profile builds (asserts are stripped), which
+/// broke crop + share on TestFlight. Instead we wait for the current frame to
+/// finish so the boundary is guaranteed painted before rasterising.
 Future<Uint8List?> captureBoundaryPng(GlobalKey key, {double pixelRatio = 3}) async {
+  await WidgetsBinding.instance.endOfFrame;
   final boundary = key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
   if (boundary == null) return null;
-  // Let a pending paint settle before rasterising (RenderObject ref stays valid).
-  if (boundary.debugNeedsPaint) {
-    await Future<void>.delayed(const Duration(milliseconds: 20));
-  }
   final image = await boundary.toImage(pixelRatio: pixelRatio);
   final data = await image.toByteData(format: ui.ImageByteFormat.png);
   image.dispose();

@@ -39,6 +39,25 @@ void main() {
     expect(app.pendingBroadcast, isNull);
   });
 
+  test('accepting an invite moves it to upcoming friendlies; declining just removes it', () {
+    final app = AppState();
+    expect(app.invites, isNotEmpty);
+    final accept = app.invites.first;
+    final decline = app.invites.last;
+
+    app.acceptInvite(accept);
+    expect(app.invites.any((i) => i.id == accept.id), isFalse);
+    expect(app.acceptedFriendlies.any((i) => i.id == accept.id), isTrue);
+
+    app.declineInvite(decline);
+    expect(app.invites.any((i) => i.id == decline.id), isFalse);
+    expect(app.acceptedFriendlies.any((i) => i.id == decline.id), isFalse);
+  });
+
+  test('the roster supports Premier League, Champions League and World Cup', () {
+    expect(AppState.rosterCaps.keys.toSet(), {'pl', 'ucl', 'wc'});
+  });
+
   test('Champions League has four groups like the World Cup', () {
     expect(Comps.championsLeague.groups.length, 4);
     expect(Comps.worldCup.groups.length, 4);

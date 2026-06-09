@@ -105,7 +105,7 @@ class _AdminLoginState extends State<_AdminLogin> {
         Text('Sign in with an FC150 admin account to manage approvals, the roster, the season and broadcasts.',
             style: FCType.body(size: 12.5, color: FC.text2, height: 1.35)),
         const SizedBox(height: 16),
-        _Field(controller: _email, hint: 'admin@fc150.com', icon: LucideIcons.mail, keyboardType: TextInputType.emailAddress, onChanged: _clearError),
+        _Field(controller: _email, hint: 'Email', icon: LucideIcons.mail, keyboardType: TextInputType.emailAddress, onChanged: _clearError),
         const SizedBox(height: 10),
         _Field(
           controller: _pass,

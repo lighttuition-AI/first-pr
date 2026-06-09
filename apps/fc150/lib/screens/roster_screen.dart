@@ -20,10 +20,10 @@ class RosterScreen extends StatefulWidget {
 }
 
 class _RosterScreenState extends State<RosterScreen> {
-  String _comp = 'pl'; // pl / wc
+  String _comp = 'pl'; // pl / ucl / wc
   String _filter = 'all'; // all / in / out
 
-  static const _compName = {'pl': 'Premier League', 'wc': 'World Cup'};
+  static const _compName = {'pl': 'Premier League', 'ucl': 'Champions League', 'wc': 'World Cup'};
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +65,7 @@ class _RosterScreenState extends State<RosterScreen> {
 
         // competition switcher
         Segmented(
-          tabs: const [MapEntry('pl', 'Premier League'), MapEntry('wc', 'World Cup')],
+          tabs: const [MapEntry('pl', 'Premier League'), MapEntry('ucl', 'Champions League'), MapEntry('wc', 'World Cup')],
           value: _comp,
           onChange: (v) => setState(() => _comp = v),
         ),
