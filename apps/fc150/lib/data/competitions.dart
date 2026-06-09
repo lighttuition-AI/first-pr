@@ -44,7 +44,7 @@ class Comps {
     name: 'Champions League',
     season: '2025/26',
     title: 'Knockout phase',
-    subtitle: '8 teams · 2 groups · semi-finals live',
+    subtitle: '16 teams · 4 groups · quarter-finals live',
     kind: CompetitionKind.cup,
     groups: [
       Group('Group A', [
@@ -59,10 +59,26 @@ class Comps {
         _r(_noah, 1, 1, 1, 4, 4),
         _r(_yusuf, 0, 0, 3, 1, 7),
       ]),
+      Group('Group C', [
+        _r(_joao, 3, 0, 0, 7, 1),
+        _r(_omar, 2, 0, 1, 4, 3),
+        _r(_kenji, 1, 0, 2, 3, 5),
+        _r(_carlos, 0, 0, 3, 2, 7),
+      ]),
+      Group('Group D', [
+        _r(_erik, 2, 1, 0, 5, 2),
+        _r(_tomas, 2, 0, 1, 4, 3),
+        _r(_bilal, 1, 0, 2, 3, 4),
+        _r(_yuki, 0, 1, 2, 2, 5),
+      ]),
     ],
     bracket: [
-      KnockoutTie(round: 'Semi-finals', a: _khadar, b: _guled, sa: 3, sb: 1, status: 'confirmed'),
-      KnockoutTie(round: 'Semi-finals', a: _hodan, b: _adam, status: 'locked'),
+      KnockoutTie(round: 'Quarter-finals', a: _khadar, b: _tomas, sa: 3, sb: 1, status: 'confirmed'),
+      KnockoutTie(round: 'Quarter-finals', a: _joao, b: _guled, status: 'locked'),
+      KnockoutTie(round: 'Quarter-finals', a: _hodan, b: _omar, sa: 2, sb: 0, status: 'confirmed'),
+      KnockoutTie(round: 'Quarter-finals', a: _erik, b: _adam, status: 'scheduled'),
+      KnockoutTie(round: 'Semi-finals', a: _khadar, status: 'scheduled'),
+      KnockoutTie(round: 'Semi-finals', a: _hodan, status: 'scheduled'),
       KnockoutTie(round: 'Final', status: 'scheduled'),
     ],
   );

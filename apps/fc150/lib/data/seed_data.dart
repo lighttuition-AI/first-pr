@@ -39,6 +39,67 @@ class Seed {
   static Player byId(String id) =>
       players.firstWhere((p) => p.id == id, orElse: () => players.first);
 
+  /// Approved registrants the admin can draft into competitions. More players
+  /// register than a competition can hold — the admin picks the line-up
+  /// (Premier League caps at 38, World Cup at 32) and leaves the rest out. The
+  /// first 12 are the named roster above; the remainder are generated fillers
+  /// so the cap is meaningful (50 approved · only 38 fit the league).
+  static final List<Player> roster = [
+    ...players,
+    ..._generatedRoster(),
+  ];
+
+  static Stats _statsFor(String pos, int ovr) {
+    int c(int v) => v.clamp(34, 99);
+    switch (pos) {
+      case 'ATT':
+        return Stats(pac: c(ovr - 2), sho: c(ovr + 1), pas: c(ovr - 16), dri: c(ovr - 4), def: c(ovr - 48), phy: c(ovr - 12));
+      case 'DEF':
+        return Stats(pac: c(ovr - 14), sho: c(ovr - 36), pas: c(ovr - 16), dri: c(ovr - 18), def: c(ovr + 1), phy: c(ovr - 2));
+      default: // MID
+        return Stats(pac: c(ovr - 8), sho: c(ovr - 12), pas: c(ovr + 1), dri: c(ovr - 2), def: c(ovr - 18), phy: c(ovr - 10));
+    }
+  }
+
+  static List<Player> _generatedRoster() {
+    // (short name, ISO country) — countries map onto the flag bands above.
+    const names = <(String, String)>[
+      ('Aron Visser', 'NL'), ('Mateo Rossi', 'IT'), ('Daud Jama', 'SO'),
+      ('Lars Berg', 'SE'), ('Hiro Mori', 'JP'), ('Pavel Dvorak', 'CZ'),
+      ('Bruno Alves', 'BR'), ('Tiago Costa', 'PT'), ('Luis Reyes', 'MX'),
+      ('Mamadou Diop', 'SN'), ('Sem Bakker', 'NL'), ('Gianni Conti', 'IT'),
+      ('Said Nur', 'SO'), ('Felix Holm', 'SE'), ('Ren Kato', 'JP'),
+      ('Jan Kucera', 'CZ'), ('Caio Lima', 'BR'), ('Diogo Faria', 'PT'),
+      ('Mateo Cruz', 'MX'), ('Ousmane Ba', 'SN'), ('Tim Mulder', 'NL'),
+      ('Enzo Greco', 'IT'), ('Abdi Yusuf', 'SO'), ('Nils Sand', 'SE'),
+      ('Sota Abe', 'JP'), ('Petr Marek', 'CZ'), ('Rafael Souza', 'BR'),
+      ('Hugo Pinto', 'PT'), ('Ivan Lopez', 'MX'), ('Cheikh Fall', 'SN'),
+      ('Daan Smit', 'NL'), ('Luca Ferri', 'IT'), ('Farah Aden', 'SO'),
+      ('Emil Lund', 'SE'), ('Kenta Ito', 'JP'), ('Milan Horak', 'CZ'),
+      ('Pedro Rocha', 'BR'), ('Andre Melo', 'PT'),
+    ];
+    const positions = ['ATT', 'MID', 'DEF'];
+    return [
+      for (var i = 0; i < names.length; i++)
+        _mkPlayer(i, names[i], positions[i % 3]),
+    ];
+  }
+
+  static Player _mkPlayer(int i, (String, String) n, String pos) {
+    final ovr = 86 - i; // 86 down to ~49 — below the named roster
+    final psn = n.$1.toUpperCase().replaceAll(' ', '_').replaceAll(RegExp(r'[^A-Z_]'), '');
+    return Player(
+      id: 'r${(i + 13).toString().padLeft(2, '0')}',
+      name: n.$1.toUpperCase(),
+      short: n.$1,
+      country: n.$2,
+      pos: pos,
+      psn: psn,
+      rating: ovr,
+      stats: _statsFor(pos, ovr),
+    );
+  }
+
   /// Simple geometric horizontal flag bands (original art, not official).
   static const Map<String, List<Color>> flags = {
     'NL': [Color(0xFFAE1C28), Color(0xFFFFFFFF), Color(0xFF21468B)],

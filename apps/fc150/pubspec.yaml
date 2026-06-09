@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.1.0+3
 
 environment:
   sdk: ^3.12.1
@@ -40,6 +40,9 @@ dependencies:
   shared_preferences: ^2.5.5
   image_picker: ^1.2.2
   lucide_icons_flutter: ^3.1.14+2
+  share_plus: ^13.1.0
+  gal: ^2.3.2
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
@@ -51,6 +54,16 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+# App icon generation — run `dart run flutter_launcher_icons` after editing the
+# source PNG (regenerate it with `python3 tool/gen_icon.py`).
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon.png"
+  ios: true
+  android: true
+  remove_alpha_ios: true
+  background_color_ios: "#0A0A0F"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -20,7 +20,9 @@ idiomatic Flutter** — not ported.
   (numbers/IDs/PSN).
 - **Icons:** `lucide_icons` (Lucide line set, ~2px stroke) — matches the spec.
 - **Confetti:** `confetti` (Top-3 + card-upgrade reveal).
-- **Photo:** `image_picker` (gallery) → photo on the player card.
+- **Photo:** `image_picker` (gallery) → in-app crop/position editor → photo on the
+  player card. **Share:** `share_plus` (WhatsApp / Email via the OS share sheet) +
+  `gal` (save card image to the gallery); `path_provider` for the temp/saved files.
 - **Persistence:** `shared_preferences` (last active tab).
 - **Firebase:** target backend (Auth, Firestore, Storage, FCM) — **not yet wired**. The
   app currently runs entirely off the seed data in `lib/data/seed_data.dart`, which is
@@ -36,10 +38,11 @@ state/      app_state.dart (ChangeNotifier)
 widgets/    fc_card.dart (the hero player card), primitives.dart (Pill, StatusPill,
             GButton, Surface, StatBars, Segmented, CountUp, FCConfetti, Eyebrow,
             SectionTitle), sheet.dart (bottom-sheet shell), common.dart (avatar, toast)
-screens/    app_shell.dart (blurred 5-tab bottom nav + IndexedStack), home, arena,
-            league, cards, admin
+screens/    app_shell.dart (blurred 6-tab bottom nav + IndexedStack), home, arena,
+            league, cards, roster, admin
 flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detail.dart,
-            profile_sheet.dart, notifications_sheet.dart
+            profile_sheet.dart, notifications_sheet.dart, photo_crop.dart,
+            photo_viewer.dart, share_card.dart
 ```
 
 ## Design fidelity
@@ -53,8 +56,34 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
   width-relative so the same widget renders crisply from 102px podium cards to 232px hero.
 - **Stat→colour:** ≥85 success · ≥70 teal · ≥55 warning · <55 danger.
 - **Screens:** Home, Arena (Pool/Active/History + **"New challenge"** flow + result submit),
-  League (competition-aware), Cards (collection + detail + half-season Reveal), Admin
-  (KPIs + Approvals/Disputes/Season). Top-3 winners overlay shows once per session.
+  League (competition-aware), Cards (collection + detail + half-season Reveal), **Roster**
+  (admin squad-builder), Admin (KPIs + Approvals/Disputes/Season). Top-3 winners overlay
+  shows once per session.
+- **Admin auth & tab gating** (`flows/admin_login.dart`, `AppState.isAdmin`): players see a
+  **4-tab** nav (Home/Arena/League/Cards); the **Roster + Admin** tabs appear only after an
+  admin signs in via the lock icon in the Home header. Two prototype admin accounts
+  (`AppState.adminEmails` = admin@fc150.com / admin2@fc150.com, password `AppState.adminPassword`)
+  — in production this is Firebase Auth + an `admin` claim. `isAdmin` persists; QA: build with
+  `--dart-define=FC_QA_ADMIN=true` (also implied by `FC_QA_TAB>=4`).
+- **Broadcast** (`flows/broadcast.dart`): Admin → Season → **Broadcast** composes a message and
+  `AppState.pushBroadcast`es it; every device shows it once as a popup on next open
+  (`pendingBroadcast` / `markBroadcastSeen`, tracked by id, checked in `AppShell.initState`).
+- **Admin Season** generates fixtures for **all three competitions** (Premier League / Champions
+  League / World Cup) with per-competition state; **disputes** clear from the queue when
+  Upheld or sent to Replay.
+- **Roster — admin squad-builder** (`screens/roster_screen.dart`): approved players land in
+  one shared pool (`Seed.roster`, ~50 — more than a competition holds). The admin drafts
+  them into a competition via a **Premier League / World Cup** switcher; each has a **cap**
+  (`AppState.rosterCaps`: PL 38, WC 32) shown by a capacity meter. Adding past the cap is
+  refused with a toast, so the admin chooses who plays and who sits out. An **All / In / Out**
+  filter reviews the picks. Selections live in `AppState` (`rosterFor` / `toggleRoster` /
+  `isFull`) — the 12 named players start pre-placed in the league.
+- **Player photo** (`flows/`): from the profile sheet, **Photo** picks from the gallery then
+  opens an in-app **crop/position editor** (`photo_crop.dart` — pinch-zoom + drag inside a
+  card-shaped frame, captured via `RepaintBoundary.toImage`). The chosen photo shows on the
+  card; **tapping it expands** full-screen (`photo_viewer.dart`, Hero + zoom). **Share card**
+  (`share_card.dart`) rasterises the card and offers **WhatsApp / Email** (OS share sheet via
+  `share_plus`) and **Save to gallery** (`gal`).
 - **Challenge flow** supports **1v1** and full **2v2 team matches**: Type → (2v2: pick
   teammate → pick two opponents | 1v1: pick opponent) → Time → Confirm. The confirm and
   "match locked" screens show the full roster. Reach it via Arena → **New challenge**
@@ -100,7 +129,8 @@ First run on Google Fonts needs network to fetch the font files (cached after).
 ## TODO / follow-ups (not blocking the prototype)
 1. **Firebase**: `flutterfire configure`, then wire Auth + Firestore repositories behind
    the current seed accessors; move card photo to Storage; FCM for the notification kinds
-   listed in the handoff (challenge/locked/result/card/top3).
+   listed in the handoff (challenge/locked/result/card/top3). Persist the **Roster** draft
+   (`AppState._rosters`) as each competition's entrant set, and the cropped card photo path.
 2. **Challenge / result state machine** persisted to Firestore (pending→accepted→locked→
    completed/disputed/no-show; auto-approve at 12h; no-show = 3–0).
 3. **League engine**: Win 3 / Draw 1 / Loss 0; 38 games; card auto-update at game 19 and
