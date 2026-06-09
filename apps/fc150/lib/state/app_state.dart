@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/backend.dart';
 import '../data/competitions.dart';
 import '../data/seed_data.dart';
 import '../models/competition.dart';
@@ -19,6 +20,13 @@ import '../models/models.dart';
 /// + Firestore + Storage) is the next milestone — see PROJECT_NOTES "Roadmap".
 class AppState extends ChangeNotifier {
   AppState() {
+    // Roster draft: from the backend when it loaded, else sensible defaults
+    // (the 12 named players pre-placed in the league).
+    _rosters['pl'] = Backend.rosters['pl'] != null
+        ? Set.of(Backend.rosters['pl']!)
+        : Seed.players.take(12).map((p) => p.id).toSet();
+    _rosters['ucl'] = Set.of(Backend.rosters['ucl'] ?? const <String>{});
+    _rosters['wc'] = Set.of(Backend.rosters['wc'] ?? const <String>{});
     _restore();
   }
 
@@ -30,11 +38,7 @@ class AppState extends ChangeNotifier {
   // ---- Admin roster drafting -------------------------------------------------
   static const Map<String, int> rosterCaps = {'pl': 38, 'ucl': 32, 'wc': 32};
 
-  final Map<String, Set<String>> _rosters = {
-    'pl': {for (final p in Seed.players) p.id},
-    'ucl': <String>{},
-    'wc': <String>{},
-  };
+  final Map<String, Set<String>> _rosters = {};
 
   Set<String> rosterFor(String compId) => _rosters.putIfAbsent(compId, () => <String>{});
   int capOf(String compId) => rosterCaps[compId] ?? 38;
@@ -44,18 +48,22 @@ class AppState extends ChangeNotifier {
   bool toggleRoster(String compId, String playerId) {
     final set = rosterFor(compId);
     if (set.remove(playerId)) {
-      _saveRosters();
+      _persistRoster(compId);
       notifyListeners();
       return true;
     }
     if (set.length >= capOf(compId)) return false; // full
     set.add(playerId);
-    _saveRosters();
+    _persistRoster(compId);
     notifyListeners();
     return true;
   }
 
-  void _saveRosters() => _prefs?.setString('rosters', jsonEncode(_rosters.map((k, v) => MapEntry(k, v.toList()))));
+  void _persistRoster(String compId) {
+    // Local cache (offline) + Firestore (shared, best-effort).
+    _prefs?.setString('rosters', jsonEncode(_rosters.map((k, v) => MapEntry(k, v.toList()))));
+    Backend.setRoster(compId, Set.of(rosterFor(compId)));
+  }
 
   String _leagueSubTab = 'table';
   String get leagueSubTab => _leagueSubTab;
@@ -113,6 +121,7 @@ class AppState extends ChangeNotifier {
     _broadcastId = DateTime.now().millisecondsSinceEpoch;
     _prefs?.setString('broadcastMsg', _broadcastMsg!);
     _prefs?.setInt('broadcastId', _broadcastId);
+    Backend.pushBroadcast(_broadcastMsg!); // deliver to other devices too
     notifyListeners();
   }
 
@@ -204,13 +213,23 @@ class AppState extends ChangeNotifier {
 
     currentUser.photo = p.getString('photo');
 
-    // Roster draft.
-    final rostersJson = p.getString('rosters');
-    if (rostersJson != null) {
-      final decoded = jsonDecode(rostersJson) as Map<String, dynamic>;
-      for (final entry in decoded.entries) {
-        _rosters[entry.key] = {for (final id in (entry.value as List)) id as String};
+    // Roster draft — Firestore (set in the constructor) wins when the backend
+    // is live; only fall back to the local cache when offline.
+    if (!Backend.ready) {
+      final rostersJson = p.getString('rosters');
+      if (rostersJson != null) {
+        final decoded = jsonDecode(rostersJson) as Map<String, dynamic>;
+        for (final entry in decoded.entries) {
+          _rosters[entry.key] = {for (final id in (entry.value as List)) id as String};
+        }
       }
+    }
+
+    // A broadcast pushed from another device (newer than what we've stored) wins.
+    final lb = Backend.latestBroadcast;
+    if (lb != null && lb.id > _broadcastId) {
+      _broadcastMsg = lb.message;
+      _broadcastId = lb.id;
     }
 
     // Invitations.

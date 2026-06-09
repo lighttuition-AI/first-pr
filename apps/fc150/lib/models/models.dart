@@ -15,6 +15,12 @@ class Stats {
     required this.phy,
   });
 
+  // 'def' is a reserved word in some stores, so Firestore stores it as 'defe'.
+  factory Stats.fromMap(Map<String, dynamic> m) => Stats(
+        pac: m['pac'] as int, sho: m['sho'] as int, pas: m['pas'] as int,
+        dri: m['dri'] as int, def: (m['defe'] ?? m['def']) as int, phy: m['phy'] as int,
+      );
+
   int byKey(String k) => switch (k) {
         'pac' => pac,
         'sho' => sho,
@@ -63,6 +69,20 @@ class Player {
     this.photo,
   });
 
+  factory Player.fromMap(Map<String, dynamic> m) => Player(
+        id: m['id'] as String,
+        name: m['name'] as String,
+        short: m['short'] as String,
+        country: m['country'] as String,
+        pos: m['pos'] as String,
+        psn: m['psn'] as String,
+        rating: m['rating'] as int,
+        tier: (m['tier'] ?? 'base') as String,
+        variant: (m['variant'] ?? 'neon') as String,
+        stats: Stats.fromMap(Map<String, dynamic>.from(m['stats'] as Map)),
+        photo: m['photo'] as String?,
+      );
+
   String get initials =>
       short.split(' ').map((w) => w.isEmpty ? '' : w[0]).take(2).join();
 }
@@ -84,6 +104,12 @@ class LeagueRow {
     required this.pts,
     required this.form,
   });
+  factory LeagueRow.fromMap(Map<String, dynamic> m) => LeagueRow(
+        pos: m['pos'] as int, id: m['id'] as String,
+        p: m['p'] as int, w: m['w'] as int, d: m['d'] as int, l: m['l'] as int,
+        gf: m['gf'] as int, ga: m['ga'] as int, pts: m['pts'] as int,
+        form: (m['form'] as List).cast<String>(),
+      );
   int get gd => gf - ga;
 }
 
@@ -99,6 +125,10 @@ class Fixture {
     required this.md,
     required this.status,
   });
+  factory Fixture.fromMap(Map<String, dynamic> m) => Fixture(
+        id: m['id'] as String, a: m['a'] as String, b: m['b'] as String,
+        when: m['when'] as String, comp: m['comp'] as String, md: m['md'] as int, status: m['status'] as String,
+      );
 }
 
 class MatchResult {
@@ -114,6 +144,11 @@ class MatchResult {
     required this.when,
     required this.status,
   });
+  factory MatchResult.fromMap(Map<String, dynamic> m) => MatchResult(
+        id: m['id'] as String, a: m['a'] as String, b: m['b'] as String,
+        sa: m['sa'] as int, sb: m['sb'] as int,
+        comp: m['comp'] as String, when: m['when'] as String, status: m['status'] as String,
+      );
 }
 
 class Invite {
@@ -126,6 +161,10 @@ class Invite {
     required this.comp,
     required this.status,
   });
+  factory Invite.fromMap(Map<String, dynamic> m) => Invite(
+        id: m['id'] as String, from: m['from'] as String, mode: m['mode'] as String,
+        when: m['when'] as String, comp: m['comp'] as String, status: m['status'] as String,
+      );
 }
 
 class CareerCard {
@@ -167,6 +206,10 @@ class PendingReg {
     required this.country,
     required this.when,
   });
+  factory PendingReg.fromMap(Map<String, dynamic> m) => PendingReg(
+        id: m['id'] as String, name: m['name'] as String, psn: m['psn'] as String,
+        country: m['country'] as String, when: m['when'] as String,
+      );
   String get initials =>
       name.split(' ').map((w) => w.isEmpty ? '' : w[0]).take(2).join();
 }
@@ -181,4 +224,8 @@ class Dispute {
     required this.claimB,
     required this.when,
   });
+  factory Dispute.fromMap(Map<String, dynamic> m) => Dispute(
+        id: m['id'] as String, a: m['a'] as String, b: m['b'] as String,
+        claimA: m['claimA'] as String, claimB: m['claimB'] as String, when: m['when'] as String,
+      );
 }
