@@ -1,12 +1,13 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // PROTOTYPE rules — open read/write so the TestFlight build works without an
-    // auth step yet. TODO (next milestone): enable Firebase Auth (anonymous +
-    // email/Apple), then restrict writes — players edit only their own doc;
-    // rosters/broadcasts/season writes require an admin custom claim.
+    // Reads stay open so every installed build keeps showing live data; writes
+    // require a signed-in session (anonymous is enough). Next step once the
+    // registration build is verified on-device: require auth for reads too
+    // (see firestore.rules.authed) and scope roster/broadcast writes to admins.
     match /{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if request.auth != null;
     }
   }
 }
