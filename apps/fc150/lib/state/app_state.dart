@@ -30,7 +30,8 @@ class AppState extends ChangeNotifier {
     _restore();
   }
 
-  final Player currentUser = Seed.me;
+  // The signed-in player's own profile, or the seed identity for guests.
+  final Player currentUser = Backend.currentPlayer ?? Seed.me;
 
   int _activeTab = 0; // 0 Home · 1 Arena · 2 League · 3 Cards · 4 Roster · 5 Control
   int get activeTab => _activeTab;
