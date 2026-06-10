@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
 
 import '../models/models.dart';
+import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
 import '../widgets/primitives.dart';
@@ -74,7 +76,11 @@ class _ResultSubmitState extends State<_ResultSubmit> {
             ],
           ),
         ),
-        GButton('Submit for confirmation', full: true, icon: LucideIcons.send, onTap: () => setState(() => _done = true)),
+        GButton('Submit for confirmation', full: true, icon: LucideIcons.send, onTap: () {
+          // Record the result: moves the match from Active to History.
+          context.read<AppState>().submitResult(widget.opp.id, _sa, _sb);
+          setState(() => _done = true);
+        }),
       ],
     );
   }

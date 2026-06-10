@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../data/seed_data.dart';
 import '../models/models.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
@@ -37,6 +38,7 @@ class FCCard extends StatefulWidget {
   final bool shine;
   final String? photo; // local file path
   final List<Color>? flagBands;
+  final String? country; // ISO code → real flag emoji
   final VoidCallback? onTap;
   final VoidCallback? onPhotoTap; // tap the photo to expand it full-screen
 
@@ -53,6 +55,7 @@ class FCCard extends StatefulWidget {
     this.shine = true,
     this.photo,
     this.flagBands,
+    this.country,
     this.onTap,
     this.onPhotoTap,
   });
@@ -241,7 +244,7 @@ class _FCCardState extends State<FCCard> with TickerProviderStateMixin {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  FlagBands(width: w * 0.115, bands: widget.flagBands),
+                  FlagBands(width: w * 0.16, code: widget.country, bands: widget.flagBands),
                   if (!isPlat) ...[
                     SizedBox(height: 8 * s),
                     Container(
@@ -374,14 +377,27 @@ class _Nameplate extends StatelessWidget {
   }
 }
 
-/// Simple geometric horizontal flag bands (original art, not official).
+/// Country flag. Renders the real flag as an OS emoji when an ISO [code] is
+/// given (e.g. 'NL' → 🇳🇱); falls back to geometric [bands] otherwise.
 class FlagBands extends StatelessWidget {
   final double width;
   final List<Color>? bands;
-  const FlagBands({super.key, this.width = 28, this.bands});
+  final String? code;
+  const FlagBands({super.key, this.width = 28, this.bands, this.code});
 
   @override
   Widget build(BuildContext context) {
+    final emoji = (code == null || code!.isEmpty) ? null : Seed.flagEmoji(code!);
+    if (emoji != null) {
+      return SizedBox(
+        width: width,
+        height: width * 0.72,
+        child: FittedBox(
+          fit: BoxFit.contain,
+          child: Text(emoji, style: const TextStyle(fontSize: 40)),
+        ),
+      );
+    }
     final cols = (bands == null || bands!.isEmpty)
         ? const [Color(0xFFAE1C28), Color(0xFFFFFFFF), Color(0xFF21468B)]
         : bands!;

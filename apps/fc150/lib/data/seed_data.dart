@@ -116,63 +116,23 @@ class Seed {
 
   static List<Color> flagOf(String code) => flags[code] ?? flags['NL']!;
 
-  // League table (38-game season — mid-season snapshot).
-  static List<LeagueRow> league = [
-    LeagueRow(pos: 1, id: 'p02', p: 19, w: 14, d: 3, l: 2, gf: 41, ga: 16, pts: 45, form: ['W', 'W', 'D', 'W', 'W']),
-    LeagueRow(pos: 2, id: 'p01', p: 19, w: 13, d: 4, l: 2, gf: 44, ga: 19, pts: 43, form: ['W', 'W', 'W', 'D', 'W']),
-    LeagueRow(pos: 3, id: 'p03', p: 19, w: 12, d: 5, l: 2, gf: 30, ga: 13, pts: 41, form: ['D', 'W', 'W', 'W', 'D']),
-    LeagueRow(pos: 4, id: 'p04', p: 19, w: 12, d: 2, l: 5, gf: 38, ga: 22, pts: 38, form: ['W', 'L', 'W', 'W', 'L']),
-    LeagueRow(pos: 5, id: 'p05', p: 19, w: 10, d: 6, l: 3, gf: 33, ga: 21, pts: 36, form: ['D', 'W', 'D', 'W', 'W']),
-    LeagueRow(pos: 6, id: 'p06', p: 19, w: 10, d: 3, l: 6, gf: 35, ga: 27, pts: 33, form: ['W', 'W', 'L', 'D', 'W']),
-    LeagueRow(pos: 7, id: 'p08', p: 19, w: 9, d: 4, l: 6, gf: 29, ga: 25, pts: 31, form: ['L', 'W', 'D', 'W', 'D']),
-    LeagueRow(pos: 8, id: 'p07', p: 19, w: 8, d: 5, l: 6, gf: 22, ga: 21, pts: 29, form: ['D', 'D', 'W', 'L', 'W']),
-    LeagueRow(pos: 9, id: 'p10', p: 19, w: 7, d: 5, l: 7, gf: 27, ga: 28, pts: 26, form: ['W', 'L', 'D', 'L', 'W']),
-    LeagueRow(pos: 10, id: 'p09', p: 19, w: 6, d: 6, l: 7, gf: 25, ga: 28, pts: 24, form: ['D', 'L', 'W', 'D', 'L']),
-    LeagueRow(pos: 11, id: 'p11', p: 19, w: 5, d: 5, l: 9, gf: 18, ga: 29, pts: 20, form: ['L', 'D', 'L', 'W', 'L']),
-    LeagueRow(pos: 12, id: 'p12', p: 19, w: 3, d: 4, l: 12, gf: 17, ga: 38, pts: 13, form: ['L', 'L', 'D', 'L', 'L']),
-  ];
+  /// Country flag as an OS emoji (e.g. 'NL' → 🇳🇱); null for invalid codes.
+  static String? flagEmoji(String code) {
+    final cc = code.trim().toUpperCase();
+    if (cc.length != 2 || !RegExp(r'^[A-Z]{2}$').hasMatch(cc)) return null;
+    return String.fromCharCodes([0x1F1E6 + cc.codeUnitAt(0) - 65, 0x1F1E6 + cc.codeUnitAt(1) - 65]);
+  }
 
-  static List<Fixture> fixtures = [
-    Fixture(id: 'f1', a: 'p01', b: 'p06', when: 'Today · 20:30', comp: 'Premier League', md: 20, status: 'locked'),
-    Fixture(id: 'f2', a: 'p03', b: 'p05', when: 'Today · 21:00', comp: 'Premier League', md: 20, status: 'scheduled'),
-    Fixture(id: 'f3', a: 'p02', b: 'p04', when: 'Tomorrow · 19:00', comp: 'Premier League', md: 20, status: 'scheduled'),
-    Fixture(id: 'f4', a: 'p01', b: 'p09', when: 'Sat · 18:30', comp: 'Premier League', md: 21, status: 'scheduled'),
-  ];
-
-  static List<MatchResult> results = [
-    MatchResult(id: 'r1', a: 'p01', b: 'p10', sa: 4, sb: 1, comp: 'Premier League', when: 'Yesterday', status: 'confirmed'),
-    MatchResult(id: 'r2', a: 'p02', b: 'p07', sa: 2, sb: 0, comp: 'Premier League', when: 'Yesterday', status: 'confirmed'),
-    MatchResult(id: 'r3', a: 'p08', b: 'p03', sa: 1, sb: 1, comp: 'Premier League', when: '2 days ago', status: 'confirmed'),
-    MatchResult(id: 'r4', a: 'p06', b: 'p12', sa: 3, sb: 0, comp: 'Premier League', when: '2 days ago', status: 'noshow'),
-  ];
-
-  static List<Invite> invites = [
-    Invite(id: 'inv1', from: 'p06', mode: '1v1', when: 'Today · 20:30', comp: 'Friendly', status: 'pending'),
-    Invite(id: 'inv2', from: 'p10', mode: '1v1', when: 'Fri · 21:30', comp: 'Friendly', status: 'pending'),
-  ];
-
-  static const List<CareerCard> collection = [
-    CareerCard(id: 'c1', comp: 'Premier League', season: '2025/26', label: 'Mid-season', variant: 'neon', tier: 'base', rating: 94, date: 'Jun 2026', record: '13W · 4D · 2L', stats: Stats(pac: 92, sho: 95, pas: 78, dri: 90, def: 42, phy: 84)),
-    CareerCard(id: 'c2', comp: 'Premier League', season: '2025/26', label: 'Matchday 1', variant: 'neon', tier: 'base', rating: 88, date: 'Aug 2025', record: 'New season', stats: Stats(pac: 86, sho: 88, pas: 72, dri: 84, def: 40, phy: 80)),
-    CareerCard(id: 'c3', comp: 'Top 3 · Rank 2', season: '2024/25', label: 'Gold winner', variant: 'platinum', tier: 'gold', rating: 91, date: 'May 2025', record: 'Runner-up', stats: Stats(pac: 89, sho: 90, pas: 74, dri: 87, def: 41, phy: 82)),
-    CareerCard(id: 'c4', comp: 'Champions League', season: '2024/25', label: 'Champion', variant: 'holo', tier: 'base', rating: 92, date: 'Apr 2025', record: 'Winner', stats: Stats(pac: 90, sho: 92, pas: 75, dri: 88, def: 42, phy: 83)),
-  ];
-
-  static const List<AppNotification> notifs = [
-    AppNotification(id: 'n1', kind: 'challenge', text: 'Adam Osman challenged you · Today 20:30', time: '5m', unread: true),
-    AppNotification(id: 'n2', kind: 'locked', text: 'Match locked vs Adam Osman', time: '4m', unread: true),
-    AppNotification(id: 'n3', kind: 'result', text: 'Result confirmed: you beat Kenji Sato 4–1', time: '1d', unread: false),
-    AppNotification(id: 'n4', kind: 'card', text: 'Your card upgraded to 94 OVR (+2)', time: '1d', unread: false),
-    AppNotification(id: 'n5', kind: 'top3', text: 'Top 3 announced for Premier League', time: '2d', unread: false),
-  ];
-
-  static List<PendingReg> pendingReg = [
-    PendingReg(id: 'pr1', name: 'Ismail Warsame', psn: 'WARSAME_10', country: 'SO', when: '12m ago'),
-    PendingReg(id: 'pr2', name: 'Sven Eriksson', psn: 'SVEN_E', country: 'SE', when: '1h ago'),
-    PendingReg(id: 'pr3', name: 'Diego Santos', psn: 'SANTOS_BR', country: 'BR', when: '3h ago'),
-  ];
-
-  static List<Dispute> disputes = [
-    Dispute(id: 'd1', a: 'p06', b: 'p12', claimA: '3–0 win', claimB: 'No-show, replay', when: '20m ago'),
-  ];
+  // Match/season data is empty at launch — nothing has been played yet. Live
+  // data comes from Firestore (backend.dart); these are the clean-slate fallback.
+  // League/cup standings are built from the accepted rosters (zeroed) by the
+  // League screen until the admin starts a season and results come in.
+  static List<LeagueRow> league = [];
+  static List<Fixture> fixtures = [];
+  static List<MatchResult> results = [];
+  static List<Invite> invites = [];
+  static const List<CareerCard> collection = [];
+  static const List<AppNotification> notifs = [];
+  static List<PendingReg> pendingReg = [];
+  static List<Dispute> disputes = [];
 }
