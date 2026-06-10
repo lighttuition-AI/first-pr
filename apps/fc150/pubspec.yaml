@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.7.0+12
+version: 1.7.1+13
 
 environment:
   sdk: ^3.12.1
@@ -57,6 +57,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.0
 
 # App icon generation — run `dart run flutter_launcher_icons` after editing the
 # source PNG (regenerate it with `python3 tool/gen_icon.py`).
@@ -66,6 +67,19 @@ flutter_launcher_icons:
   android: true
   remove_alpha_ios: true
   background_color_ios: "#0A0A0F"
+
+# Branded launch/splash screen — the FC150 wordmark centered on the dark brand
+# color. Regenerate the logo with `python3 tool/gen_splash.py`, then apply with
+# `dart run flutter_native_splash:create`.
+flutter_native_splash:
+  color: "#0A0A0F"
+  image: assets/splash/splash_logo.png
+  android_12:
+    color: "#0A0A0F"
+    image: assets/splash/splash_logo.png
+  ios: true
+  android: true
+  web: false
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
