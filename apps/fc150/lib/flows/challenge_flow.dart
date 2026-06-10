@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -296,13 +297,72 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
     return '${wd[dt.weekday - 1]} ${dt.day} ${mo[dt.month - 1]} · $hh:$mm';
   }
 
+  /// A single iOS-style date+time wheel in a bottom sheet. Replaces the Material
+  /// clock-dial picker (whose keyboard/typing mode was fiddly on device): the
+  /// wheel always works, reads as native on iOS, and keeps everything in one
+  /// scroll instead of two chained dialogs.
   Future<void> _pickDateTime() async {
     final now = DateTime.now();
-    final d = await showDatePicker(context: context, initialDate: now, firstDate: now, lastDate: now.add(const Duration(days: 90)));
-    if (d == null || !mounted) return;
-    final t = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 20, minute: 30));
-    if (t == null || !mounted) return;
-    setState(() => _slot = _fmtDateTime(DateTime(d.year, d.month, d.day, t.hour, t.minute)));
+    // Default to the next round-ish kick-off (top of the next hour).
+    var temp = DateTime(now.year, now.month, now.day, now.hour).add(const Duration(hours: 1));
+
+    final picked = await showModalBottomSheet<DateTime>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => Container(
+        decoration: const BoxDecoration(
+          color: FC.elevated,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          border: Border(top: BorderSide(color: FC.border)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 14, 14, 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Pick date & time', style: FCType.heading(size: 16, weight: FontWeight.w800)),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => Navigator.of(sheetCtx).pop(temp),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                        child: Text('Done', style: FCType.body(size: 15, weight: FontWeight.w800, color: FC.purple300)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 224,
+                child: CupertinoTheme(
+                  data: const CupertinoThemeData(
+                    brightness: Brightness.dark,
+                    textTheme: CupertinoTextThemeData(
+                      dateTimePickerTextStyle: TextStyle(fontSize: 19, color: FC.text, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.dateAndTime,
+                    use24hFormat: true,
+                    initialDateTime: temp,
+                    minimumDate: now.subtract(const Duration(minutes: 1)),
+                    maximumDate: now.add(const Duration(days: 90)),
+                    onDateTimeChanged: (d) => temp = d,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _slot = _fmtDateTime(picked));
   }
 
   Widget _timeStep() {
