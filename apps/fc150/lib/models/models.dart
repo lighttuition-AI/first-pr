@@ -56,6 +56,8 @@ class Player {
   final String variant; // neon / holo / mono / platinum
   final Stats stats;
   String? photo; // local file path (mutable for the current user)
+  // Trophies won, each {'comp': 'Premier League', 'date': '2026-06-10'}.
+  List<Map<String, dynamic>> trophies;
 
   Player({
     required this.id,
@@ -69,6 +71,7 @@ class Player {
     this.variant = 'neon',
     required this.stats,
     this.photo,
+    this.trophies = const [],
   });
 
   factory Player.fromMap(Map<String, dynamic> m) => Player(
@@ -83,12 +86,13 @@ class Player {
         variant: (m['variant'] ?? 'neon') as String,
         stats: Stats.fromMap(Map<String, dynamic>.from(m['stats'] as Map)),
         photo: m['photo'] as String?,
+        trophies: ((m['trophies'] as List?) ?? const []).map((e) => Map<String, dynamic>.from(e as Map)).toList(),
       );
 
   Map<String, dynamic> toMap() => {
         'id': id, 'name': name, 'short': short, 'country': country, 'pos': pos,
         'psn': psn, 'rating': rating, 'tier': tier, 'variant': variant,
-        'stats': stats.toMap(), 'photo': photo,
+        'stats': stats.toMap(), 'photo': photo, 'trophies': trophies,
       };
 
   String get initials =>

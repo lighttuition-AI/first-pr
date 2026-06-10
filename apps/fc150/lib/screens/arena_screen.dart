@@ -55,8 +55,12 @@ class _ArenaScreenState extends State<ArenaScreen> {
           onChange: (v) => setState(() => _tab = v),
         ),
         const SizedBox(height: 16),
-        if (_tab == 'pool')
-          for (final p in pool) ...[_poolRow(p, challenge), const SizedBox(height: 9)],
+        if (_tab == 'pool') ...[
+          if (pool.isEmpty)
+            _empty(LucideIcons.users, 'No players yet', 'Other players appear here once they join and are accepted.')
+          else
+            for (final p in pool) ...[_poolRow(p, challenge), const SizedBox(height: 9)],
+        ],
         if (_tab == 'active') ...[
           if (active.isEmpty)
             _empty(LucideIcons.swords, 'No active challenges', 'Tap “New challenge” to set one up.')
