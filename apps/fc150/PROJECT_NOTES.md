@@ -137,6 +137,19 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
   record** (played/W-D-L). Move these to a Firestore `users/{uid}` doc + Cloud Storage for the photo.
 - **Cup structures** (Champions League / World Cup groups + brackets) are still bundled in
   `lib/data/competitions.dart` — migrate to a `competitions` collection.
+- **Per-player registration is LIVE (v1.4.0).** `lib/main.dart` `RootGate` decides on launch:
+  **onboarding** (`screens/onboarding_screen.dart` — Create account / Sign in / Explore as guest) for
+  new users, or the app for signed-in players and guests. Sign-up (`Backend.register`) creates a Firebase
+  Email/Password account + a `players/{uid}` profile + a `pendingReg/{uid}` for the admin to approve, and
+  `AppState.currentUser` becomes that player (`Backend.currentPlayer ?? Seed.me`). Guests get the seed
+  identity. Sign out from the profile sheet (`Backend.signOut` bumps `Backend.session` → RootGate returns
+  to onboarding; the `guest` flag is cleared). **Fail-safe:** if Firebase isn't ready, or a QA hook is set
+  (`FC_SKIP_TOP3`/`FC_QA_*`), or tests run, RootGate goes straight to the app with the seed identity — no
+  lockout. Admin accounts (`admin@fc150.com`/`admin2@fc150.com`) are real Firebase users now; they sign in
+  through the same lock (local gate + `Backend.adminSignIn`).
+  - VERIFIED on the macOS harness: fresh user → `FC150_GATE ... -> onboarding` (no brick), live data
+    loaded; and an authenticated client write to `players/{uid}` succeeds under the rules (= the register
+    write path). Remaining device check: the actual tap-through (Create account form → submit) on iOS.
 - **Auth is wired but dormant until you flip the console switch** (v1.3.1). `firebase_auth` is added;
   `Backend.init()` signs in **anonymously** (best-effort), and admin sign-in calls
   `Backend.adminSignIn` (real Email/Password, self-provisioning the 2 admin accounts on first use) —

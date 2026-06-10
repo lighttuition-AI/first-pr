@@ -24,7 +24,8 @@ class HomeScreen extends StatelessWidget {
     final app = context.watch<AppState>();
     final me = app.currentUser;
     final unread = Seed.notifs.where((n) => n.unread).length;
-    final rank = Seed.league.firstWhere((r) => r.id == 'p01');
+    final myRows = Seed.league.where((r) => r.id == me.id);
+    final rank = myRows.isEmpty ? null : myRows.first;
 
     String ordinal(int n) => n == 1 ? '1st' : n == 2 ? '2nd' : n == 3 ? '3rd' : '${n}th';
 
@@ -92,7 +93,7 @@ class HomeScreen extends StatelessWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(ordinal(rank.pos), style: FCType.mono(size: 17, weight: FontWeight.w700)),
+                        Text(rank == null ? '—' : ordinal(rank.pos), style: FCType.mono(size: 17, weight: FontWeight.w700)),
                         Text('League rank', style: FCType.body(size: 11, color: FC.text2, height: 1.1)),
                       ],
                     ),
@@ -115,11 +116,11 @@ class HomeScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.baseline,
                           textBaseline: TextBaseline.alphabetic,
                           children: [
-                            Text('${rank.pts}', style: FCType.mono(size: 17, weight: FontWeight.w700)),
+                            Text('${rank?.pts ?? 0}', style: FCType.mono(size: 17, weight: FontWeight.w700)),
                             Text(' pts', style: FCType.body(size: 11, color: FC.textMuted)),
                           ],
                         ),
-                        Text(rank.form.join(' '), style: FCType.body(size: 11, color: FC.text2, height: 1.1)),
+                        Text(rank == null ? 'New player' : rank.form.join(' '), style: FCType.body(size: 11, color: FC.text2, height: 1.1)),
                       ],
                     ),
                   ],

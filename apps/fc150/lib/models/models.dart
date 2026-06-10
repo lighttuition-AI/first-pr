@@ -21,6 +21,8 @@ class Stats {
         dri: m['dri'] as int, def: (m['defe'] ?? m['def']) as int, phy: m['phy'] as int,
       );
 
+  Map<String, dynamic> toMap() => {'pac': pac, 'sho': sho, 'pas': pas, 'dri': dri, 'defe': def, 'phy': phy};
+
   int byKey(String k) => switch (k) {
         'pac' => pac,
         'sho' => sho,
@@ -82,6 +84,12 @@ class Player {
         stats: Stats.fromMap(Map<String, dynamic>.from(m['stats'] as Map)),
         photo: m['photo'] as String?,
       );
+
+  Map<String, dynamic> toMap() => {
+        'id': id, 'name': name, 'short': short, 'country': country, 'pos': pos,
+        'psn': psn, 'rating': rating, 'tier': tier, 'variant': variant,
+        'stats': stats.toMap(), 'photo': photo,
+      };
 
   String get initials =>
       short.split(' ').map((w) => w.isEmpty ? '' : w[0]).take(2).join();

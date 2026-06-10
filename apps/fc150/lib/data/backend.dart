@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 
 import '../firebase_options.dart';
 import '../models/models.dart';
@@ -24,6 +25,111 @@ class Backend {
 
   /// True once a Firebase Auth session exists (anonymous or admin).
   static bool get signedIn => ready && FirebaseAuth.instance.currentUser != null;
+
+  /// The signed-in player's own profile (`players/{uid}`), or null for
+  /// anonymous/guest sessions (who use the seed identity).
+  static Player? currentPlayer;
+
+  /// Whether a real (non-anonymous) account is signed in.
+  static bool get isRegistered {
+    final u = ready ? FirebaseAuth.instance.currentUser : null;
+    return u != null && !u.isAnonymous;
+  }
+
+  static int _ratingFor(String pos) => 80;
+
+  static Stats _starterStats(String pos) {
+    int c(int v) => v.clamp(34, 99);
+    const ovr = 80;
+    switch (pos) {
+      case 'ATT':
+        return Stats(pac: c(ovr - 2), sho: c(ovr + 1), pas: c(ovr - 16), dri: c(ovr - 4), def: c(ovr - 48), phy: c(ovr - 12));
+      case 'DEF':
+        return Stats(pac: c(ovr - 14), sho: c(ovr - 36), pas: c(ovr - 16), dri: c(ovr - 18), def: c(ovr + 1), phy: c(ovr - 2));
+      default:
+        return Stats(pac: c(ovr - 8), sho: c(ovr - 12), pas: c(ovr + 1), dri: c(ovr - 2), def: c(ovr - 18), phy: c(ovr - 10));
+    }
+  }
+
+  static String _friendlyAuthError(String code) => switch (code) {
+        'email-already-in-use' => 'That email already has an account — try signing in.',
+        'invalid-email' => "That email doesn't look right.",
+        'weak-password' => 'Pick a password with at least 6 characters.',
+        'operation-not-allowed' => 'Email sign-in isn\'t enabled yet.',
+        'user-not-found' || 'wrong-password' || 'invalid-credential' => 'Wrong email or password.',
+        'network-request-failed' => 'No connection — check your network.',
+        _ => 'Something went wrong. Please try again.',
+      };
+
+  /// Create a new player account + their `players/{uid}` doc, and a pending
+  /// registration for the admin to approve. Returns (ok, error?).
+  static Future<({bool ok, String? error})> register({
+    required String email,
+    required String password,
+    required String name,
+    required String psn,
+    required String pos,
+    required String country,
+  }) async {
+    if (!ready || _db == null) return (ok: false, error: 'No connection to the server.');
+    try {
+      final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email.trim(), password: password);
+      final uid = cred.user!.uid;
+      final player = Player(
+        id: uid, name: name.trim().toUpperCase(), short: name.trim(), country: country,
+        pos: pos, psn: psn.trim(), rating: _ratingFor(pos), stats: _starterStats(pos),
+      );
+      await _db!.collection('players').doc(uid).set(player.toMap());
+      await _db!.collection('pendingReg').doc(uid).set({'id': uid, 'name': name.trim(), 'psn': psn.trim(), 'country': country, 'when': 'just now'});
+      currentPlayer = player;
+      return (ok: true, error: null);
+    } on FirebaseAuthException catch (e) {
+      return (ok: false, error: _friendlyAuthError(e.code));
+    } catch (_) {
+      return (ok: false, error: 'Something went wrong. Please try again.');
+    }
+  }
+
+  /// Sign in to an existing account and load the player's profile.
+  static Future<({bool ok, String? error})> signIn({required String email, required String password}) async {
+    if (!ready || _db == null) return (ok: false, error: 'No connection to the server.');
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(email: email.trim(), password: password);
+      final p = await loadCurrentPlayer();
+      if (p == null) return (ok: true, error: null); // admin or profile-less account
+      return (ok: true, error: null);
+    } on FirebaseAuthException catch (e) {
+      return (ok: false, error: _friendlyAuthError(e.code));
+    } catch (_) {
+      return (ok: false, error: 'Something went wrong. Please try again.');
+    }
+  }
+
+  /// Load the signed-in (non-anonymous) user's player profile from Firestore.
+  static Future<Player?> loadCurrentPlayer() async {
+    if (!ready || _db == null) return null;
+    final u = FirebaseAuth.instance.currentUser;
+    if (u == null || u.isAnonymous) return null;
+    try {
+      final doc = await _db!.collection('players').doc(u.uid).get();
+      if (doc.exists) {
+        currentPlayer = Player.fromMap(doc.data()!);
+        return currentPlayer;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// Bumped on sign-out so the root gate returns to onboarding.
+  static final ValueNotifier<int> session = ValueNotifier<int>(0);
+
+  static Future<void> signOut() async {
+    currentPlayer = null;
+    try {
+      await FirebaseAuth.instance.signOut();
+    } catch (_) {}
+    session.value++;
+  }
 
   static Future<void> init() async {
     try {

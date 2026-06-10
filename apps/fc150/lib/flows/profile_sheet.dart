@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/backend.dart';
 import '../data/seed_data.dart';
 import '../models/models.dart';
+import '../theme/app_theme.dart';
+import '../theme/tokens.dart';
 import '../widgets/fc_card.dart';
 import '../widgets/primitives.dart';
 import '../widgets/sheet.dart';
@@ -74,6 +78,27 @@ class _ProfileSheetState extends State<_ProfileSheet> {
             Expanded(child: GButton('Share card', icon: LucideIcons.share2, full: true, onTap: () => showShareCardSheet(context, boundaryKey: _cardKey, playerName: me.short))),
           ],
         ),
+        if (Backend.ready) ...[
+          const SizedBox(height: 12),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () async {
+              final nav = Navigator.of(context);
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove('guest');
+              nav.maybePop();
+              await Backend.signOut(); // returns the app to the account screen
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                Backend.isRegistered ? 'Sign out' : 'Create an account or sign in',
+                textAlign: TextAlign.center,
+                style: FCType.body(size: 13, weight: FontWeight.w600, color: FC.text2),
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
