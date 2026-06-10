@@ -81,3 +81,22 @@ canvas = Image.alpha_composite(canvas, grad)
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 canvas.save(OUT, "PNG")
 print("wrote", os.path.abspath(OUT), canvas.size)
+
+# --- Android 12+ variant -----------------------------------------------------
+# Android 12's splash API masks the icon to a CIRCLE ~2/3 of the canvas
+# (a 768px circle on a 1152px canvas). The full-width wordmark above would be
+# clipped, so derive a smaller, centered logo that sits comfortably inside that
+# circle. Same artwork as iOS — just scaled to survive the mask (iOS is left
+# untouched as the reference). Width target ~58% of the canvas keeps the
+# left/right extremes of "150" (the binding points) well inside the circle.
+A12 = 1152
+A12_OUT = os.path.join(os.path.dirname(__file__), "..", "assets", "splash", "splash_logo_android12.png")
+crop = canvas.crop(canvas.getbbox())               # tight logo (incl. glow)
+target_w = int(A12 * 0.54)
+scale = target_w / crop.width
+scaled = crop.resize((target_w, max(1, round(crop.height * scale))), Image.LANCZOS)
+a12 = Image.new("RGBA", (A12, A12), (0, 0, 0, 0))
+a12.alpha_composite(scaled, ((A12 - scaled.width) // 2, (A12 - scaled.height) // 2))
+a12.save(A12_OUT, "PNG")
+print("wrote", os.path.abspath(A12_OUT), a12.size,
+      f"(logo {scaled.size}, radius {round((scaled.width**2 + scaled.height**2) ** 0.5 / 2)}px vs 384px circle)")
