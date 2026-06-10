@@ -112,6 +112,23 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
   (league: table/fixtures/results), **Champions League** and **World Cup** (cups: group-stage
   tables + a knockout bracket — QF/SF/Final). Active competition lives in `AppState`.
 
+## Android 12+ splash parity (v1.7.2, build 14)
+- **Fixed the Android 12+ splash mask clipping.** Android 12 masks the splash icon to a
+  **circle ~⅔ the canvas** (a 768px circle on a 1152px canvas). The full-width FC150
+  wordmark was 93% of the canvas, so the sides of "150" would be clipped. `tool/gen_splash.py`
+  now also emits **`assets/splash/splash_logo_android12.png`** — the same artwork scaled to
+  **54% width** (centered, ~73px margin inside the mask) — and `pubspec.yaml`'s
+  `flutter_native_splash.android_12.image` points at it. iOS is untouched (still uses the
+  full-size `splash_logo.png`); re-running `dart run flutter_native_splash:create` only
+  changed the Android-12 drawables.
+- **Verified on device** (Pixel 7 emulator, **API 35 / Android 15**, which uses the
+  Android-12 splash API): cold-start capture shows the full FC150 wordmark centered on
+  `#0A0A0F` with **no clipping**, handing off cleanly (no white flash) to the dark
+  onboarding screen. To re-capture a transient splash: set animation scales to 3×
+  (`adb shell settings put global {window,transition,animator}_*_scale 3`), `am force-stop`
+  then `am start`, and burst `adb exec-out screencap` (splash bg is `#0A0A0F` ≈ (10,10,15);
+  Flutter's pre-first-frame is pure black (0,0,0) — that's how to tell them apart).
+
 ## Branded launch screen (v1.7.1, build 13)
 - **Replaced the default Flutter launch placeholder** (Flutter warned about it on every
   build) with a branded splash: the **FC150 wordmark centered on the dark brand color
