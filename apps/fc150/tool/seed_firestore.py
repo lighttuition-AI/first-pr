@@ -153,24 +153,15 @@ PENDING = [
 
 
 def main():
+    # Clean launch: seed only the player pool + the admin's accepted rosters.
+    # No match data — leagues/cups start empty (zeroed) until games are played,
+    # and real player registrations land in pendingReg via the app.
     np = seed_players()
-    for (pos, pid, p, w, d, l, gf, ga, pts, form) in LEAGUE:
-        put("league", pid, dict(pos=pos, id=pid, p=p, w=w, d=d, l=l, gf=gf, ga=ga, pts=pts, form=form))
-    for (fid, a, b, when, comp, md, status) in FIXTURES:
-        put("fixtures", fid, dict(id=fid, a=a, b=b, when=when, comp=comp, md=md, status=status))
-    for (rid, a, b, sa, sb, comp, when, status) in RESULTS:
-        put("results", rid, dict(id=rid, a=a, b=b, sa=sa, sb=sb, comp=comp, when=when, status=status))
-    for (iid, frm, mode, when, comp, status) in INVITES:
-        put("invites", iid, dict(id=iid, **{"from": frm}, mode=mode, when=when, comp=comp, status=status))
-    for (did, a, b, ca, cb, when) in DISPUTES:
-        put("disputes", did, dict(id=did, a=a, b=b, claimA=ca, claimB=cb, when=when))
-    for (pid, name, psn, country, when) in PENDING:
-        put("pendingReg", pid, dict(id=pid, name=name, psn=psn, country=country, when=when))
     put("rosters", "pl", dict(playerIds=[p[0] for p in NAMED]))
     put("rosters", "ucl", dict(playerIds=[]))
     put("rosters", "wc", dict(playerIds=[]))
-    put("meta", "seed", dict(version=1, players=np))
-    print(f"Seeded {np} players + league/fixtures/results/invites/disputes/pendingReg/rosters.")
+    put("meta", "seed", dict(version=2, players=np))
+    print(f"Seeded {np} players + rosters (clean launch — no match/demo data).")
 
 
 if __name__ == "__main__":

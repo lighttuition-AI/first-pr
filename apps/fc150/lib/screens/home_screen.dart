@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
-import '../data/competitions.dart';
 import '../data/seed_data.dart';
-import '../models/competition.dart';
 import '../flows/admin_login.dart';
 import '../flows/friendly_result.dart';
 import '../flows/notifications_sheet.dart';
@@ -73,6 +71,7 @@ class HomeScreen extends StatelessWidget {
             psn: me.psn,
             stats: me.stats,
             photo: me.photo,
+            country: me.country,
             flagBands: Seed.flagOf(me.country),
             width: 232,
             onTap: () => showProfileSheet(context, me, (p) => context.read<AppState>().setPhoto(p)),
@@ -193,32 +192,15 @@ class _UpcomingMatches extends StatelessWidget {
     final app = context.watch<AppState>();
     final me = app.currentUser;
 
-    // Premier League — the player's own scheduled/locked fixtures.
-    final pl = [
-      for (final fx in Seed.fixtures)
-        if (fx.a == me.id || fx.b == me.id)
-          (opp: Seed.byId(fx.a == me.id ? fx.b : fx.a).short, meta: fx.when, status: fx.status),
-    ];
-
-    // Cup ties involving the player that haven't been played yet.
-    List<({String opp, String meta, String status})> cup(Competition c) {
-      final out = <({String opp, String meta, String status})>[];
-      for (final t in c.bracket) {
-        final isA = t.a?.name == me.short, isB = t.b?.name == me.short;
-        if ((!isA && !isB) || t.status == 'confirmed') continue;
-        out.add((opp: (isA ? t.b?.name : t.a?.name) ?? 'TBD', meta: t.round, status: t.status));
-      }
-      return out;
+    // The player's own real fixtures, grouped by competition. Empty until the
+    // admin generates a season — a new player sees nothing here.
+    final byComp = <String, List<({String opp, String meta, String status})>>{};
+    for (final fx in Seed.fixtures) {
+      if (fx.a != me.id && fx.b != me.id) continue;
+      final oppId = fx.a == me.id ? fx.b : fx.a;
+      (byComp[fx.comp] ??= []).add((opp: Seed.byId(oppId).short, meta: fx.when, status: fx.status));
     }
-
-    final ucl = cup(Comps.championsLeague);
-    final wc = cup(Comps.worldCup);
-
-    final cupGroups = <(String, List<({String opp, String meta, String status})>)>[
-      ('Premier League', pl),
-      ('Champions League', ucl),
-      ('World Cup', wc),
-    ].where((g) => g.$2.isNotEmpty).toList();
+    final cupGroups = byComp.entries.map((e) => (e.key, e.value)).toList();
     final friendly = app.acceptedFriendlies;
 
     if (cupGroups.isEmpty && friendly.isEmpty) return const SizedBox.shrink();

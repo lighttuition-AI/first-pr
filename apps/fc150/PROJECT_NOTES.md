@@ -112,6 +112,24 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
   (league: table/fixtures/results), **Champions League** and **World Cup** (cups: group-stage
   tables + a knockout bracket — QF/SF/Final). Active competition lives in `AppState`.
 
+## Clean launch state (v1.4.1) — no dummy match data
+The app launches with **nothing played**. `Seed`'s match data is empty (`league`/`fixtures`/
+`results`/`invites`/`disputes`/`pendingReg`/`notifs` = `[]`) and the matching Firestore collections
+were cleared; the seeder (`tool/seed_firestore.py`) now seeds **only** the player pool + the admin
+`rosters` (clean launch). So:
+- **League/cup standings** are built by `league_screen.dart` from the **accepted roster**
+  (`AppState.rosterFor(comp.id)`) with **zeroed** stats (P/GD/PTS = 0) + a "season hasn't started"
+  note. Fixtures/results/knockout show empty states until the admin starts a season.
+- A **new player is clean**: no challenge invitations, no active challenges, no history, no upcoming
+  matches (Home/Arena read the player's own `AppState` lists, which start empty). They can still see
+  and follow the league standings of the accepted players.
+- **Arena challenge lifecycle** (`AppState.activeChallenges`/`matchHistory`): "New challenge"/"Challenge"
+  → `challenge_flow` `onConfirm` → `addChallenge` (Active); **Submit result** (`result_submit`) →
+  `submitResult` → moves the match to **History**. Both persist.
+- **Country flag** on the card is the real OS **flag emoji** (`Seed.flagEmoji`, rendered by `FlagBands`
+  when given an ISO `code`); `FCCard.country` carries the player's country. The old geometric bands were
+  invisible on the dark card.
+
 ## Firebase backend (LIVE — `lib/data/backend.dart`)
 - **Project:** `fc150-arena` (Firebase console → that project). Auth account: app.jeeble@gmail.com.
   Config committed: `lib/firebase_options.dart`, `ios/Runner/GoogleService-Info.plist`,

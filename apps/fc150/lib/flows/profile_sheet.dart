@@ -58,6 +58,7 @@ class _ProfileSheetState extends State<_ProfileSheet> {
             psn: me.psn,
             stats: me.stats,
             photo: me.photo,
+            country: me.country,
             flagBands: Seed.flagOf(me.country),
             width: 230,
             onPhotoTap: me.photo == null ? null : () => showPhotoViewer(context, me.photo!),

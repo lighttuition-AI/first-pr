@@ -20,11 +20,12 @@ Future<void> showChallengeFlow(
   Player? preset,
   String? presetSlot,
   bool autoLock = false,
+  void Function(Player opponent, String mode, String slot)? onConfirm,
 }) {
   return showFcSheet(
     context,
     dismissible: !autoLock,
-    builder: (_) => _ChallengeSheet(preset: preset, presetSlot: presetSlot, autoLock: autoLock),
+    builder: (_) => _ChallengeSheet(preset: preset, presetSlot: presetSlot, autoLock: autoLock, onConfirm: onConfirm),
   );
 }
 
@@ -32,7 +33,8 @@ class _ChallengeSheet extends StatefulWidget {
   final Player? preset;
   final String? presetSlot;
   final bool autoLock;
-  const _ChallengeSheet({this.preset, this.presetSlot, this.autoLock = false});
+  final void Function(Player opponent, String mode, String slot)? onConfirm;
+  const _ChallengeSheet({this.preset, this.presetSlot, this.autoLock = false, this.onConfirm});
 
   @override
   State<_ChallengeSheet> createState() => _ChallengeSheetState();
@@ -73,6 +75,7 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
 
   void _send() {
     setState(() => _sent = true);
+    if (_opponents.isNotEmpty) widget.onConfirm?.call(_opponents.first, _mode, _slot);
     Timer(const Duration(milliseconds: 1700), _closeIfMounted);
   }
 

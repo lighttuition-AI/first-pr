@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:fc150/data/competitions.dart';
+import 'package:fc150/data/seed_data.dart';
 import 'package:fc150/state/app_state.dart';
 
 void main() {
@@ -39,19 +40,25 @@ void main() {
     expect(app.pendingBroadcast, isNull);
   });
 
-  test('accepting an invite moves it to upcoming friendlies; declining just removes it', () {
+  test('a fresh player starts clean — no invites, challenges or history', () {
     final app = AppState();
-    expect(app.invites, isNotEmpty);
-    final accept = app.invites.first;
-    final decline = app.invites.last;
+    expect(app.invites, isEmpty);
+    expect(app.activeChallenges, isEmpty);
+    expect(app.matchHistory, isEmpty);
+    expect(Seed.league, isEmpty);
+    expect(Seed.fixtures, isEmpty);
+  });
 
-    app.acceptInvite(accept);
-    expect(app.invites.any((i) => i.id == accept.id), isFalse);
-    expect(app.acceptedFriendlies.any((i) => i.id == accept.id), isTrue);
+  test('submitting a result moves a challenge from active to history', () {
+    final app = AppState();
+    app.addChallenge('p06', '1v1', 'Today · 20:30');
+    expect(app.activeChallenges.length, 1);
+    expect(app.matchHistory, isEmpty);
 
-    app.declineInvite(decline);
-    expect(app.invites.any((i) => i.id == decline.id), isFalse);
-    expect(app.acceptedFriendlies.any((i) => i.id == decline.id), isFalse);
+    app.submitResult('p06', 3, 1);
+    expect(app.activeChallenges, isEmpty);
+    expect(app.matchHistory.length, 1);
+    expect(app.matchHistory.first['sa'], 3);
   });
 
   test('the roster supports Premier League, Champions League and World Cup', () {

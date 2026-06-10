@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/competitions.dart';
 import '../data/seed_data.dart';
 import '../flows/photo_viewer.dart';
-import '../models/competition.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
@@ -17,33 +15,21 @@ import '../widgets/primitives.dart';
 class CardsScreen extends StatelessWidget {
   const CardsScreen({super.key});
 
-  String _ordinal(int n) => n == 1 ? '1st' : n == 2 ? '2nd' : n == 3 ? '3rd' : '${n}th';
-
-  String _stageOf(Competition c, String myName) {
-    for (final t in c.bracket) {
-      if ((t.a?.name == myName || t.b?.name == myName) && t.status != 'confirmed') return t.round;
-    }
-    String last = 'Group stage';
-    for (final t in c.bracket) {
-      if (t.a?.name == myName || t.b?.name == myName) last = t.round;
-    }
-    return last;
-  }
-
   @override
   Widget build(BuildContext context) {
     final app = context.watch<AppState>();
     final me = app.currentUser;
-    final rank = Seed.league.firstWhere((r) => r.id == me.id, orElse: () => Seed.league.first);
 
     final friendlyLine = app.friendlyPlayed == 0
         ? 'No matches yet'
         : 'Played ${app.friendlyPlayed} · ${app.friendlyWon}W ${app.friendlyDrawn}D ${app.friendlyLost}L';
 
+    // No games played yet → competition cards read "not started" until the
+    // season begins; the Friendly card tracks the live record.
     final cards = <({String comp, String variant, String progress})>[
-      (comp: 'Premier League', variant: 'neon', progress: 'Matchday 19 · ${_ordinal(rank.pos)} · ${rank.pts} pts'),
-      (comp: 'Champions League', variant: 'holo', progress: 'Knockout · ${_stageOf(Comps.championsLeague, me.short)}'),
-      (comp: 'World Cup', variant: 'neon', progress: 'Knockout · ${_stageOf(Comps.worldCup, me.short)}'),
+      (comp: 'Premier League', variant: 'neon', progress: 'Season hasn’t started'),
+      (comp: 'Champions League', variant: 'holo', progress: 'Not started yet'),
+      (comp: 'World Cup', variant: 'neon', progress: 'Not started yet'),
       (comp: 'Friendly challenges', variant: 'mono', progress: friendlyLine),
     ];
 
@@ -77,6 +63,7 @@ class CardsScreen extends StatelessWidget {
                       psn: me.psn,
                       stats: me.stats,
                       photo: me.photo,
+                      country: me.country,
                       flagBands: Seed.flagOf(me.country),
                       width: 142,
                       shine: c.variant != 'mono',

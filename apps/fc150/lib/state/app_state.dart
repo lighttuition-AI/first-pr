@@ -197,6 +197,34 @@ class AppState extends ChangeNotifier {
 
   void _saveFriendly() => _prefs?.setString('friendly', jsonEncode({'p': _fPlayed, 'w': _fWon, 'd': _fDrawn, 'l': _fLost}));
 
+  // ---- Arena challenges — the player's own matches ---------------------------
+  // Active = locked/pending matches to play; once a result is submitted the
+  // match moves to history. New players start with both empty.
+  final List<Map<String, dynamic>> _activeChallenges = [];
+  List<Map<String, dynamic>> get activeChallenges => List.unmodifiable(_activeChallenges);
+
+  final List<Map<String, dynamic>> _matchHistory = [];
+  List<Map<String, dynamic>> get matchHistory => List.unmodifiable(_matchHistory);
+
+  void addChallenge(String opponentId, String mode, String when) {
+    _activeChallenges.add({'opp': opponentId, 'mode': mode, 'when': when, 'status': 'locked'});
+    _saveChallenges();
+    notifyListeners();
+  }
+
+  /// Submit a played result — moves the match from active to history.
+  void submitResult(String opponentId, int sa, int sb) {
+    _activeChallenges.removeWhere((c) => c['opp'] == opponentId);
+    _matchHistory.insert(0, {'opp': opponentId, 'sa': sa, 'sb': sb, 'when': 'Just now'});
+    _saveChallenges();
+    notifyListeners();
+  }
+
+  void _saveChallenges() {
+    _prefs?.setString('activeChallenges', jsonEncode(_activeChallenges));
+    _prefs?.setString('matchHistory', jsonEncode(_matchHistory));
+  }
+
   // ---- Persistence -----------------------------------------------------------
   SharedPreferences? _prefs;
   bool _tabTouched = false;
@@ -256,6 +284,20 @@ class AppState extends ChangeNotifier {
       _fWon = f['w'] ?? 0;
       _fDrawn = f['d'] ?? 0;
       _fLost = f['l'] ?? 0;
+    }
+
+    // Arena challenges + history.
+    final acJson = p.getString('activeChallenges');
+    if (acJson != null) {
+      _activeChallenges
+        ..clear()
+        ..addAll((jsonDecode(acJson) as List).map((e) => Map<String, dynamic>.from(e as Map)));
+    }
+    final mhJson = p.getString('matchHistory');
+    if (mhJson != null) {
+      _matchHistory
+        ..clear()
+        ..addAll((jsonDecode(mhJson) as List).map((e) => Map<String, dynamic>.from(e as Map)));
     }
 
     _restored = true;
