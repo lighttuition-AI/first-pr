@@ -253,6 +253,30 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Pull-to-refresh: re-pull the shared data (players, results, rosters,
+  /// broadcasts) from Firestore into `Seed.*`, then re-sync the local roster
+  /// draft so standings/cards/league reflect the latest live state. No-op-safe
+  /// when offline — `Backend.load()` keeps the existing data if anything fails.
+  Future<void> refresh() async {
+    await Backend.load();
+    // When the backend is live, Firestore rosters are the source of truth; only
+    // adopt a competition's set when Firestore actually has it (a missing key
+    // keeps the current local draft rather than wiping it).
+    if (Backend.ready) {
+      for (final c in ['pl', 'ucl', 'wc']) {
+        final live = Backend.rosters[c];
+        if (live != null) _rosters[c] = Set.of(live);
+      }
+    }
+    // A broadcast pushed from another device since launch should still surface.
+    final lb = Backend.latestBroadcast;
+    if (lb != null && lb.id > _broadcastId) {
+      _broadcastMsg = lb.message;
+      _broadcastId = lb.id;
+    }
+    notifyListeners();
+  }
+
   // ---- Persistence -----------------------------------------------------------
   SharedPreferences? _prefs;
   bool _tabTouched = false;

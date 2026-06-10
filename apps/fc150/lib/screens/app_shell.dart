@@ -75,11 +75,22 @@ class _AppShellState extends State<AppShell> {
     final isAdmin = app.isAdmin;
     final bottomPad = MediaQuery.of(context).padding.bottom + 88;
 
+    // Each tab is its own pull-to-refresh surface: pulling down re-pulls live
+    // data (players, results, rosters, broadcasts) from Firestore. The
+    // AlwaysScrollableScrollPhysics lets the gesture work even when the content
+    // is shorter than the screen.
     Widget page(Widget child) => SafeArea(
           bottom: false,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(20, 16, 20, bottomPad),
-            child: child,
+          child: RefreshIndicator(
+            onRefresh: () => context.read<AppState>().refresh(),
+            color: FC.purple300,
+            backgroundColor: FC.elevated,
+            displacement: 28,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(20, 16, 20, bottomPad),
+              child: child,
+            ),
           ),
         );
 

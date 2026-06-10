@@ -159,6 +159,22 @@ class LeagueScreen extends StatelessWidget {
   TextStyle _hStyle() => FCType.body(size: 10, weight: FontWeight.w700, color: FC.textMuted, height: 1);
   static const _cols = [24.0, null, 22.0, 28.0, 28.0, 30.0];
 
+  /// Column header (# · PLAYER · P · GD · PTS) shared by the league table and
+  /// the cup group tables. [showRating] keeps the trailing rating column for the
+  /// league; the groups hide it.
+  Widget _headerRow({bool showRating = true}) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: FC.border))),
+        child: _rowLayout(
+          Text('#', style: _hStyle()),
+          Text('PLAYER', style: _hStyle()),
+          Text('P', textAlign: TextAlign.center, style: _hStyle()),
+          Text('GD', textAlign: TextAlign.center, style: _hStyle()),
+          Text('PTS', textAlign: TextAlign.center, style: _hStyle()),
+          showRating ? Text('OVR', textAlign: TextAlign.right, style: _hStyle()) : const SizedBox(),
+        ),
+      );
+
   Widget _table(List<TableEntry> rows, String meId) {
     return Surface(
       pad: 0,
@@ -166,18 +182,7 @@ class LeagueScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(FC.rCard),
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: FC.border))),
-              child: _rowLayout(
-                Text('#', style: _hStyle()),
-                Text('PLAYER', style: _hStyle()),
-                Text('P', textAlign: TextAlign.center, style: _hStyle()),
-                Text('GD', textAlign: TextAlign.center, style: _hStyle()),
-                Text('PTS', textAlign: TextAlign.center, style: _hStyle()),
-                const SizedBox(),
-              ),
-            ),
+            _headerRow(),
             for (var i = 0; i < rows.length; i++) _row(i + 1, rows[i], meId),
           ],
         ),
@@ -199,6 +204,7 @@ class LeagueScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(FC.rCard),
             child: Column(
               children: [
+                _headerRow(showRating: false),
                 for (var i = 0; i < rows.length; i++) _row(i + 1, rows[i], meId, showRating: false),
               ],
             ),

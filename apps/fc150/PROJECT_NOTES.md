@@ -112,6 +112,29 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
   (league: table/fixtures/results), **Champions League** and **World Cup** (cups: group-stage
   tables + a knockout bracket — QF/SF/Final). Active competition lives in `AppState`.
 
+## Pull-to-refresh + time picker + cup headers + dynamic Top-3 (v1.7.0, build 12)
+- **Pull-to-refresh** (`screens/app_shell.dart` + `AppState.refresh`): every tab is a
+  pull-down refresh surface (`RefreshIndicator` + `AlwaysScrollableScrollPhysics`). The
+  pull calls `AppState.refresh()` → `Backend.load()` (re-pulls players/results/rosters/
+  broadcasts from Firestore), re-syncs the local roster draft from the live Firestore
+  rosters, and picks up a newer broadcast. Offline-safe (`Backend.load` keeps current data).
+- **Date & time picker** (`flows/challenge_flow.dart` `_pickDateTime`): replaced the
+  Material clock-dial + keyboard dialogs (the typing/clock mode was unreliable on device)
+  with a single **iOS-style `CupertinoDatePicker` wheel** (`dateAndTime`, 24h, dark theme)
+  in a bottom sheet. One scroll, always works, no clock to fight.
+- **Cup group tables** (`screens/league_screen.dart` `_headerRow`): Champions League and
+  World Cup group tables were missing the column headers — added the shared **# · PLAYER ·
+  P · GD · PTS** header (the league table also gained an **OVR** header for its rating col).
+- **Top-3 splash is now dynamic** (`flows/top3_popup.dart` `_resolvePodium`), driven by the
+  Premier League season state:
+  - **Pre-season** (no season started / nobody drafted): **random placeholder names** —
+    never the seed player Khadar Agab — as a teaser.
+  - **Season started, no games played:** the drafted players in **alphabetical order**, top 3.
+  - **After the first result:** the **live standings** leader board (best PTS → GD), top 3.
+  - A short list is padded to three with shuffled placeholders so the podium always renders;
+    the "leader" caption under the podium reflects the state (Pre-season / Season start /
+    League leader).
+
 ## Standings engine + fixed slots + Home boxes (v1.6.0, build 11)
 - **Standings engine** (`lib/data/standings.dart`) — the previously-deferred "results → table"
   backend piece, built as a **pure, unit-tested** function (no UI/Firebase deps):
@@ -242,7 +265,13 @@ First run on Google Fonts needs network to fetch the font files (cached after).
 - Photo-library + camera usage strings are set in `ios/Runner/Info.plist`.
 - For signed device/IPA builds use the paid Apple team **`4696KN59VV`** on every config
   (Debug/Release/Profile). Simulator runs do not need signing.
-- IPA: `flutter build ipa --export-method development`.
+- IPA for **your own device only** (sideload via Xcode/Apple Configurator):
+  `flutter build ipa --export-method development`.
+- ⚠️ **For TestFlight / App Store uploads you MUST use the distribution build** —
+  `flutter build ipa --export-method app-store` (this is also the Flutter default).
+  A `development`-signed IPA is rejected by App Store Connect with a 409
+  *"Invalid Provisioning Profile … A distribution provisioning profile should be
+  used"*. See "Releasing to TestFlight" below.
 
 ## Releasing to TestFlight
 - **Version & build number** live in `pubspec.yaml` as `version: X.Y.Z+build` →
