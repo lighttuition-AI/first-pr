@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../data/seed_data.dart';
 import '../flows/broadcast.dart';
+import '../flows/new_season.dart';
 import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
@@ -31,6 +32,20 @@ class _AdminScreenState extends State<AdminScreen> {
   void _resolveDispute(String id, String msg) {
     setState(() => _disputes = _disputes.where((d) => d.id != id).toList());
     flashToast(context, msg);
+  }
+
+  void _newSeason(String compId, String compName) {
+    final app = context.read<AppState>();
+    final entrants = app.rosterFor(compId).map(Seed.byId).toList();
+    showNewSeasonSheet(
+      context,
+      compName: compName,
+      entrants: entrants,
+      onConfirm: (winnerId) {
+        app.startNewSeason(compId, compName, winnerId: winnerId);
+        flashToast(context, winnerId == null ? '$compName · new season started' : '$compName champion crowned 🏆');
+      },
+    );
   }
 
   void _generate(String compId, String doneMsg) {
@@ -233,6 +248,14 @@ class _AdminScreenState extends State<AdminScreen> {
         _generateCard('ucl', 'Champions League', '16 teams · 4 groups + knockout', 'Champions League drawn · 4 groups + bracket'),
         const SizedBox(height: 11),
         _generateCard('wc', 'World Cup', '16 teams · 4 groups + knockout', 'World Cup drawn · 4 groups + bracket'),
+        const SizedBox(height: 16),
+        const SectionTitle('Reset / new season'),
+        const SizedBox(height: 9),
+        _seasonRow(LucideIcons.trophy, FC.warning, 'Premier League', 'Crown champion · clear & restart', 'New season', () => _newSeason('pl', 'Premier League')),
+        const SizedBox(height: 11),
+        _seasonRow(LucideIcons.trophy, FC.warning, 'Champions League', 'Crown champion · clear & restart', 'New season', () => _newSeason('ucl', 'Champions League')),
+        const SizedBox(height: 11),
+        _seasonRow(LucideIcons.trophy, FC.warning, 'World Cup', 'Crown champion · clear & restart', 'New season', () => _newSeason('wc', 'World Cup')),
         const SizedBox(height: 16),
         const SectionTitle('Season controls'),
         const SizedBox(height: 9),

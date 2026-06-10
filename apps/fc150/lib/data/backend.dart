@@ -120,6 +120,29 @@ class Backend {
     return null;
   }
 
+  /// Award a season trophy to a player (appends to players/{id}.trophies). Each
+  /// trophy carries the competition + the date it was won, so repeated wins of
+  /// the same cup are distinct.
+  static Future<void> awardTrophy(String playerId, String comp) async {
+    final now = DateTime.now();
+    final trophy = {'comp': comp, 'date': now.toIso8601String().split('T').first, 'at': now.millisecondsSinceEpoch};
+    if (currentPlayer?.id == playerId) currentPlayer!.trophies = [...currentPlayer!.trophies, trophy];
+    if (!ready || _db == null) return;
+    try {
+      await _db!.collection('players').doc(playerId).set({'trophies': FieldValue.arrayUnion([trophy])}, SetOptions(merge: true));
+    } catch (_) {}
+  }
+
+  /// Start a new season for a competition — clears its roster so the admin
+  /// re-drafts; standings reset to empty.
+  static Future<void> resetCompetition(String compId) async {
+    rosters[compId] = <String>{};
+    if (!ready || _db == null) return;
+    try {
+      await _db!.collection('rosters').doc(compId).set({'playerIds': <String>[]});
+    } catch (_) {}
+  }
+
   /// Bumped on sign-out so the root gate returns to onboarding.
   static final ValueNotifier<int> session = ValueNotifier<int>(0);
 
@@ -183,13 +206,11 @@ class Backend {
         db.collection('broadcasts').orderBy('createdAt', descending: true).limit(1).get(),
       ]);
 
-      final playerDocs = snaps[0].docs;
-      if (playerDocs.isEmpty) return; // empty DB → keep bundled seed
-
-      final players = playerDocs.map((d) => Player.fromMap(d.data())).toList()
+      // Live player pool (empty at clean launch — that's fine, the app shows
+      // empty states). The guest identity `Seed.me` is left untouched; the
+      // signed-in player's identity comes from `currentPlayer`.
+      Seed.players = snaps[0].docs.map((d) => Player.fromMap(d.data())).toList()
         ..sort((a, b) => b.rating.compareTo(a.rating));
-      Seed.players = players;
-      Seed.me = players.firstWhere((p) => p.id == 'p01', orElse: () => players.first);
 
       List<T> rows<T>(QuerySnapshot<Map<String, dynamic>> s, T Function(Map<String, dynamic>) f) =>
           s.docs.map((d) => f(d.data())).toList();

@@ -112,6 +112,20 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
   (league: table/fixtures/results), **Champions League** and **World Cup** (cups: group-stage
   tables + a knockout bracket — QF/SF/Final). Active competition lives in `AppState`.
 
+## Ship-clean + seasons + trophies (v1.5.0)
+- **Zero demo data.** The player pool is now empty too (`Seed.players = []`; Firestore `players`,
+  `pendingReg`, and all match collections cleared; `tool/seed_firestore.py` seeds only empty
+  `rosters` + a meta marker). A shipped app starts with **no players** — real players register
+  in-app (→ `pendingReg`), the admin approves + drafts them, and standings build from there.
+  `Seed.me` remains only as the local "Explore as guest" identity; `byId` falls back to it.
+- **Admin → Reset / new season** (per competition): Control → Season → "New season" for Premier
+  League / Champions League / World Cup. Opens `flows/new_season.dart` to (optionally) crown the
+  champion of the ending season → `AppState.startNewSeason` → `Backend.awardTrophy` (the winner) +
+  `Backend.resetCompetition` (clears that competition's roster → empty standings for a fresh season).
+- **Trophies.** `Player.trophies` = `[{comp, date, at}]` (persisted on the Firestore player doc via
+  `arrayUnion`). The **Cards tab** shows a "Trophies" section — one entry per win with the competition
+  and the **date won**, so the same cup won several times is differentiated. Empty state until you win one.
+
 ## Clean launch state (v1.4.1) — no dummy match data
 The app launches with **nothing played**. `Seed`'s match data is empty (`league`/`fixtures`/
 `results`/`invites`/`disputes`/`pendingReg`/`notifs` = `[]`) and the matching Firestore collections

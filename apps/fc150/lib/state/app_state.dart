@@ -20,13 +20,11 @@ import '../models/models.dart';
 /// + Firestore + Storage) is the next milestone — see PROJECT_NOTES "Roadmap".
 class AppState extends ChangeNotifier {
   AppState() {
-    // Roster draft: from the backend when it loaded, else sensible defaults
-    // (the 12 named players pre-placed in the league).
-    _rosters['pl'] = Backend.rosters['pl'] != null
-        ? Set.of(Backend.rosters['pl']!)
-        : Seed.players.take(12).map((p) => p.id).toSet();
-    _rosters['ucl'] = Set.of(Backend.rosters['ucl'] ?? const <String>{});
-    _rosters['wc'] = Set.of(Backend.rosters['wc'] ?? const <String>{});
+    // Roster draft from the backend (empty at clean launch until the admin
+    // accepts and drafts real players).
+    for (final c in ['pl', 'ucl', 'wc']) {
+      _rosters[c] = Set.of(Backend.rosters[c] ?? const <String>{});
+    }
     _restore();
   }
 
@@ -64,6 +62,16 @@ class AppState extends ChangeNotifier {
     // Local cache (offline) + Firestore (shared, best-effort).
     _prefs?.setString('rosters', jsonEncode(_rosters.map((k, v) => MapEntry(k, v.toList()))));
     Backend.setRoster(compId, Set.of(rosterFor(compId)));
+  }
+
+  /// Crown an (optional) champion of the ending season and reset the competition
+  /// for a fresh one (clears its roster → empty standings).
+  Future<void> startNewSeason(String compId, String compName, {String? winnerId}) async {
+    if (winnerId != null && winnerId.isNotEmpty) await Backend.awardTrophy(winnerId, compName);
+    await Backend.resetCompetition(compId);
+    _rosters[compId] = <String>{};
+    _prefs?.setString('rosters', jsonEncode(_rosters.map((k, v) => MapEntry(k, v.toList()))));
+    notifyListeners();
   }
 
   String _leagueSubTab = 'table';

@@ -1,5 +1,6 @@
 // Roster (squad-builder) tests — the admin draft logic: a shared approved pool,
-// per-competition placement, and the 38-player Premier League cap.
+// per-competition placement, and the 38-player Premier League cap. The pool is
+// empty at launch, so these inject a small test pool.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -7,9 +8,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:fc150/data/backend.dart';
 import 'package:fc150/data/seed_data.dart';
+import 'package:fc150/models/models.dart';
 import 'package:fc150/screens/roster_screen.dart';
 import 'package:fc150/state/app_state.dart';
 import 'package:fc150/theme/app_theme.dart';
+
+Player _p(int i) => Player(
+      id: 't$i', name: 'TEST $i', short: 'Test $i', country: 'NL', pos: 'ATT', psn: 'T$i',
+      rating: 90 - i, stats: const Stats(pac: 80, sho: 80, pas: 80, dri: 80, def: 80, phy: 80),
+    );
 
 Widget _host() => ChangeNotifierProvider(
       create: (_) => AppState(),
@@ -17,35 +24,26 @@ Widget _host() => ChangeNotifierProvider(
     );
 
 void main() {
-  // AppState restores the last tab from SharedPreferences on construction;
-  // give the test binding a mock store so that call doesn't leave a timer.
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() {
     SharedPreferences.setMockInitialValues({});
-    Backend.rosters.clear(); // reset cross-test backend state
+    Backend.rosters.clear();
     Backend.latestBroadcast = null;
+    Seed.players = [for (var i = 0; i < 3; i++) _p(i)]; // small test pool
   });
 
-  test('approved pool is larger than the Premier League can hold', () {
-    expect(Seed.roster.length, greaterThan(AppState.rosterCaps['pl']!));
-  });
-
-  test('AppState seeds the league with the 12 named players and caps adds at 38', () {
+  test('a new competition starts empty and the league caps at 38', () {
     final app = AppState();
-    expect(app.rosterFor('pl').length, 12);
+    expect(app.rosterFor('pl'), isEmpty);
     expect(app.rosterFor('wc'), isEmpty);
 
-    // Fill the Premier League to its 38 cap from the approved pool.
-    for (final p in Seed.roster) {
-      app.toggleRoster('pl', p.id);
+    // Fill the Premier League to its 38 cap with synthetic ids.
+    for (var i = 0; i < 40; i++) {
+      app.toggleRoster('pl', 'x$i');
     }
     expect(app.rosterFor('pl').length, 38);
     expect(app.isFull('pl'), isTrue);
-
-    // Any further add is refused (returns false, nothing changes).
-    final leftOut = Seed.roster.firstWhere((p) => !app.isPlaced('pl', p.id));
-    expect(app.toggleRoster('pl', leftOut.id), isFalse);
-    expect(app.rosterFor('pl').length, 38);
+    expect(app.toggleRoster('pl', 'x999'), isFalse); // refused when full
   });
 
   testWidgets('Roster screen renders the switcher, capacity meter and pool', (tester) async {
@@ -55,23 +53,20 @@ void main() {
     expect(find.text('Roster'), findsOneWidget);
     expect(find.text('Premier League'), findsWidgets);
     expect(find.text('World Cup'), findsOneWidget);
-    // 12 named players are pre-placed in a 38-cap league.
     expect(find.textContaining('/ 38 placed'), findsOneWidget);
-    // Approved pool count chip.
-    expect(find.text('${Seed.roster.length} approved'), findsOneWidget);
+    expect(find.text('${Seed.players.length} approved'), findsOneWidget); // 3 approved
   });
 
   testWidgets('tapping Add places a player and bumps the count', (tester) async {
     await tester.pumpWidget(_host());
     await tester.pumpAndSettle();
 
-    expect(find.text('12'), findsOneWidget); // capacity meter count
+    expect(find.text('0'), findsOneWidget); // capacity meter starts at 0
     final add = find.text('Add').first;
     await tester.ensureVisible(add);
     await tester.tap(add);
     await tester.pump();
-    expect(find.text('13'), findsOneWidget);
-    // Let the confirmation toast's timer fire so none are pending at teardown.
-    await tester.pump(const Duration(seconds: 2));
+    expect(find.text('1'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2)); // drain the toast timer
   });
 }

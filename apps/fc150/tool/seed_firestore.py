@@ -153,15 +153,14 @@ PENDING = [
 
 
 def main():
-    # Clean launch: seed only the player pool + the admin's accepted rosters.
-    # No match data — leagues/cups start empty (zeroed) until games are played,
-    # and real player registrations land in pendingReg via the app.
-    np = seed_players()
-    put("rosters", "pl", dict(playerIds=[p[0] for p in NAMED]))
+    # SHIP CLEAN: no demo data at all. Real players register in-app (→ pendingReg),
+    # the admin approves + drafts them into competitions, and standings build up
+    # from there. We only initialise empty rosters + a meta marker.
+    put("rosters", "pl", dict(playerIds=[]))
     put("rosters", "ucl", dict(playerIds=[]))
     put("rosters", "wc", dict(playerIds=[]))
-    put("meta", "seed", dict(version=2, players=np))
-    print(f"Seeded {np} players + rosters (clean launch — no match/demo data).")
+    put("meta", "seed", dict(version=3, clean=True))
+    print("Initialised empty rosters (ship-clean — no players/match/demo data).")
 
 
 if __name__ == "__main__":

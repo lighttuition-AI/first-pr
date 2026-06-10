@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../data/seed_data.dart';
@@ -85,6 +86,63 @@ class CardsScreen extends StatelessWidget {
               ),
           ],
         ),
+        const SizedBox(height: 20),
+        const SectionTitle('Trophies'),
+        const SizedBox(height: 4),
+        Text('Season titles you’ve won', style: FCType.body(size: 12, color: FC.text2)),
+        const SizedBox(height: 12),
+        _trophies(me.trophies),
+      ],
+    );
+  }
+
+  Widget _trophies(List<Map<String, dynamic>> trophies) {
+    if (trophies.isEmpty) {
+      return Surface(
+        pad: 22,
+        child: Column(
+          children: [
+            const Icon(LucideIcons.trophy, size: 26, color: FC.textMuted),
+            const SizedBox(height: 10),
+            Text('No trophies yet', style: FCType.body(size: 14, weight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text('Win a Premier League, Champions League or World Cup season to earn one.',
+                textAlign: TextAlign.center, style: FCType.body(size: 12, color: FC.text2)),
+          ],
+        ),
+      );
+    }
+    // Newest first, so repeated wins of the same cup are ordered by date.
+    final sorted = [...trophies]..sort((a, b) => '${b['date']}'.compareTo('${a['date']}'));
+    return Column(
+      children: [
+        for (final t in sorted) ...[
+          Surface(
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(gradient: FC.gradient, borderRadius: BorderRadius.circular(11), boxShadow: FC.glowPurpleSm),
+                  child: const Icon(LucideIcons.trophy, size: 22, color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('${t['comp']} champion', style: FCType.body(size: 14, weight: FontWeight.w700, height: 1.2)),
+                      const SizedBox(height: 2),
+                      Text('Won ${t['date']}', style: FCType.mono(size: 11.5, color: FC.text2)),
+                    ],
+                  ),
+                ),
+                const Icon(LucideIcons.medal, size: 20, color: FC.warning),
+              ],
+            ),
+          ),
+          const SizedBox(height: 9),
+        ],
       ],
     );
   }
