@@ -59,6 +59,21 @@ class Seed {
     return String.fromCharCodes([0x1F1E6 + cc.codeUnitAt(0) - 65, 0x1F1E6 + cc.codeUnitAt(1) - 65]);
   }
 
+  /// Placeholder team names for empty competition slots once a season starts, so
+  /// a season can begin with fewer than the full count (the rest are CPU teams).
+  static const List<String> _autoTeams = [
+    'Northside FC', 'Harbor United', 'Iron Wolves', 'Royal Crest', 'Vortex SC',
+    'Summit Athletic', 'Crimson Lions', 'Aztec Rovers', 'Nova United', 'Polar Bears FC',
+    'Granite City', 'Echo Rangers', 'Falcon Park', 'Tundra United', 'Meridian FC',
+    'Onyx Athletic', 'Pioneer SC', 'Coastal Kings', 'Vertex United', 'Storm Bay',
+    'Ember Town', 'Helix FC', 'Cobalt United', 'Atlas Rovers', 'Pulse Athletic',
+    'Zenith SC', 'Drift United', 'Saber FC', 'Quartz City', 'Apex Rangers',
+    'Solace FC', 'Brava United', 'Titan Park', 'Lumen SC', 'Nomad Athletic',
+    'Crest United', 'Halcyon FC', 'Verde Rovers',
+  ];
+
+  static String autoTeamName(int slotIndex) => _autoTeams[slotIndex % _autoTeams.length];
+
   // Match/season data is empty at launch — nothing has been played yet. Live
   // data comes from Firestore (backend.dart); these are the clean-slate fallback.
   // League/cup standings are built from the accepted rosters (zeroed) by the

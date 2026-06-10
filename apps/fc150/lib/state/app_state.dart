@@ -29,18 +29,29 @@ class AppState extends ChangeNotifier {
   }
 
   // The signed-in player's own profile, or the seed identity for guests.
-  final Player currentUser = Backend.currentPlayer ?? Seed.me;
+  // A getter (not captured) so it stays correct after onboarding sets the player.
+  Player get currentUser => Backend.currentPlayer ?? Seed.me;
 
   int _activeTab = 0; // 0 Home · 1 Arena · 2 League · 3 Cards · 4 Roster · 5 Control
   int get activeTab => _activeTab;
 
   // ---- Admin roster drafting -------------------------------------------------
-  static const Map<String, int> rosterCaps = {'pl': 38, 'ucl': 32, 'wc': 32};
+  // Premier League: 38 slots. Cups: 4 groups of 4 = 16 slots each.
+  static const Map<String, int> rosterCaps = {'pl': 38, 'ucl': 16, 'wc': 16};
 
   final Map<String, Set<String>> _rosters = {};
 
   Set<String> rosterFor(String compId) => _rosters.putIfAbsent(compId, () => <String>{});
   int capOf(String compId) => rosterCaps[compId] ?? 38;
+
+  // Which competitions have a started season (empty slots become CPU teams).
+  final Set<String> _seasonStarted = {};
+  bool seasonStarted(String compId) => _seasonStarted.contains(compId);
+  void startSeason(String compId) {
+    _seasonStarted.add(compId);
+    _prefs?.setStringList('seasonStarted', _seasonStarted.toList());
+    notifyListeners();
+  }
   bool isPlaced(String compId, String playerId) => rosterFor(compId).contains(playerId);
   bool isFull(String compId) => rosterFor(compId).length >= capOf(compId);
 
@@ -70,7 +81,9 @@ class AppState extends ChangeNotifier {
     if (winnerId != null && winnerId.isNotEmpty) await Backend.awardTrophy(winnerId, compName);
     await Backend.resetCompetition(compId);
     _rosters[compId] = <String>{};
+    _seasonStarted.remove(compId);
     _prefs?.setString('rosters', jsonEncode(_rosters.map((k, v) => MapEntry(k, v.toList()))));
+    _prefs?.setStringList('seasonStarted', _seasonStarted.toList());
     notifyListeners();
   }
 
@@ -233,6 +246,13 @@ class AppState extends ChangeNotifier {
     _prefs?.setString('matchHistory', jsonEncode(_matchHistory));
   }
 
+  /// Admin: record a confirmed result between two drafted players. Feeds the
+  /// standings for [compId] (see lib/data/standings.dart).
+  Future<void> recordResult(String compId, String aId, String bId, int sa, int sb) async {
+    await Backend.recordResult(compId, aId, bId, sa, sb);
+    notifyListeners();
+  }
+
   // ---- Persistence -----------------------------------------------------------
   SharedPreferences? _prefs;
   bool _tabTouched = false;
@@ -293,6 +313,10 @@ class AppState extends ChangeNotifier {
       _fDrawn = f['d'] ?? 0;
       _fLost = f['l'] ?? 0;
     }
+
+    _seasonStarted
+      ..clear()
+      ..addAll(p.getStringList('seasonStarted') ?? const []);
 
     // Arena challenges + history.
     final acJson = p.getString('activeChallenges');

@@ -3,20 +3,24 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../data/seed_data.dart';
+import '../data/standings.dart';
 import '../flows/competition_picker.dart';
 import '../models/competition.dart';
-import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
 import '../theme/tokens.dart';
 import '../widgets/fc_card.dart';
 import '../widgets/primitives.dart';
 
-/// League / cup standings. At launch nothing has been played, so standings are
-/// the admin-accepted roster with zeroed stats (P/GD/PTS = 0). Fixtures, results
-/// and the knockout bracket fill in once the admin starts the season.
+/// League / cup standings. Premier League is a fixed 38-row table; the cups are
+/// 4 groups of 4 (16 slots). Slots are empty until the admin drafts players;
+/// once a season starts, leftover slots become CPU teams that every real player
+/// beats 3-0. Real head-to-head results (recorded via the admin Control tab)
+/// feed the table through [computeLeague] / [computeGroups].
 class LeagueScreen extends StatelessWidget {
   const LeagueScreen({super.key});
+
+  static const _plSlots = 38;
 
   @override
   Widget build(BuildContext context) {
@@ -25,10 +29,11 @@ class LeagueScreen extends StatelessWidget {
     final tab = app.leagueSubTab;
     final meId = app.currentUser.id;
     final isLeague = comp.kind == CompetitionKind.league;
+    final started = app.seasonStarted(comp.id);
 
-    // Accepted entrants (the admin's roster for this competition), zeroed.
     final entrants = app.rosterFor(comp.id).map(Seed.byId).toList()
       ..sort((a, b) => b.rating.compareTo(a.rating));
+    final results = Seed.results.where((r) => r.comp == comp.id).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -44,7 +49,9 @@ class LeagueScreen extends StatelessWidget {
         Text(comp.title, style: FCType.heading(size: 23, weight: FontWeight.w800)),
         const SizedBox(height: 4),
         Text(
-          isLeague ? '${entrants.length} players · season hasn’t started' : '${entrants.length} teams · draw pending',
+          isLeague
+              ? '${entrants.length}/$_plSlots players · ${started ? 'season live' : 'season hasn’t started'}'
+              : '${entrants.length} teams · 4 groups · ${started ? 'season live' : 'draw pending'}',
           style: FCType.body(size: 12, color: FC.text2),
         ),
         const SizedBox(height: 16),
@@ -56,17 +63,17 @@ class LeagueScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           if (tab == 'fixtures')
-            _empty(LucideIcons.calendar, 'No fixtures yet', 'Fixtures appear once the admin starts the season.')
+            _empty(LucideIcons.calendar, 'No fixtures yet', 'Fixtures appear once the season starts.')
           else if (tab == 'results')
-            _empty(LucideIcons.flag, 'No results yet', 'Played matches show up here.')
+            _resultsList(results)
           else ...[
-            _notStarted(),
-            const SizedBox(height: 12),
-            _standings(entrants, meId),
+            if (!started) _notStarted(),
+            if (!started) const SizedBox(height: 12),
+            _table(computeLeague(entrants: entrants, results: results, started: started, slots: _plSlots), meId),
           ],
         ] else ...[
           Segmented(
-            tabs: const [MapEntry('groups', 'Standings'), MapEntry('knockout', 'Knockout')],
+            tabs: const [MapEntry('groups', 'Groups'), MapEntry('knockout', 'Knockout')],
             value: tab == 'knockout' ? 'knockout' : 'groups',
             onChange: (v) => context.read<AppState>().setLeagueSubTab(v),
           ),
@@ -74,9 +81,17 @@ class LeagueScreen extends StatelessWidget {
           if (tab == 'knockout')
             _empty(LucideIcons.trophy, 'Bracket not drawn', 'The knockout bracket appears after the group stage.')
           else ...[
-            _notStarted(),
-            const SizedBox(height: 12),
-            _standings(entrants, meId),
+            if (!started) _notStarted(),
+            if (!started) const SizedBox(height: 12),
+            ...() {
+              final groups = computeGroups(entrants: entrants, results: results, started: started);
+              return [
+                for (var g = 0; g < groups.length; g++) ...[
+                  _group(String.fromCharCode(65 + g), groups[g], meId),
+                  const SizedBox(height: 16),
+                ],
+              ];
+            }(),
           ],
         ],
       ],
@@ -89,7 +104,8 @@ class LeagueScreen extends StatelessWidget {
             const Icon(LucideIcons.info, size: 18, color: FC.purple300),
             const SizedBox(width: 11),
             Expanded(
-              child: Text('Season hasn’t started — standings stay at zero until games are played.',
+              child: Text(
+                  'Season hasn’t started — slots stay empty until the admin drafts players, and standings are zero until results come in.',
                   style: FCType.body(size: 12.5, color: FC.text2, height: 1.35)),
             ),
           ],
@@ -109,15 +125,41 @@ class LeagueScreen extends StatelessWidget {
         ),
       );
 
-  // ---- Standings table (zeroed) --------------------------------------------
-  static const _cols = [22.0, null, 22.0, 28.0, 28.0, 30.0];
+  Widget _resultsList(List results) {
+    if (results.isEmpty) {
+      return _empty(LucideIcons.flag, 'No results yet', 'Played matches show up here.');
+    }
+    return Surface(
+      pad: 0,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(FC.rCard),
+        child: Column(
+          children: [
+            for (final r in results)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+                decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: FC.border))),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(Seed.byId(r.a).short, textAlign: TextAlign.right, maxLines: 1, overflow: TextOverflow.ellipsis, style: FCType.body(size: 12.5))),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Text('${r.sa} – ${r.sb}', style: FCType.mono(size: 13, weight: FontWeight.w700)),
+                    ),
+                    Expanded(child: Text(Seed.byId(r.b).short, maxLines: 1, overflow: TextOverflow.ellipsis, style: FCType.body(size: 12.5))),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
   TextStyle _hStyle() => FCType.body(size: 10, weight: FontWeight.w700, color: FC.textMuted, height: 1);
+  static const _cols = [24.0, null, 22.0, 28.0, 28.0, 30.0];
 
-  Widget _standings(List<Player> entrants, String meId) {
-    if (entrants.isEmpty) {
-      return _empty(LucideIcons.users, 'No players yet', 'Players appear here once the admin accepts them.');
-    }
+  Widget _table(List<TableEntry> rows, String meId) {
     return Surface(
       pad: 0,
       child: ClipRRect(
@@ -128,23 +170,73 @@ class LeagueScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: FC.border))),
               child: _rowLayout(
-                hash: Text('#', style: _hStyle()),
-                player: Text('PLAYER', style: _hStyle()),
-                p: Text('P', textAlign: TextAlign.center, style: _hStyle()),
-                gd: Text('GD', textAlign: TextAlign.center, style: _hStyle()),
-                pts: Text('PTS', textAlign: TextAlign.center, style: _hStyle()),
-                rating: const SizedBox(),
+                Text('#', style: _hStyle()),
+                Text('PLAYER', style: _hStyle()),
+                Text('P', textAlign: TextAlign.center, style: _hStyle()),
+                Text('GD', textAlign: TextAlign.center, style: _hStyle()),
+                Text('PTS', textAlign: TextAlign.center, style: _hStyle()),
+                const SizedBox(),
               ),
             ),
-            for (int i = 0; i < entrants.length; i++) _row(i + 1, entrants[i], meId),
+            for (var i = 0; i < rows.length; i++) _row(i + 1, rows[i], meId),
           ],
         ),
       ),
     );
   }
 
-  Widget _row(int pos, Player p, String meId) {
-    final me = p.id == meId;
+  Widget _group(String letter, List<TableEntry> rows, String meId) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 2, bottom: 8),
+          child: Text('Group $letter', style: FCType.heading(size: 15, weight: FontWeight.w800)),
+        ),
+        Surface(
+          pad: 0,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(FC.rCard),
+            child: Column(
+              children: [
+                for (var i = 0; i < rows.length; i++) _row(i + 1, rows[i], meId, showRating: false),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _row(int pos, TableEntry e, String meId, {bool showRating = true}) {
+    final p = e.player;
+    final me = p != null && p.id == meId;
+    final Widget name;
+    if (p != null) {
+      name = Row(children: [
+        FlagBands(width: 18, code: p.country),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text.rich(
+            TextSpan(children: [
+              TextSpan(text: p.short, style: FCType.body(size: 12.5, weight: me ? FontWeight.w700 : FontWeight.w500)),
+              if (me) TextSpan(text: ' · you', style: FCType.body(size: 12.5, weight: FontWeight.w600, color: FC.purple300)),
+            ]),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ]);
+    } else if (e.cpu != null) {
+      name = Row(children: [
+        const Icon(LucideIcons.bot, size: 15, color: FC.textMuted),
+        const SizedBox(width: 6),
+        Flexible(child: Text(e.cpu!, maxLines: 1, overflow: TextOverflow.ellipsis, style: FCType.body(size: 12.5, color: FC.text2))),
+      ]);
+    } else {
+      name = Text('Empty slot', style: FCType.body(size: 12.5, color: FC.textMuted));
+    }
+    final muted = !e.isFilled;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
       decoration: BoxDecoration(
@@ -152,39 +244,19 @@ class LeagueScreen extends StatelessWidget {
         border: const Border(bottom: BorderSide(color: FC.border)),
       ),
       child: _rowLayout(
-        hash: Text('$pos', style: FCType.mono(size: 13, weight: FontWeight.w700, color: me ? FC.purple300 : FC.text)),
-        player: Row(
-          children: [
-            FlagBands(width: 18, code: p.country),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text.rich(
-                TextSpan(children: [
-                  TextSpan(text: p.short, style: FCType.body(size: 12.5, weight: me ? FontWeight.w700 : FontWeight.w500)),
-                  if (me) TextSpan(text: ' · you', style: FCType.body(size: 12.5, weight: FontWeight.w600, color: FC.purple300)),
-                ]),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        p: Text('0', textAlign: TextAlign.center, style: FCType.mono(size: 12, color: FC.text2)),
-        gd: Text('0', textAlign: TextAlign.center, style: FCType.mono(size: 12, color: FC.text2)),
-        pts: Text('0', textAlign: TextAlign.center, style: FCType.mono(size: 13, weight: FontWeight.w700)),
-        rating: Text('${p.rating}', textAlign: TextAlign.right, style: FCType.mono(size: 12, weight: FontWeight.w700, color: FC.purple300)),
+        Text('$pos', style: FCType.mono(size: 13, weight: FontWeight.w700, color: me ? FC.purple300 : (muted ? FC.textMuted : FC.text))),
+        name,
+        Text('${e.played}', textAlign: TextAlign.center, style: FCType.mono(size: 12, color: FC.text2)),
+        Text(e.gd > 0 ? '+${e.gd}' : '${e.gd}', textAlign: TextAlign.center, style: FCType.mono(size: 12, color: FC.text2)),
+        Text('${e.pts}', textAlign: TextAlign.center, style: FCType.mono(size: 13, weight: FontWeight.w700)),
+        showRating && p != null
+            ? Text('${p.rating}', textAlign: TextAlign.right, style: FCType.mono(size: 12, weight: FontWeight.w700, color: FC.purple300))
+            : const SizedBox(),
       ),
     );
   }
 
-  Widget _rowLayout({
-    required Widget hash,
-    required Widget player,
-    required Widget p,
-    required Widget gd,
-    required Widget pts,
-    required Widget rating,
-  }) {
+  Widget _rowLayout(Widget hash, Widget player, Widget p, Widget gd, Widget pts, Widget rating) {
     Widget fixed(double w, Widget c) => SizedBox(width: w, child: c);
     return Row(
       children: [

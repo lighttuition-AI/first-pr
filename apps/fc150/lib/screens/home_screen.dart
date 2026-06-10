@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../data/seed_data.dart';
 import '../flows/admin_login.dart';
-import '../flows/friendly_result.dart';
 import '../flows/notifications_sheet.dart';
 import '../flows/profile_sheet.dart';
 import '../state/app_state.dart';
@@ -182,8 +181,9 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-/// Upcoming matches grouped by competition (Premier League · Champions League ·
-/// World Cup) plus accepted Friendly challenges. Only non-empty groups show.
+/// Home "Upcoming matches" — four fixed boxes: Premier League, Champions League,
+/// World Cup, and New challenges (friendly duels from the Arena). Each is empty
+/// by default and fills with live data once a season starts or a challenge locks.
 class _UpcomingMatches extends StatelessWidget {
   const _UpcomingMatches();
 
@@ -192,61 +192,61 @@ class _UpcomingMatches extends StatelessWidget {
     final app = context.watch<AppState>();
     final me = app.currentUser;
 
-    // The player's own real fixtures, grouped by competition. Empty until the
-    // admin generates a season — a new player sees nothing here.
-    final byComp = <String, List<({String opp, String meta, String status})>>{};
+    // The player's own competition fixtures, grouped by competition.
+    final byComp = <String, List<({String opp, String meta, String? status})>>{};
     for (final fx in Seed.fixtures) {
       if (fx.a != me.id && fx.b != me.id) continue;
       final oppId = fx.a == me.id ? fx.b : fx.a;
       (byComp[fx.comp] ??= []).add((opp: Seed.byId(oppId).short, meta: fx.when, status: fx.status));
     }
-    final cupGroups = byComp.entries.map((e) => (e.key, e.value)).toList();
-    final friendly = app.acceptedFriendlies;
-
-    if (cupGroups.isEmpty && friendly.isEmpty) return const SizedBox.shrink();
+    List<({String opp, String meta, String? status})> forComp(String c) => byComp[c] ?? const [];
+    final friendly = [
+      for (final c in app.activeChallenges)
+        (opp: Seed.byId(c['opp'] as String).short, meta: c['when'] as String, status: c['status'] as String?),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SectionTitle('Upcoming matches'),
-        for (final g in cupGroups) ...[
-          _groupHeader(g.$1, g.$2.length),
-          for (final m in g.$2) ...[
-            _matchRow(m.opp, m.meta, status: m.status),
-            const SizedBox(height: 8),
-          ],
-        ],
-        if (friendly.isNotEmpty) ...[
-          _groupHeader('Friendly challenges', friendly.length),
-          for (final inv in friendly) ...[
-            Builder(builder: (context) {
-              final opp = Seed.byId(inv.from).short;
-              return _matchRow(opp, inv.when, onLog: () {
-                showFriendlyResult(context, opp, (outcome) {
-                  context.read<AppState>().completeFriendly(inv, outcome);
-                  flashToast(context, 'Friendly logged · $opp');
-                });
-              });
-            }),
-            const SizedBox(height: 8),
-          ],
-        ],
+        _box('Premier League', forComp('Premier League')),
+        _box('Champions League', forComp('Champions League')),
+        _box('World Cup', forComp('World Cup')),
+        _box('New challenges', friendly),
       ],
     );
   }
 
-  Widget _groupHeader(String name, int count) => Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 8),
-        child: Row(
+  Widget _box(String name, List<({String opp, String meta, String? status})> items) => Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Eyebrow(name, color: FC.purple300),
-            const SizedBox(width: 8),
-            Text('$count', style: FCType.mono(size: 11, color: FC.textMuted)),
+            Row(
+              children: [
+                Eyebrow(name, color: FC.purple300),
+                const SizedBox(width: 8),
+                if (items.isNotEmpty) Text('${items.length}', style: FCType.mono(size: 11, color: FC.textMuted)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (items.isEmpty)
+              Surface(
+                child: Row(
+                  children: [
+                    const Icon(LucideIcons.calendar, size: 18, color: FC.textMuted),
+                    const SizedBox(width: 11),
+                    Text('Nothing scheduled yet', style: FCType.body(size: 12.5, color: FC.text2)),
+                  ],
+                ),
+              )
+            else
+              for (final m in items) ...[_matchRow(m.opp, m.meta, m.status), const SizedBox(height: 8)],
           ],
         ),
       );
 
-  Widget _matchRow(String opp, String meta, {String? status, VoidCallback? onLog}) {
+  Widget _matchRow(String opp, String meta, String? status) {
     final initials = opp.split(' ').map((w) => w.isEmpty ? '' : w[0]).take(2).join();
     return Surface(
       child: Row(
@@ -262,11 +262,7 @@ class _UpcomingMatches extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          if (onLog != null)
-            GButton('Result', size: 'sm', variant: GBtn.teal, icon: LucideIcons.flag, onTap: onLog)
-          else if (status != null)
-            StatusPill(status),
+          if (status != null) ...[const SizedBox(width: 8), StatusPill(status)],
         ],
       ),
     );

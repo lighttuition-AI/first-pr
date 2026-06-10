@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../data/seed_data.dart';
 import '../flows/broadcast.dart';
 import '../flows/new_season.dart';
+import '../flows/record_result.dart';
 import '../models/models.dart';
 import '../state/app_state.dart';
 import '../theme/app_theme.dart';
@@ -48,11 +49,27 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 
+  void _recordResult(String compId, String compName) {
+    final app = context.read<AppState>();
+    final entrants = app.rosterFor(compId).map(Seed.byId).toList();
+    showRecordResultSheet(
+      context,
+      compName: compName,
+      entrants: entrants,
+      onConfirm: (aId, bId, sa, sb) {
+        app.recordResult(compId, aId, bId, sa, sb);
+        flashToast(context, '${Seed.byId(aId).short} $sa–$sb ${Seed.byId(bId).short} recorded');
+      },
+    );
+  }
+
   void _generate(String compId, String doneMsg) {
     if (_gen[compId] == 1) return;
     setState(() => _gen[compId] = 1);
     Timer(const Duration(milliseconds: 1600), () {
       if (!mounted) return;
+      // Start the season: locks the table; any empty slots become CPU teams.
+      context.read<AppState>().startSeason(compId);
       setState(() => _gen[compId] = 2);
       flashToast(context, doneMsg);
     });
@@ -61,10 +78,10 @@ class _AdminScreenState extends State<AdminScreen> {
   @override
   Widget build(BuildContext context) {
     final kpis = <(String, String, IconData)>[
-      ('Players', '38', LucideIcons.users),
+      ('Players', '${Seed.players.length}', LucideIcons.users),
       ('Pending', '${_reg.length}', LucideIcons.userPlus),
       ('Disputes', '${_disputes.length}', LucideIcons.alertTriangle),
-      ('Today', '6', LucideIcons.calendar),
+      ('Results', '${Seed.results.length}', LucideIcons.flag),
     ];
 
     return Column(
@@ -241,13 +258,21 @@ class _AdminScreenState extends State<AdminScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SectionTitle('Generate competitions'),
+        const SectionTitle('Start a season'),
         const SizedBox(height: 9),
-        _generateCard('pl', 'Premier League', '38 approved players · 38 rounds', 'Premier League fixtures generated · 38 rounds'),
+        _generateCard('pl', 'Premier League', 38, 'Premier League season started'),
         const SizedBox(height: 11),
-        _generateCard('ucl', 'Champions League', '16 teams · 4 groups + knockout', 'Champions League drawn · 4 groups + bracket'),
+        _generateCard('ucl', 'Champions League', 16, 'Champions League season started'),
         const SizedBox(height: 11),
-        _generateCard('wc', 'World Cup', '16 teams · 4 groups + knockout', 'World Cup drawn · 4 groups + bracket'),
+        _generateCard('wc', 'World Cup', 16, 'World Cup season started'),
+        const SizedBox(height: 16),
+        const SectionTitle('Record a result'),
+        const SizedBox(height: 9),
+        _seasonRow(LucideIcons.flag, FC.teal, 'Premier League', 'Log a played head-to-head match', 'Record', () => _recordResult('pl', 'Premier League')),
+        const SizedBox(height: 11),
+        _seasonRow(LucideIcons.flag, FC.teal, 'Champions League', 'Log a played head-to-head match', 'Record', () => _recordResult('ucl', 'Champions League')),
+        const SizedBox(height: 11),
+        _seasonRow(LucideIcons.flag, FC.teal, 'World Cup', 'Log a played head-to-head match', 'Record', () => _recordResult('wc', 'World Cup')),
         const SizedBox(height: 16),
         const SectionTitle('Reset / new season'),
         const SizedBox(height: 9),
@@ -272,8 +297,12 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 
-  Widget _generateCard(String compId, String name, String sub, String doneMsg) {
-    final state = _gen[compId] ?? 0;
+  Widget _generateCard(String compId, String name, int slots, String doneMsg) {
+    final app = context.watch<AppState>();
+    final drafted = app.rosterFor(compId).length;
+    final live = app.seasonStarted(compId);
+    final state = live ? 2 : (_gen[compId] ?? 0);
+    final filler = (slots - drafted).clamp(0, slots);
     return Surface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -287,7 +316,11 @@ class _AdminScreenState extends State<AdminScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(name, style: FCType.body(size: 14, weight: FontWeight.w700)),
-                    Text(sub, style: FCType.body(size: 11.5, color: FC.text2)),
+                    Text(
+                        live
+                            ? 'Season live · $drafted player${drafted == 1 ? '' : 's'}${filler > 0 ? ' + $filler CPU' : ''}'
+                            : '$drafted of $slots slots drafted${filler > 0 ? ' · rest become CPU teams' : ''}',
+                        style: FCType.body(size: 11.5, color: FC.text2)),
                   ],
                 ),
               ),
@@ -301,12 +334,13 @@ class _AdminScreenState extends State<AdminScreen> {
             )
           else
             GButton(
-              state == 2 ? 'Fixtures generated' : 'Generate fixtures',
+              state == 2 ? 'Season started' : 'Start season',
               full: true,
               size: 'md',
               variant: state == 2 ? GBtn.secondary : GBtn.primary,
-              icon: state == 2 ? LucideIcons.check : LucideIcons.shuffle,
-              onTap: () => _generate(compId, doneMsg),
+              icon: state == 2 ? LucideIcons.check : LucideIcons.play,
+              disabled: state == 2 || drafted == 0,
+              onTap: state == 2 || drafted == 0 ? null : () => _generate(compId, doneMsg),
             ),
         ],
       ),

@@ -12,7 +12,7 @@ import 'package:fc150/theme/app_theme.dart';
 import 'package:fc150/widgets/fc_card.dart';
 
 void main() {
-  testWidgets('a fresh player Home is clean — no demo invites or upcoming matches', (tester) async {
+  testWidgets('a fresh player Home shows the 4 empty upcoming-match boxes', (tester) async {
     // Google Fonts can't fetch in tests; the wider fallback font reports a few
     // px of layout overflow on the card. Ignore those reports; fail on anything else.
     final recordError = FlutterError.onError;
@@ -32,12 +32,18 @@ void main() {
     ));
     await tester.pump();
 
-    // Clean launch: no dummy invitations or matches; only the always-present
-    // Quick actions section shows.
+    // Clean launch: no dummy invitations. The 4 upcoming-match boxes are always
+    // present (PL / UCL / WC / new challenges) but empty until live data arrives.
     expect(find.text('Quick actions'), findsOneWidget);
     expect(find.text('Challenge invitations'), findsNothing);
-    expect(find.text('Upcoming matches'), findsNothing);
-    expect(find.text('Upcoming match'), findsNothing);
+    expect(find.text('Upcoming matches'), findsOneWidget);
+    // Box labels render through Eyebrow (uppercased).
+    expect(find.text('PREMIER LEAGUE'), findsOneWidget);
+    expect(find.text('CHAMPIONS LEAGUE'), findsOneWidget);
+    expect(find.text('WORLD CUP'), findsOneWidget);
+    expect(find.text('NEW CHALLENGES'), findsOneWidget);
+    // Every box is empty on a clean launch.
+    expect(find.text('Nothing scheduled yet'), findsNWidgets(4));
 
     await tester.pump(const Duration(seconds: 1));
   });

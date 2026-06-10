@@ -143,6 +143,22 @@ class Backend {
     } catch (_) {}
   }
 
+  /// Record a confirmed head-to-head result between two drafted players. This is
+  /// what feeds the league/cup standings (see lib/data/standings.dart). Appends
+  /// to the in-memory feed and to Firestore (best-effort, shared across devices).
+  static Future<MatchResult> recordResult(String compId, String aId, String bId, int sa, int sb) async {
+    final id = 'r${DateTime.now().millisecondsSinceEpoch}';
+    final map = {'id': id, 'a': aId, 'b': bId, 'sa': sa, 'sb': sb, 'comp': compId, 'when': 'just now', 'status': 'confirmed'};
+    final r = MatchResult.fromMap(map);
+    Seed.results = [...Seed.results, r];
+    if (ready && _db != null) {
+      try {
+        await _db!.collection('results').doc(id).set(map);
+      } catch (_) {}
+    }
+    return r;
+  }
+
   /// Bumped on sign-out so the root gate returns to onboarding.
   static final ValueNotifier<int> session = ValueNotifier<int>(0);
 
