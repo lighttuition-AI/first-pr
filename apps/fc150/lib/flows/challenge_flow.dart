@@ -289,20 +289,67 @@ class _ChallengeSheetState extends State<_ChallengeSheet> {
     );
   }
 
+  String _fmtDateTime(DateTime dt) {
+    const wd = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const mo = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final hh = dt.hour.toString().padLeft(2, '0'), mm = dt.minute.toString().padLeft(2, '0');
+    return '${wd[dt.weekday - 1]} ${dt.day} ${mo[dt.month - 1]} · $hh:$mm';
+  }
+
+  Future<void> _pickDateTime() async {
+    final now = DateTime.now();
+    final d = await showDatePicker(context: context, initialDate: now, firstDate: now, lastDate: now.add(const Duration(days: 90)));
+    if (d == null || !mounted) return;
+    final t = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 20, minute: 30));
+    if (t == null || !mounted) return;
+    setState(() => _slot = _fmtDateTime(DateTime(d.year, d.month, d.day, t.hour, t.minute)));
+  }
+
   Widget _timeStep() {
     final sub = _mode == '2v2'
         ? 'You & ${_teammate?.short ?? '—'} vs ${_opponents.map((o) => o.short.split(' ').first).join(' & ')}'
         : 'vs ${_opponents.isNotEmpty ? _opponents.first.short : '—'} · $_mode';
+    final custom = !_slots.contains(_slot);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _heading('Propose a time', sub),
+        _heading('Pick date & time', sub),
         const SizedBox(height: 14),
+        GestureDetector(
+          onTap: _pickDateTime,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+            decoration: BoxDecoration(
+              color: custom ? FC.purpleTint : FC.surface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: custom ? FC.borderFocus : FC.borderStrong),
+            ),
+            child: Row(
+              children: [
+                const Icon(LucideIcons.calendarClock, size: 18, color: FC.purple300),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(custom ? _slot : 'Pick a date & time', style: FCType.body(size: 13.5, weight: FontWeight.w700)),
+                      Text('Choose any day and kick-off time', style: FCType.body(size: 11.5, color: FC.text2)),
+                    ],
+                  ),
+                ),
+                const Icon(LucideIcons.chevronRight, size: 18, color: FC.textMuted),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text('Or pick a quick slot', style: FCType.body(size: 11.5, weight: FontWeight.w600, color: FC.text2)),
+        const SizedBox(height: 8),
         for (final s in _slots) ...[
           GestureDetector(
             onTap: () => setState(() => _slot = s),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
               decoration: BoxDecoration(
                 color: _slot == s ? FC.purpleTint : FC.surface,
                 borderRadius: BorderRadius.circular(10),

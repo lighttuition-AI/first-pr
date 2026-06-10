@@ -39,11 +39,17 @@ class FC150App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'FC150 — Challenge Arena',
-      debugShowCheckedModeBanner: false,
-      theme: buildFcTheme(),
-      home: const RootGate(),
+    // Provider sits ABOVE MaterialApp so every route — including modal bottom
+    // sheets (submit result, broadcast, sign-in, new season…) — can read AppState.
+    // currentUser is a getter, so it reflects the signed-in player after onboarding.
+    return ChangeNotifierProvider(
+      create: (_) => AppState(),
+      child: MaterialApp(
+        title: 'FC150 — Challenge Arena',
+        debugShowCheckedModeBanner: false,
+        theme: buildFcTheme(),
+        home: const RootGate(),
+      ),
     );
   }
 }
@@ -119,8 +125,7 @@ class _RootGateState extends State<RootGate> {
       case _Phase.onboarding:
         return OnboardingScreen(onEnter: _enter);
       case _Phase.app:
-        // New AppState so currentUser reflects the signed-in player.
-        return ChangeNotifierProvider(create: (_) => AppState(), child: const AppShell());
+        return const AppShell();
     }
   }
 }

@@ -112,6 +112,39 @@ flows/      top3_popup.dart, challenge_flow.dart, result_submit.dart, card_detai
   (league: table/fixtures/results), **Champions League** and **World Cup** (cups: group-stage
   tables + a knockout bracket — QF/SF/Final). Active competition lives in `AppState`.
 
+## Standings engine + fixed slots + Home boxes (v1.6.0, build 11)
+- **Standings engine** (`lib/data/standings.dart`) — the previously-deferred "results → table"
+  backend piece, built as a **pure, unit-tested** function (no UI/Firebase deps):
+  - `computeLeague(entrants, results, started, slots=38)` → a 38-row Premier League table.
+  - `computeGroups(entrants, results, started)` → **4 groups of 4** (16 slots); entrants are
+    seeded across groups (0→A, 1→B, 2→C, 3→D, 4→A …) so the strongest spread out.
+  - Both delegate to `rankPool(...)`: real players accrue P/W/D/L/GF/GA/PTS from **confirmed**
+    `MatchResult`s where both sides are in the pool (3/win, 1/draw), sorted by PTS→GD→GF→rating.
+  - **Auto-3-0 vs CPU rule:** when a season is started and the pool isn't full, leftover slots
+    become **CPU teams** (`Seed.autoTeamName`); every real player is auto-credited a **3-0 win**
+    over each CPU team and each CPU team takes a 0-3 loss. "Only real users need to play each
+    other." Empty slots (season not started) stay blank and zeroed.
+  - Covered by `test/standings_test.dart` (engine) + `test/record_result_test.dart` (wiring).
+- **Recording results.** Arena challenges are **friendlies** (don't touch league tables). Real
+  head-to-head league/cup results are entered by the admin: **Control → Season → "Record a result"**
+  (`flows/record_result.dart`) → pick two drafted players + scores → `AppState.recordResult` →
+  `Backend.recordResult` writes a `confirmed` `MatchResult` to Firestore `results` + the in-memory
+  feed, which `league_screen.dart` aggregates. The League **Results** sub-tab lists them.
+- **Start a season.** Control → Season → "Start season" per competition → `AppState.startSeason`
+  (persisted) locks the table; empty slots flip to CPU teams. `startNewSeason` clears it again.
+- **Fixed structure** (`league_screen.dart`): **Premier League = 38 slots**, cups = **4 groups of 4**.
+  Player column is empty until the admin drafts players; cup roster caps lowered to **16** (was 32)
+  to match the visible 4×4. A season can start with fewer than the full count (rest = CPU teams).
+- **Home — 4 fixed "Upcoming matches" boxes** (`home_screen.dart`): Premier League, Champions
+  League, World Cup, and **New challenges** (friendly duels from the Arena). Empty by default
+  ("Nothing scheduled yet"); fill with live data as fixtures/challenges appear.
+- **Challenge date & time** (`flows/challenge_flow.dart`): the challenger picks a real date+time
+  (`showDatePicker`→`showTimePicker`) in addition to quick-slot presets.
+- **Submit-for-confirmation fix:** the `AppState` provider was moved **above `MaterialApp`** in
+  `main.dart` so modal bottom sheets pushed on the root navigator (result submit, broadcast, admin
+  login, new season, record result) can read it — previously they threw `ProviderNotFoundException`.
+  `currentUser` is now a getter so it stays correct after onboarding.
+
 ## Ship-clean + seasons + trophies (v1.5.0)
 - **Zero demo data.** The player pool is now empty too (`Seed.players = []`; Firestore `players`,
   `pendingReg`, and all match collections cleared; `tool/seed_firestore.py` seeds only empty
