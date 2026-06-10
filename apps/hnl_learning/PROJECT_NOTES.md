@@ -179,8 +179,16 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   (recording) + `NSPhotoLibraryUsageDescription` (image/GIF picker). Missing
   these = hard crash on iOS. Android has `RECORD_AUDIO` in the manifest.
 - **Landscape-locked** on iPad/iPhone (Info.plist orientations +
-  `UIRequiresFullScreen`). On the simulator the window may show portrait after a
-  reinstall → rotate with **⌘→** (Device → Rotate). On a real iPad: hold landscape.
+  `UIRequiresFullScreen`; also `SystemChrome.setPreferredOrientations` in main.dart).
+  On the simulator the window may show portrait after a reinstall → rotate with **⌘→**
+  (Device → Rotate). On a real iPad: hold landscape.
+- **iPhone (universal binary, `TARGETED_DEVICE_FAMILY=1,2`):** installs + runs on iPhone,
+  but the UI is the fixed **1366×1024 (4:3) stage** scaled to fit — so on a tall phone in
+  landscape it **letterboxes** (side bars; it's the iPad UI, smaller). Functional for
+  testing, not a native phone layout. ⚠️ The **iPhone sim won't auto-rotate** to the app's
+  landscape lock, so `simctl` screenshots come out portrait + show debug overflow stripes;
+  that's a sim artifact — a real iPhone forces landscape and clips silently in release. A
+  proper **portrait / responsive layout is the deferred follow-up** ("portrait later").
 - Images/GIFs stored as **base64 in shared_preferences** (works on mobile + web,
   no dart:io). Fine for small assets; large GIFs could bloat storage — switch to
   file-based if needed.
@@ -223,8 +231,13 @@ Locked-in identity (all permanent / must match App Store Connect):
   TestFlight build; 1.1.0 adds the Flip the Letters + Letter Sounds games; +3 moved
   the harakat Studio section up next to the Arabic groups — bump the `+build` in pubspec
   before each new upload — App Store Connect rejects a reused build number).
-- **App icon**: branded Robo on a sunshine ground (alpha stripped). To re-skin: re-render
-  the in-app `Robo` to a 1024 PNG and resize into every `AppIcon.appiconset` slot.
+- **App icon (1.2.0+)**: the **three Somali Village sisters** (pink · gold · purple, tiaras
+  + scepters) on a warm savanna ground — original art composed from `widgets/village.dart`
+  `SomaliGirl`. Reproducible: `flutter test tool/gen_app_icon.dart` renders the 1024 master
+  to `/tmp/hnl_icon_1024.png`, then `scripts/gen-app-icon.sh` slices it into every
+  `AppIcon.appiconset` slot (alpha stripped via a jpeg round-trip — App Store rejects
+  transparency). Tweak the composition in `SisterIcon` (in the tool) + re-run both.
+  (Earlier icon was a branded Robo on sunshine.)
 - **Info.plist purpose strings**: mic + photo (used) AND camera + location (NOT used —
   required only because bundled `file_picker` references those APIs; without them the
   upload fails with App Store error **90683**). Also `ITSAppUsesNonExemptEncryption=false`.
