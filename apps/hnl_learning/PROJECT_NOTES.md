@@ -162,7 +162,7 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 - `app.dart` — iPad stage scaling + the routed screen + overlays (studios,
   tweaks, gate, child switcher). `main.dart` — providers + service init.
 
-## Backend — Firebase (cloud sync + analytics) · foundation wired 1.2.0+5
+## Backend — Firebase · analytics + crash reporting LIVE; data-sync pending (1.3.0+6)
 - **Project `hnl-learning`** (Firebase CLI logged in as app.jeeble@gmail.com). Scope: cloud
   for **user data only** — recordings, photos, child profiles, progress + Analytics/
   Crashlytics. **Educational content stays bundled** (offline-first; NOT moved to a backend).
@@ -177,9 +177,23 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   iPhone 15 Pro is iOS 17+, and iOS 15+ is ~all active devices.
 - `analysis_options.yaml` now **excludes `build/`** (the Firebase SDK checks Dart test files into
   `build/ios/SourcePackages/`, which polluted `flutter analyze`).
-- **Next increments (not done):** (2) Crashlytics + key analytics events; (3) the big one —
-  **anonymous auth + Firestore/Storage sync** of recordings/photos/profiles/progress, migrating
-  off `shared_preferences` (offline-capable). Android build not yet verified (iOS verified on sim).
+- **Crashlytics + Analytics (done, 1.3.0+6):** `firebase_crashlytics` routes uncaught
+  `FlutterError` + `PlatformDispatcher` errors (off in debug via
+  `setCrashlyticsCollectionEnabled(!kDebugMode)`). `services/analytics.dart` (`Analytics`) is a
+  throw-proof wrapper; events wired: `app_open`, `world_open`, `game_start`, `recording_saved`.
+  Verified building + initialising cleanly on the iPad + iPhone sims.
+- **Data sync (NOT done — blocked, this is the next round).** Design: anonymous-auth (later a
+  Parent Sign-In) + a **non-destructive backup mirror** under `users/{uid}` — Firestore for the
+  small `hnl-save-v1` blob (profiles+progress), Storage for media (recordings = files; images/gifs
+  = base64 in prefs → upload decoded). Restore ONLY when local is empty (fresh install) so it can
+  never harm on-device data. **Security rules are written + ready** (`firestore.rules`,
+  `storage.rules`, wired in `firebase.json`: own-uid-only). **Two hard blockers (only the owner can
+  clear):** (a) **enable Cloud Firestore + Storage in the console** — neither is enabled yet (CLI
+  403, no gcloud); (b) **anonymous auth does NOT survive an app reinstall** (new uid each install),
+  so true cross-device/reinstall restore needs a **Parent Sign-In (Apple/Google)** behind the gate —
+  a real feature (Apple entitlement + device testing). Until both are cleared, the sync code is
+  intentionally NOT shipped (would be unverifiable).
+- **Android build still not verified** (gradle is Firebase-ready; needs an emulator run for Play).
 
 ## Gotchas / decisions (don't re-trip these)
 - **`record` is pinned `^6.1.1`** — `5.x` resolved an incompatible
@@ -201,13 +215,19 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   `UIRequiresFullScreen`; also `SystemChrome.setPreferredOrientations` in main.dart).
   On the simulator the window may show portrait after a reinstall → rotate with **⌘→**
   (Device → Rotate). On a real iPad: hold landscape.
-- **iPhone (universal binary, `TARGETED_DEVICE_FAMILY=1,2`):** installs + runs on iPhone,
-  but the UI is the fixed **1366×1024 (4:3) stage** scaled to fit — so on a tall phone in
-  landscape it **letterboxes** (side bars; it's the iPad UI, smaller). Functional for
-  testing, not a native phone layout. ⚠️ The **iPhone sim won't auto-rotate** to the app's
-  landscape lock, so `simctl` screenshots come out portrait + show debug overflow stripes;
-  that's a sim artifact — a real iPhone forces landscape and clips silently in release. A
-  proper **portrait / responsive layout is the deferred follow-up** ("portrait later").
+- **iPhone (universal binary, `TARGETED_DEVICE_FAMILY=1,2`):** runs on iPhone in landscape and,
+  since 1.3.0, **fills the screen edge-to-edge** (the `Stage` in `app.dart` detects phone-class
+  screens — `min(w,h)<600` — and drops the tablet "device" bezel). It's still the landscape iPad
+  UI, just full-screen; a true **portrait layout is the one remaining big redesign** (~20 screens
+  on an absolutely-positioned canvas — a dedicated project, intentionally NOT rushed).
+  - 🐞 **Fixed-stage clamp bug (FIXED 1.3.0):** the `SizedBox(1366×1024)` stage used to be
+    constraint-**clamped** on any screen shorter than 1024px (every iPhone, the 11" iPad) → content
+    overflowed. The 13" iPad (exactly 1024 tall) was the only size that worked, which hid it. Fix:
+    wrap the stage in **`FittedBox(BoxFit.contain)`** (both phone + tablet paths) so it lays out at
+    full size then scales. Don't reintroduce a bare `Transform.scale` over the fixed SizedBox.
+  - A phone held **upright** shows a friendly "Turn me sideways to play!" `_RotateHint` (the app is
+    landscape-only). ⚠️ The **iPhone sim won't auto-rotate**, so `simctl` screenshots come out
+    portrait showing the landscape frame rotated — rotate the PNG (`sips -r 270`) to read it.
 - Images/GIFs stored as **base64 in shared_preferences** (works on mobile + web,
   no dart:io). Fine for small assets; large GIFs could bloat storage — switch to
   file-based if needed.

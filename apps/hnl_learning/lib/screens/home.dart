@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../models/animals.dart';
 import '../models/content.dart';
+import '../services/analytics.dart';
 import '../services/vo_service.dart';
 import '../state/app_state.dart';
 import '../theme/tokens.dart';
@@ -142,8 +143,14 @@ class _HomeScreenState extends State<HomeScreen> {
         world: world,
         count: world.id == 'animals' ? kContinents.length : gamesInWorld(world.id).length + 1,
         onTap: world.id == 'animals'
-            ? app.openContinents
-            : () => setState(() => _world = world),
+            ? () {
+                Analytics.worldOpen('animals');
+                app.openContinents();
+              }
+            : () {
+                Analytics.worldOpen(world.id);
+                setState(() => _world = world);
+              },
       ),
     );
   }

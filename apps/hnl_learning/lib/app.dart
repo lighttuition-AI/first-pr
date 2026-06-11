@@ -51,52 +51,86 @@ class Stage extends StatelessWidget {
       color: C.letterbox,
       child: LayoutBuilder(
         builder: (context, box) {
-          const margin = 20.0;
-          final bezelW = kStageW + 40;
-          final bezelH = kStageH + 40;
-          final s = math.min(
-            math.min((box.maxWidth - margin * 2) / bezelW,
-                (box.maxHeight - margin * 2) / bezelH),
-            1.35,
-          );
-          return Center(
-            child: Transform.scale(
-              scale: s <= 0 ? 0.1 : s,
-              child: _bezel(),
-            ),
+          // Phone-class screens are small; tablets keep the framed "device" look.
+          final isPhone = math.min(box.maxWidth, box.maxHeight) < 600;
+
+          // The app is landscape-only. If a phone is held upright, ask for a
+          // sideways turn rather than cram the wide stage into a tall sliver.
+          if (isPhone && box.maxHeight > box.maxWidth) {
+            return const _RotateHint();
+          }
+
+          // FittedBox lets the fixed 1366×1024 stage lay out at its full natural
+          // size (it gets unbounded constraints) and THEN scales to fit. Plain
+          // Transform.scale doesn't: the SizedBox would be constraint-clamped on
+          // any screen shorter than 1024px (every iPhone, the 11" iPad) and the
+          // content would overflow. Contain = fit + letterbox (never crops UI).
+          if (isPhone) {
+            return FittedBox(fit: BoxFit.contain, child: _stage()); // fill the phone
+          }
+          return Padding(
+            padding: const EdgeInsets.all(20),
+            child: FittedBox(fit: BoxFit.contain, child: _framed()),
           );
         },
       ),
     );
   }
 
-  Widget _bezel() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(56),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2F3742), Color(0xFF14181C)],
-        ),
-        boxShadow: const [
-          BoxShadow(color: Color(0x8C000000), offset: Offset(0, 40), blurRadius: 90),
-        ],
-      ),
-      child: ClipRRect(
+  // The bare app stage (fixed 1366×1024). The transparent Material gives Text a
+  // real DefaultTextStyle (else the debug yellow underline); the skin background
+  // is painted inside by _StageContent.
+  Widget _stage() => ClipRRect(
         borderRadius: BorderRadius.circular(38),
         child: const SizedBox(
           width: kStageW,
           height: kStageH,
-          // Material provides a proper DefaultTextStyle so Text never falls
-          // back to the debug yellow-underline style. It's transparent so the
-          // active skin's background (painted in _StageContent) shows through.
-          child: Material(
-            color: Colors.transparent,
-            child: _BootSplashGate(),
-          ),
+          child: Material(color: Colors.transparent, child: _BootSplashGate()),
         ),
+      );
+
+  // Tablet "device" frame: a dark rounded bezel + drop shadow around the stage.
+  Widget _framed() => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(56),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF2F3742), Color(0xFF14181C)],
+          ),
+          boxShadow: const [
+            BoxShadow(color: Color(0x8C000000), offset: Offset(0, 40), blurRadius: 90),
+          ],
+        ),
+        child: _stage(),
+      );
+}
+
+/// Shown on a phone held upright — the app plays in landscape, so nudge a turn.
+class _RotateHint extends StatelessWidget {
+  const _RotateHint();
+  @override
+  Widget build(BuildContext context) {
+    final white = Colors.white.withValues(alpha: .92);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.screen_rotation_rounded, size: 76, color: white),
+          const SizedBox(height: 20),
+          Text(
+            'Turn me sideways\nto play! 🙂',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 26,
+              height: 1.3,
+              fontWeight: FontWeight.w800,
+              color: white,
+              decoration: TextDecoration.none, // no Material ancestor here
+            ),
+          ),
+        ],
       ),
     );
   }

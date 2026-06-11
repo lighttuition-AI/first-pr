@@ -14,6 +14,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'analytics.dart';
 import 'local_file.dart' if (dart.library.io) 'local_file_io.dart';
 
 /// Audio file types the upload picker accepts. iOS plays them all; `.ogg` is
@@ -281,6 +282,7 @@ class VoService extends ChangeNotifier {
         ? path
         : path.split('/').last;
     _persistPaths();
+    Analytics.recordingSaved(id);
     notifyListeners();
   }
 

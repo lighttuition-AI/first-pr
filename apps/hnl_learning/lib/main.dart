@@ -1,6 +1,8 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -16,10 +18,17 @@ import 'state/app_state.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Backend (cloud sync + analytics) — project `hnl-learning`. Wrapped so a
+  // Backend (analytics + crash reporting) — project `hnl-learning`. Wrapped so a
   // bad config / no network never blocks launch: the app stays offline-first.
   try {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    // Send uncaught Flutter + platform errors to Crashlytics (off in debug).
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(!kDebugMode);
     await FirebaseAnalytics.instance.logAppOpen();
   } catch (e) {
     debugPrint('Firebase init skipped: $e');

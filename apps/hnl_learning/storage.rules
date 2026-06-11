@@ -1,0 +1,12 @@
+rules_version = '2';
+
+// HNL Learning — each signed-in family can read/write ONLY their own media
+// (recordings, photos, gifs). Deploy once Storage is enabled + Parent Sign-In
+// is added: `firebase deploy --only storage`.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /users/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}

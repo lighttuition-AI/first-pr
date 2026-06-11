@@ -1,0 +1,12 @@
+rules_version = '2';
+
+// HNL Learning — each signed-in family can read/write ONLY their own data.
+// (Ready for the cloud-sync round; deploy once Firestore is enabled +
+// Parent Sign-In is added: `firebase deploy --only firestore:rules`.)
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
