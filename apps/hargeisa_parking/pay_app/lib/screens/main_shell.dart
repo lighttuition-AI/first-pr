@@ -1,16 +1,27 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
+import 'package:hpark_firebase/hpark_firebase.dart';
 
-import '../data/pay_data.dart';
+import '../data/citizen_store.dart';
 import '../models/pay_models.dart';
 import '../tabs/districts_tab.dart';
 import '../tabs/home_tab.dart';
 import '../tabs/profile_tab.dart';
 
 class MainShell extends StatefulWidget {
-  const MainShell({super.key, required this.citizen, required this.onSignOut});
+  const MainShell({
+    super.key,
+    required this.uid,
+    required this.citizen,
+    required this.store,
+    required this.onSignOut,
+  });
 
+  final String uid;
   final Citizen citizen;
+  final CitizenStore store;
   final VoidCallback onSignOut;
 
   @override
@@ -19,21 +30,64 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _index = 0;
-  late final List<Citation> _citations = seedCitations();
+
+  final FirebaseCitationRepository _citations = FirebaseCitationRepository();
+  final FirebaseAppealRepository _appeals = FirebaseAppealRepository();
+
+  late Citizen _citizen = widget.citizen;
+  List<Citation> _list = [];
+  StreamSubscription<List<Citation>>? _sub;
+
+  @override
+  void initState() {
+    super.initState();
+    _listen();
+  }
+
+  /// (Re)subscribe to the live citations for this citizen's plate.
+  void _listen() {
+    _sub?.cancel();
+    if (_citizen.plate.isEmpty) {
+      setState(() => _list = []);
+      return;
+    }
+    _sub = _citations.watchByPlate(_citizen.plate).listen((list) {
+      if (mounted) setState(() => _list = list);
+    }, onError: (_) {});
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _editPlate() async {
+    final plate = await _showPlateDialog(context, initial: _citizen.plate);
+    if (plate == null) return;
+    final clean = plate.trim().toUpperCase();
+    await widget.store.setPlate(widget.uid, clean);
+    if (!mounted) return;
+    setState(() => _citizen = _citizen.copyWith(plate: clean));
+    _listen();
+  }
 
   @override
   Widget build(BuildContext context) {
     final tabs = [
       HomeTab(
-        citizen: widget.citizen,
-        citations: _citations,
-        onChanged: () => setState(() {}),
+        citizen: _citizen,
+        citations: _list,
+        repo: _citations,
+        appeals: _appeals,
+        onAddPlate: _editPlate,
       ),
       const DistrictsTab(),
       ProfileTab(
-        citizen: widget.citizen,
-        citations: _citations,
+        citizen: _citizen,
+        citations: _list,
         onSignOut: widget.onSignOut,
+        onEditPlate: _editPlate,
       ),
     ];
 
@@ -48,6 +102,43 @@ class _MainShellState extends State<MainShell> {
       ),
     );
   }
+}
+
+/// Small dialog to set / change the citizen's vehicle plate.
+Future<String?> _showPlateDialog(BuildContext context, {required String initial}) {
+  final ctrl = TextEditingController(text: initial);
+  return showDialog<String>(
+    context: context,
+    builder: (_) => AlertDialog(
+      backgroundColor: HpColors.elevated,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(HpRadius.xl)),
+      title: Text('Your vehicle plate', style: HpType.heading(size: 18)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Enter your number plate so we can show your citations.',
+              style: HpType.body(size: 13.5)),
+          const SizedBox(height: HpSpace.x4),
+          HpInput(
+            controller: ctrl,
+            label: 'Number plate',
+            hint: 'HG-0000',
+            icon: Icons.pin_outlined,
+            mono: true,
+            textCapitalization: TextCapitalization.characters,
+          ),
+        ],
+      ),
+      actions: [
+        HpButton(label: 'Cancel', variant: HpButtonVariant.ghost, onPressed: () => Navigator.pop(context)),
+        HpButton(
+          label: 'Save',
+          onPressed: () => Navigator.pop(context, ctrl.text.trim().toUpperCase()),
+        ),
+      ],
+    ),
+  );
 }
 
 class _BottomNav extends StatelessWidget {

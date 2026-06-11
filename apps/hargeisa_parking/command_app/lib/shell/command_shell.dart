@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
+import 'package:hpark_firebase/hpark_firebase.dart';
 
 import '../pages/appeals_review_page.dart';
 import '../pages/approvals_page.dart';
@@ -43,8 +46,39 @@ class CommandShell extends StatefulWidget {
 
 class _CommandShellState extends State<CommandShell> {
   OfficerRepository get repo => widget.repo;
-  late final List<Appeal> appeals = seedAppeals();
+
+  final FirebaseAppealRepository _appealRepo = FirebaseAppealRepository();
+  final FirebaseCitationRepository _citationRepo = FirebaseCitationRepository();
+  List<Appeal> appeals = [];
+  StreamSubscription<List<Appeal>>? _appealSub;
+
   CommandPage _page = CommandPage.dashboard;
+
+  @override
+  void initState() {
+    super.initState();
+    _appealSub = _appealRepo.watchAll().listen((list) {
+      if (mounted) setState(() => appeals = list);
+    }, onError: (_) {});
+  }
+
+  @override
+  void dispose() {
+    _appealSub?.cancel();
+    super.dispose();
+  }
+
+  /// Record an appeal decision and reflect it on the citation:
+  ///  - dismiss the citation (appeal succeeds) → citation `dismissed`
+  ///  - uphold the citation (appeal fails)     → citation back to `outstanding`
+  Future<void> _decideAppeal(Appeal a, AppealStatus status) async {
+    await _appealRepo.decide(a.id, status: status, by: widget.adminName);
+    if (status == AppealStatus.dismissed) {
+      await _citationRepo.setStatus(a.citationId, CitationStatus.dismissed);
+    } else if (status == AppealStatus.upheld) {
+      await _citationRepo.setStatus(a.citationId, CitationStatus.outstanding);
+    }
+  }
 
   void _go(CommandPage p) => setState(() => _page = p);
 
@@ -66,7 +100,7 @@ class _CommandShellState extends State<CommandShell> {
         return AppealsReviewPage(
           appeals: appeals,
           adminName: widget.adminName,
-          onChanged: () => setState(() {}),
+          onDecide: _decideAppeal,
         );
       case CommandPage.reports:
         return const ReportsPage();

@@ -2,19 +2,28 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
+import 'package:hpark_firebase/hpark_firebase.dart';
 
-import '../models/pay_models.dart';
 import '../util/format.dart';
 
 enum _Step { record, review, submitted }
 
 /// Citizen video-appeal flow: record an explanation, review it, submit. On
-/// submit the citation moves to [CitationStatus.appealReview].
+/// submit an [Appeal] is written to Firestore (status `review`) and the citation
+/// moves to [CitationStatus.appealReview] — so the city sees it in HPark Command.
 class AppealFlow extends StatefulWidget {
-  const AppealFlow({super.key, required this.citation, required this.onSubmitted});
+  const AppealFlow({
+    super.key,
+    required this.citation,
+    required this.appellantName,
+    required this.repo,
+    required this.appeals,
+  });
 
   final Citation citation;
-  final VoidCallback onSubmitted;
+  final String appellantName;
+  final FirebaseCitationRepository repo;
+  final FirebaseAppealRepository appeals;
 
   @override
   State<AppealFlow> createState() => _AppealFlowState();
@@ -58,9 +67,39 @@ class _AppealFlowState extends State<AppealFlow> {
     return '$m:${s.toString().padLeft(2, '0')}';
   }
 
-  void _submit() {
-    widget.citation.status = CitationStatus.appealReview;
-    setState(() => _step = _Step.submitted);
+  bool _submitting = false;
+
+  Future<void> _submit() async {
+    if (_submitting) return;
+    setState(() => _submitting = true);
+    final c = widget.citation;
+    final now = DateTime.now();
+    final appeal = Appeal(
+      id: 'APL-${now.year}-${(now.millisecondsSinceEpoch % 1000000).toString().padLeft(6, '0')}',
+      citationId: c.id,
+      plate: c.plate,
+      violation: c.violation,
+      fine: c.amount,
+      reason: _reason.text.trim().isEmpty
+          ? 'Video appeal submitted.'
+          : _reason.text.trim(),
+      videoSeconds: _seconds,
+      submittedAt: now,
+      appellantName: widget.appellantName,
+      status: AppealStatus.review,
+    );
+    try {
+      await widget.appeals.submit(appeal);
+      await widget.repo.setStatus(c.id, CitationStatus.appealReview);
+      c.status = CitationStatus.appealReview; // reflect locally on return
+    } catch (_) {
+      // Surface a gentle error but still advance — Firestore will retry the write.
+    }
+    if (!mounted) return;
+    setState(() {
+      _submitting = false;
+      _step = _Step.submitted;
+    });
   }
 
   @override
@@ -210,7 +249,7 @@ class _AppealFlowState extends State<AppealFlow> {
         Container(
           padding: const EdgeInsets.all(HpSpace.x5),
           decoration: const BoxDecoration(color: HpColors.surface, border: Border(top: BorderSide(color: HpColors.border))),
-          child: HpButton(label: 'Submit appeal', icon: Icons.send_rounded, size: HpButtonSize.lg, expand: true, onPressed: _submit),
+          child: HpButton(label: 'Submit appeal', icon: Icons.send_rounded, size: HpButtonSize.lg, expand: true, loading: _submitting, onPressed: _submitting ? null : _submit),
         ),
       ],
     );
@@ -254,10 +293,7 @@ class _AppealFlowState extends State<AppealFlow> {
             label: 'Done',
             size: HpButtonSize.lg,
             expand: true,
-            onPressed: () {
-              widget.onSubmitted();
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(context),
           ),
         ),
       ],

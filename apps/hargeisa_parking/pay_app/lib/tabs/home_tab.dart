@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
+import 'package:hpark_firebase/hpark_firebase.dart';
 
 import '../models/pay_models.dart';
 import '../screens/citation_detail.dart';
@@ -11,15 +12,18 @@ class HomeTab extends StatelessWidget {
     super.key,
     required this.citizen,
     required this.citations,
-    required this.onChanged,
+    required this.repo,
+    required this.appeals,
+    required this.onAddPlate,
   });
 
   final Citizen citizen;
   final List<Citation> citations;
+  final FirebaseCitationRepository repo;
+  final FirebaseAppealRepository appeals;
 
-  /// Called whenever a citation's state changes (paid / appealed) so the shell
-  /// can rebuild the balance + lists.
-  final VoidCallback onChanged;
+  /// Prompt the citizen to set their vehicle plate (so their citations load).
+  final VoidCallback onAddPlate;
 
   int get _outstanding => citations
       .where((c) => c.status == CitationStatus.outstanding)
@@ -29,9 +33,11 @@ class HomeTab extends StatelessWidget {
     final amount = _outstanding;
     showPaySheet(context, amount: amount, onPaid: (method) {
       for (final c in citations) {
-        if (c.status == CitationStatus.outstanding) c.status = CitationStatus.paid;
+        if (c.status == CitationStatus.outstanding) {
+          c.status = CitationStatus.paid; // optimistic; the stream reconciles
+          repo.setStatus(c.id, CitationStatus.paid);
+        }
       }
-      onChanged();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
@@ -48,8 +54,15 @@ class HomeTab extends StatelessWidget {
 
   void _openDetail(BuildContext context, Citation c) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => CitationDetailScreen(citation: c, onChanged: onChanged)),
-    ).then((_) => onChanged());
+      MaterialPageRoute(
+        builder: (_) => CitationDetailScreen(
+          citation: c,
+          citizen: citizen,
+          repo: repo,
+          appeals: appeals,
+        ),
+      ),
+    );
   }
 
   @override
@@ -74,16 +87,80 @@ class HomeTab extends StatelessWidget {
           ],
         ),
         const SizedBox(height: HpSpace.x5),
-        _BalanceCard(outstanding: outstanding, onPay: outstanding > 0 ? () => _payAll(context) : null),
-        const SizedBox(height: HpSpace.x6),
-        Text('Your citations', style: HpType.heading(size: 18)),
-        const SizedBox(height: HpSpace.x3),
-        for (final c in citations)
-          Padding(
-            padding: const EdgeInsets.only(bottom: HpSpace.x3),
-            child: _CitationCard(citation: c, onTap: () => _openDetail(context, c)),
-          ),
+        if (citizen.plate.isEmpty)
+          _AddPlateCard(onAddPlate: onAddPlate)
+        else ...[
+          _BalanceCard(outstanding: outstanding, onPay: outstanding > 0 ? () => _payAll(context) : null),
+          const SizedBox(height: HpSpace.x6),
+          Row(children: [
+            Expanded(child: Text('Your citations', style: HpType.heading(size: 18))),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: HpSpace.x2, vertical: 3),
+              decoration: BoxDecoration(color: HpColors.overlay, borderRadius: BorderRadius.circular(HpRadius.sm), border: Border.all(color: HpColors.borderStrong)),
+              child: Text(citizen.plate, style: HpType.mono(size: 13, weight: FontWeight.w700)),
+            ),
+          ]),
+          const SizedBox(height: HpSpace.x3),
+          if (citations.isEmpty)
+            HpCard(
+              padding: const EdgeInsets.symmetric(vertical: HpSpace.x10),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.verified_outlined, size: 36, color: HpColors.success),
+                    const SizedBox(height: HpSpace.x3),
+                    Text('No citations', style: HpType.heading(size: 16)),
+                    const SizedBox(height: 4),
+                    Text('You have a clean record for ${citizen.plate}.', style: HpType.body(size: 13)),
+                  ],
+                ),
+              ),
+            )
+          else
+            for (final c in citations)
+              Padding(
+                padding: const EdgeInsets.only(bottom: HpSpace.x3),
+                child: _CitationCard(citation: c, onTap: () => _openDetail(context, c)),
+              ),
+        ],
       ],
+    );
+  }
+}
+
+class _AddPlateCard extends StatelessWidget {
+  const _AddPlateCard({required this.onAddPlate});
+  final VoidCallback onAddPlate;
+
+  @override
+  Widget build(BuildContext context) {
+    return HpCard(
+      radius: HpRadius.xxl,
+      padding: const EdgeInsets.all(HpSpace.x6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 52, height: 52,
+            decoration: BoxDecoration(color: HpColors.purpleTint, borderRadius: BorderRadius.circular(HpRadius.md)),
+            child: const Icon(Icons.directions_car_outlined, color: HpColors.purple300),
+          ),
+          const SizedBox(height: HpSpace.x4),
+          Text('Add your vehicle', style: HpType.heading(size: 20)),
+          const SizedBox(height: HpSpace.x2),
+          Text('Enter your number plate to see and pay your parking citations.',
+              style: HpType.body(size: 14)),
+          const SizedBox(height: HpSpace.x5),
+          HpButton(
+            label: 'Add number plate',
+            icon: Icons.add_rounded,
+            size: HpButtonSize.lg,
+            expand: true,
+            onPressed: onAddPlate,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -136,12 +213,7 @@ class _CitationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (label, color, tint, glyph) = switch (citation.status) {
-      CitationStatus.outstanding => ('Outstanding', HpColors.danger, HpColors.dangerTint, '▲'),
-      CitationStatus.paid => ('Paid', HpColors.success, HpColors.successTint, '✓'),
-      CitationStatus.appealReview => ('Appeal review', HpColors.purple300, HpColors.purpleTint, '◌'),
-    };
-
+    final status = citation.status;
     return HpCard(
       onTap: onTap,
       child: Column(
@@ -155,7 +227,7 @@ class _CitationCard extends StatelessWidget {
                 child: Text(citation.plate, style: HpType.mono(size: 13, weight: FontWeight.w700)),
               ),
               const Spacer(),
-              HpBadge(label: label, color: color, tint: tint, glyph: glyph),
+              HpBadge(label: status.label, color: status.color, tint: status.tint, glyph: status.glyph),
             ],
           ),
           const SizedBox(height: HpSpace.x3),

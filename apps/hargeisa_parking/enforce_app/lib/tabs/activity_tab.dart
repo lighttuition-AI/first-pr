@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:intl/intl.dart';
 
-import '../models/issued_citation.dart';
 import '../state/shift_state.dart';
 
 class ActivityTab extends StatelessWidget {
@@ -58,7 +57,7 @@ class ActivityTab extends StatelessWidget {
 
 class _CitationRow extends StatelessWidget {
   const _CitationRow({required this.citation});
-  final IssuedCitation citation;
+  final Citation citation;
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +88,7 @@ class _CitationRow extends StatelessWidget {
           Text('${citation.id} · ${DateFormat('HH:mm').format(citation.issuedAt)} · ${citation.photoCount} photo${citation.photoCount == 1 ? '' : 's'}${citation.hasVideo ? ' · video' : ''}',
               style: HpType.body(size: 12.5, color: HpColors.textMuted)),
           const SizedBox(height: HpSpace.x3),
-          Text('SLSH ${money.format(citation.fine)}', style: HpType.mono(size: 17, weight: FontWeight.w700)),
+          Text('SLSH ${money.format(citation.amount)}', style: HpType.mono(size: 17, weight: FontWeight.w700)),
         ],
       ),
     );

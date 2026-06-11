@@ -20,7 +20,7 @@ hargeisa_parking/
 │   ├── lib/src/models/    #   Officer, ApprovalStatus, District
 │   ├── lib/src/data/      #   OfficerRepository (+ seeded mock), 8 Hargeisa districts
 │   └── lib/src/widgets/   #   HpButton, HpCard, HpBadge, HpKpiCard, HpAvatar, HpInput, HpLogoMark
-├── packages/hpark_firebase/ # Firebase Auth + Firestore impls of the backend seams (ready to flip)
+├── packages/hpark_firebase/ # Firebase Auth + Firestore repositories (LIVE — officers, vehicles, citations, appeals, deals)
 ├── enforce_app/           # HPark Enforce  (Flutter, Android/iOS)
 ├── pay_app/               # HPark Pay      (Flutter, Android/iOS)
 ├── command_app/           # HPark Command  (Flutter, web)
@@ -50,11 +50,11 @@ from claiming to be officers:
    Rejected / suspended officers stay locked out.
 
 This is modelled in `hpark_core`'s `OfficerRepository` + `ApprovalStatus`, with unit
-tests in `packages/hpark_core/test/`. The current build uses a **seeded in-memory mock**
-so each app runs and the flow is demoable on its own (the officer app even has a
-clearly-labelled "simulate admin approval" button). To make an approval in Command
-unlock Enforce **across devices**, swap the mock for a shared backend — **Firebase
-Auth + Firestore** is the recommended fit; `OfficerRepository` is the seam to implement.
+tests in `packages/hpark_core/test/`. **This is now live on Firebase** — officers
+self-register against Firebase Auth, their record lives in Firestore (`officers/{uid}`),
+and an admin's approval in Command unlocks Enforce on the officer's device in real time.
+The Firestore security rules enforce the gate server-side (an officer can only create
+their own `pending` record; only an admin can approve).
 
 ## Run
 
@@ -79,36 +79,43 @@ spellings), so the canonical list is **8 distinct districts** — see
 `packages/hpark_core/lib/src/data/districts.dart`. Swap in the official map + boundaries
 when available.
 
-## What's built
+## What's built — running on live Firebase (Auth + Firestore)
 
-All three apps are now functionally complete as interactive prototypes (real state,
-simulated camera / map / file I/O):
+All three apps run on the **real backend** (project `hargeisa-parking`): email/password
+Firebase Auth, and Cloud Firestore for the shared data. There are **no mock data arrays
+left in the apps** — every record comes from the database, and the end-to-end flow is real:
 
-- **Enforce** — register → approval gate → patrol shell (Patrol / Activity / Profile);
-  full citation flow (scan or simulated LPR → vehicle lookup → violation → photo/video
-  evidence with GPS+timestamp → review → issued); offline toggle that queues + syncs.
-- **Pay** — register → home (balance + ZAAD/eDahab pay) → citation detail → **video
-  appeal** (record → review → submit) → payment history; districts → deals → coupon QR.
-- **Command** — dashboard, officer approvals, officers, **vehicle import w/ dedupe**,
-  zones, **live map**, **appeals review** (watch → uphold/dismiss), **reports**.
+> An officer **issues** a citation in Enforce → it's written to Firestore → the cited
+> driver **sees and pays/appeals** it in Pay (matched on their number plate) → the city
+> **decides** the appeal in Command → the citation status updates everywhere.
 
-## Backend (Firebase) — built, ready to flip
+- **Enforce** — register → Firestore approval gate → patrol shell; full citation flow
+  (scan or LPR → **Firestore vehicle lookup** → violation → photo/video evidence with
+  GPS+timestamp → review → **issued to `citations/{id}`**). Offline writes queue in
+  Firestore and flush on reconnect.
+- **Pay** — register (with vehicle plate) → home streams **your citations from Firestore**
+  (by plate) → pay (ZAAD/eDahab) or **video appeal** → both persist to Firestore; districts
+  → **deals from Firestore** → coupon QR.
+- **Command** — dashboard, **live officer approvals**, officers, vehicle data, zones, live
+  map, **live appeals review** (watch → uphold/dismiss writes back to `appeals` + the
+  `citation`), reports.
 
-The real backend is written and tested in `packages/hpark_firebase/`:
-`FirebaseOfficerRepository` (Firestore, live-synced) and `FirebaseAuthService`
-implement the same `hpark_core` seams the apps already use, plus `firestore.rules`
-that enforce the **approval gate in the database** (officers can only self-register
-as `pending`; only admins approve; only approved officers can write citations).
+### Firestore collections
+`officers/{uid}` · `citizens/{uid}` · `vehicles/{plate}` · `citations/{id}` ·
+`appeals/{id}` · `deals/{code}` · `counters/officers`. Security rules
+(`firestore.rules`, deployed) enforce: officers self-register `pending` only; only admins
+approve; only **approved** officers issue citations; a citizen may only flip their own
+citation to `paid`/`appealReview`; appeals start as `review` and only admins decide.
 
-It's deliberately not switched on yet — that needs your Firebase project. Follow
-[`FIREBASE_SETUP.md`](FIREBASE_SETUP.md): create the project, run `flutterfire
-configure`, deploy the rules, and flip each app with a one-line `initBackend(...)`.
-If Firebase isn't configured, the apps fall back to the in-memory demo backend, so
-they never break mid-setup.
+The Firebase-backed repositories live in `packages/hpark_firebase/`
+(`FirebaseOfficerRepository`/`Account`, `FirebaseVehicleRepository`,
+`FirebaseCitationRepository`, `FirebaseAppealRepository`, `FirebaseDealRepository`).
+Reference/registry data is loaded with `tool/seed_firestore.mjs` (officer roster, vehicle
+registry, district deals); citations + appeals are created by real app usage, not seeded.
 
 ## Next steps
-- Run the `FIREBASE_SETUP.md` steps, then I'll wire the officer & citizen **login
-  screens** and move citations/appeals/vehicles onto Firestore too.
-- Real device integrations: camera/LPR, GPS, a maps SDK, file picker for imports,
-  ZAAD/eDahab payment APIs.
-- Bilingual English / Somali toggle; replace stylized data with live data.
+- Real device integrations: camera/LPR, GPS, a maps SDK, a real file picker + parser for
+  the bulk **vehicle import** (Command's import preview is still a UI mock), ZAAD/eDahab
+  payment APIs.
+- Bilingual English / Somali toggle.
+- Push notifications (e.g. notify a driver when their appeal is decided).

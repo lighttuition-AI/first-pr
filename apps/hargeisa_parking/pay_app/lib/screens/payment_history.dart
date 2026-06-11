@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:intl/intl.dart';
 
-import '../models/pay_models.dart';
 import '../util/format.dart';
 
 /// Past payments — every citation the citizen has settled.

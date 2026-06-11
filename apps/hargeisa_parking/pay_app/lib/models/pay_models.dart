@@ -1,4 +1,5 @@
-// Citizen-facing models for HPark Pay.
+// Citizen profile for HPark Pay. (Citation, CitationStatus and Deal are shared
+// across the apps and now live in hpark_core.)
 
 class Citizen {
   const Citizen({
@@ -6,12 +7,17 @@ class Citizen {
     required this.nationalId,
     required this.dateOfBirth,
     this.email = '',
+    this.plate = '',
   });
 
   final String fullName;
   final String nationalId;
   final DateTime dateOfBirth;
   final String email;
+
+  /// The citizen's vehicle number plate. Citations are matched to a driver on
+  /// their plate, so this is how HPark Pay finds "your citations".
+  final String plate;
 
   String get initials {
     final parts =
@@ -21,11 +27,20 @@ class Citizen {
     return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
   }
 
+  Citizen copyWith({String? plate}) => Citizen(
+        fullName: fullName,
+        nationalId: nationalId,
+        dateOfBirth: dateOfBirth,
+        email: email,
+        plate: plate ?? this.plate,
+      );
+
   Map<String, dynamic> toMap() => {
         'fullName': fullName,
         'nationalId': nationalId,
         'dateOfBirth': dateOfBirth.millisecondsSinceEpoch,
         'email': email,
+        'plate': plate,
       };
 
   static Citizen fromMap(Map<String, dynamic> map) => Citizen(
@@ -35,43 +50,6 @@ class Citizen {
             (map['dateOfBirth'] as num?)?.toInt() ??
                 DateTime(1990).millisecondsSinceEpoch),
         email: map['email'] as String? ?? '',
+        plate: (map['plate'] as String? ?? '').toUpperCase(),
       );
-}
-
-enum CitationStatus { outstanding, paid, appealReview }
-
-class Citation {
-  Citation({
-    required this.id,
-    required this.plate,
-    required this.violation,
-    required this.amount,
-    required this.issuedAt,
-    required this.districtName,
-    this.status = CitationStatus.outstanding,
-  });
-
-  final String id; // CIT-2026-04821
-  final String plate; // HG-4821
-  final String violation;
-  final int amount; // in SLSH
-  final DateTime issuedAt;
-  final String districtName;
-  CitationStatus status;
-}
-
-class Deal {
-  const Deal({
-    required this.shop,
-    required this.title,
-    required this.code,
-    required this.districtId,
-    required this.category,
-  });
-
-  final String shop;
-  final String title; // e.g. "50% off shoes"
-  final String code; // coupon code encoded into the QR
-  final String districtId;
-  final String category; // Food / Fashion / Electronics ...
 }

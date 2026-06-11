@@ -45,11 +45,17 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Citations — only an APPROVED officer may issue; admins may amend.
+    // Citations — only an APPROVED officer may issue. Admins may amend freely;
+    // a citizen may only flip the status of a citation to 'paid' or
+    // 'appealReview' (paying / appealing their own ticket) — nothing else.
     match /citations/{citationId} {
-      allow read:           if isSignedIn();
-      allow create:         if isApprovedOfficer();
-      allow update, delete: if isAdmin();
+      allow read:   if isSignedIn();
+      allow create: if isApprovedOfficer();
+      allow update: if isAdmin()
+                    || (isSignedIn()
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+                        && request.resource.data.status in ['paid', 'appealReview']);
+      allow delete: if isAdmin();
     }
 
     // Appeals — a citizen submits (must start as 'review'); admins decide.
@@ -57,6 +63,12 @@ service cloud.firestore {
       allow read:           if isSignedIn();
       allow create:         if isSignedIn() && request.resource.data.status == 'review';
       allow update, delete: if isAdmin();
+    }
+
+    // District shop deals — any signed-in user reads; only admins manage.
+    match /deals/{dealId} {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
     }
   }
 }

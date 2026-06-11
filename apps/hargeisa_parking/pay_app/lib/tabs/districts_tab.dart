@@ -1,13 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
+import 'package:hpark_firebase/hpark_firebase.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-import '../data/pay_data.dart';
-import '../models/pay_models.dart';
-
 /// Browse Hargeisa's 8 districts; each opens the shop deals advertised there.
-class DistrictsTab extends StatelessWidget {
+/// Deals are loaded live from Firestore (`deals` collection).
+class DistrictsTab extends StatefulWidget {
   const DistrictsTab({super.key});
+
+  @override
+  State<DistrictsTab> createState() => _DistrictsTabState();
+}
+
+class _DistrictsTabState extends State<DistrictsTab> {
+  final FirebaseDealRepository _repo = FirebaseDealRepository();
+  List<Deal> _deals = [];
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _repo.all().then((deals) {
+      if (!mounted) return;
+      setState(() {
+        _deals = deals;
+        _loaded = true;
+      });
+    }).catchError((_) {
+      if (mounted) setState(() => _loaded = true);
+    });
+  }
+
+  int _countFor(String districtId) =>
+      _deals.where((d) => d.districtId == districtId).length;
+
+  List<Deal> _dealsFor(String districtId) =>
+      _deals.where((d) => d.districtId == districtId).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +50,11 @@ class DistrictsTab extends StatelessWidget {
         for (final d in kHargeisaDistricts)
           Padding(
             padding: const EdgeInsets.only(bottom: HpSpace.x3),
-            child: _DistrictCard(district: d),
+            child: _DistrictCard(
+              district: d,
+              count: _loaded ? _countFor(d.id) : null,
+              deals: _dealsFor(d.id),
+            ),
           ),
       ],
     );
@@ -30,15 +62,16 @@ class DistrictsTab extends StatelessWidget {
 }
 
 class _DistrictCard extends StatelessWidget {
-  const _DistrictCard({required this.district});
+  const _DistrictCard({required this.district, required this.count, required this.deals});
   final District district;
+  final int? count; // null while still loading
+  final List<Deal> deals;
 
   @override
   Widget build(BuildContext context) {
-    final count = dealsForDistrict(district.id).length;
     return HpCard(
       onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => DealsScreen(district: district)),
+        MaterialPageRoute(builder: (_) => DealsScreen(district: district, deals: deals)),
       ),
       child: Row(
         children: [
@@ -57,7 +90,12 @@ class _DistrictCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(district.name, style: HpType.heading(size: 16)),
-                Text(count == 0 ? 'No deals yet' : '$count deal${count == 1 ? '' : 's'} available',
+                Text(
+                    count == null
+                        ? 'Loading deals…'
+                        : count == 0
+                            ? 'No deals yet'
+                            : '$count deal${count == 1 ? '' : 's'} available',
                     style: HpType.body(size: 12.5, color: HpColors.textMuted)),
               ],
             ),
@@ -70,12 +108,12 @@ class _DistrictCard extends StatelessWidget {
 }
 
 class DealsScreen extends StatelessWidget {
-  const DealsScreen({super.key, required this.district});
+  const DealsScreen({super.key, required this.district, required this.deals});
   final District district;
+  final List<Deal> deals;
 
   @override
   Widget build(BuildContext context) {
-    final deals = dealsForDistrict(district.id);
     return Scaffold(
       appBar: AppBar(title: Text(district.name, style: HpType.heading(size: 18))),
       body: DecoratedBox(

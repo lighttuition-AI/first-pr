@@ -9,3 +9,7 @@ export 'src/firebase_officer_repository.dart';
 export 'src/firebase_officer_account.dart';
 export 'src/firebase_auth_service.dart';
 export 'src/firebase_bootstrap.dart';
+export 'src/firebase_vehicle_repository.dart';
+export 'src/firebase_citation_repository.dart';
+export 'src/firebase_appeal_repository.dart';
+export 'src/firebase_deal_repository.dart';
