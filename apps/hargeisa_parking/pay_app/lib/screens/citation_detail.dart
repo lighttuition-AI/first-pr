@@ -3,6 +3,7 @@ import 'package:hpark_core/hpark_core.dart';
 import 'package:hpark_firebase/hpark_firebase.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/strings.dart';
 import '../models/pay_models.dart';
 import '../util/format.dart';
 import '../widgets/pay_sheet.dart';
@@ -41,7 +42,7 @@ class _CitationDetailScreenState extends State<CitationDetailScreen> {
           content: Row(children: [
             const Icon(Icons.check_circle, color: HpColors.success, size: 18),
             const SizedBox(width: HpSpace.x3),
-            Text('Paid ${slsh(c.amount)} via $method', style: TextStyle(color: HpColors.text)),
+            Text(trf('Paid {amount} via {method}', {'amount': slsh(c.amount), 'method': method}), style: TextStyle(color: HpColors.text)),
           ]),
         ),
       );
@@ -68,7 +69,7 @@ class _CitationDetailScreenState extends State<CitationDetailScreen> {
         (c.status.label, c.status.color, c.status.tint, c.status.glyph);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Citation', style: HpType.heading(size: 18))),
+      appBar: AppBar(title: Text(tr('Citation'), style: HpType.heading(size: 18))),
       body: DecoratedBox(
         decoration: HParkTheme.backgroundWash,
         child: SafeArea(
@@ -87,7 +88,7 @@ class _CitationDetailScreenState extends State<CitationDetailScreen> {
                           child: Text(c.plate, style: HpType.mono(size: 16, weight: FontWeight.w700)),
                         ),
                         const Spacer(),
-                        HpBadge(label: label, color: color, tint: tint, glyph: glyph),
+                        HpBadge(label: tr(label), color: color, tint: tint, glyph: glyph),
                       ],
                     ),
                     const SizedBox(height: HpSpace.x5),
@@ -96,13 +97,13 @@ class _CitationDetailScreenState extends State<CitationDetailScreen> {
                     HpCard(
                       child: Column(
                         children: [
-                          _kv('Reference', c.id, mono: true),
+                          _kv(tr('Reference'), c.id, mono: true),
                           const Divider(height: HpSpace.x6),
-                          _kv('District', c.districtName),
+                          _kv(tr('District'), c.districtName),
                           const Divider(height: HpSpace.x6),
-                          _kv('Issued', DateFormat('d MMM yyyy · HH:mm').format(c.issuedAt)),
+                          _kv(tr('Issued'), DateFormat('d MMM yyyy · HH:mm').format(c.issuedAt)),
                           const Divider(height: HpSpace.x6),
-                          _kv('Fine', slsh(c.amount), mono: true),
+                          _kv(tr('Fine'), slsh(c.amount), mono: true),
                         ],
                       ),
                     ),
@@ -113,7 +114,7 @@ class _CitationDetailScreenState extends State<CitationDetailScreen> {
                         child: Row(children: [
                           const Icon(Icons.gavel_outlined, color: HpColors.purple300, size: 20),
                           const SizedBox(width: HpSpace.x3),
-                          Expanded(child: Text('Your video appeal is under review. We\'ll notify you of the decision.', style: HpType.body(size: 13.5))),
+                          Expanded(child: Text(tr("Your video appeal is under review. We'll notify you of the decision."), style: HpType.body(size: 13.5))),
                         ]),
                       ),
                     ],
@@ -126,9 +127,9 @@ class _CitationDetailScreenState extends State<CitationDetailScreen> {
                   decoration: BoxDecoration(color: HpColors.surface, border: Border(top: BorderSide(color: HpColors.border))),
                   child: Row(
                     children: [
-                      HpButton(label: 'Challenge', variant: HpButtonVariant.ghost, size: HpButtonSize.lg, icon: Icons.videocam_outlined, onPressed: _appeal),
+                      HpButton(label: tr('Challenge'), variant: HpButtonVariant.ghost, size: HpButtonSize.lg, icon: Icons.videocam_outlined, onPressed: _appeal),
                       const SizedBox(width: HpSpace.x3),
-                      Expanded(child: HpButton(label: 'Pay now', size: HpButtonSize.lg, expand: true, icon: Icons.account_balance_wallet_outlined, onPressed: _pay)),
+                      Expanded(child: HpButton(label: tr('Pay now'), size: HpButtonSize.lg, expand: true, icon: Icons.account_balance_wallet_outlined, onPressed: _pay)),
                     ],
                   ),
                 ),

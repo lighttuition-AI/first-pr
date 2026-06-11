@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/strings.dart';
 import '../util/format.dart';
 
 /// Past payments — every citation the citizen has settled.
@@ -16,13 +17,13 @@ class PaymentHistoryScreen extends StatelessWidget {
     final total = paid.fold(0, (sum, c) => sum + c.amount);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Payment history', style: HpType.heading(size: 18))),
+      appBar: AppBar(title: Text(tr('Payment history'), style: HpType.heading(size: 18))),
       body: DecoratedBox(
         decoration: HParkTheme.backgroundWash,
         child: SafeArea(
           top: false,
           child: paid.isEmpty
-              ? Center(child: Text('No payments yet.', style: HpType.body(size: 14)))
+              ? Center(child: Text(tr('No payments yet.'), style: HpType.body(size: 14)))
               : ListView(
                   padding: const EdgeInsets.all(HpSpace.x5),
                   children: [
@@ -31,7 +32,7 @@ class PaymentHistoryScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('TOTAL PAID', style: HpType.eyebrow),
+                          Text(tr('TOTAL PAID'), style: HpType.eyebrow),
                           const SizedBox(height: HpSpace.x2),
                           Text(slsh(total), style: HpType.mono(size: 28, weight: FontWeight.w700)),
                         ],

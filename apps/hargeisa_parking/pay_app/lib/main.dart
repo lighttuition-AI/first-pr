@@ -4,10 +4,12 @@ import 'package:hpark_core/hpark_core.dart';
 
 import 'app.dart';
 import 'firebase_options.dart';
+import 'l10n/strings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await hpTheme.load();
+  await localeCtrl.load();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const HParkPayApp());
 }
@@ -18,7 +20,7 @@ class HParkPayApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: hpTheme,
+      listenable: Listenable.merge([hpTheme, localeCtrl]),
       builder: (context, _) => MaterialApp(
         title: 'HPark Pay',
         debugShowCheckedModeBanner: false,

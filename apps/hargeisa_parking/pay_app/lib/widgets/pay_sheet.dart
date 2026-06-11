@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 
+import '../l10n/strings.dart';
 import '../util/format.dart';
 
 /// Opens the ZAAD / eDahab payment sheet. Calls [onPaid] with the chosen
@@ -52,9 +53,9 @@ class _PaySheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: HpSpace.x5),
-          Text('Pay ${slsh(amount)}', style: HpType.heading(size: 22)),
+          Text(trf('Pay {amount}', {'amount': slsh(amount)}), style: HpType.heading(size: 22)),
           const SizedBox(height: HpSpace.x2),
-          Text('Choose a mobile money provider.', style: HpType.body(size: 14)),
+          Text(tr('Choose a mobile money provider.'), style: HpType.body(size: 14)),
           const SizedBox(height: HpSpace.x5),
           _ProviderTile(name: 'ZAAD', provider: 'Telesom', color: HpColors.teal, onTap: () => onPaid('ZAAD')),
           const SizedBox(height: HpSpace.x3),

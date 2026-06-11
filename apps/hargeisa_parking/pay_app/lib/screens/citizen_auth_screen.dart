@@ -3,6 +3,7 @@ import 'package:hpark_core/hpark_core.dart';
 import 'package:intl/intl.dart';
 
 import '../data/citizen_store.dart';
+import '../l10n/strings.dart';
 import '../models/pay_models.dart';
 
 /// Real email/password auth for citizens. Sign in, or create an account that
@@ -111,30 +112,30 @@ class _CitizenAuthScreenState extends State<CitizenAuthScreen> {
                   children: [
                     const Center(child: HpLogoMark(size: 56)),
                     const SizedBox(height: HpSpace.x6),
-                    Text('CITIZEN APP', style: HpType.eyebrow),
+                    Text(tr('CITIZEN APP'), style: HpType.eyebrow),
                     const SizedBox(height: HpSpace.x2),
-                    Text(_signUp ? 'Create your account' : 'Welcome to HPark Pay',
+                    Text(tr(_signUp ? 'Create your account' : 'Welcome to HPark Pay'),
                         style: HpType.heading(size: 28)),
                     const SizedBox(height: HpSpace.x2),
                     Text(
-                      _signUp
+                      tr(_signUp
                           ? 'Register to see your citations and pay via ZAAD or eDahab.'
-                          : 'Sign in to see and pay your parking citations.',
+                          : 'Sign in to see and pay your parking citations.'),
                       style: HpType.body(size: 14),
                     ),
                     const SizedBox(height: HpSpace.x6),
                     if (_signUp) ...[
-                      HpInput(controller: _name, label: 'Full name', hint: 'Your name', icon: Icons.person_outline, textCapitalization: TextCapitalization.words),
+                      HpInput(controller: _name, label: tr('Full name'), hint: tr('Your name'), icon: Icons.person_outline, textCapitalization: TextCapitalization.words),
                       const SizedBox(height: HpSpace.x4),
                     ],
-                    HpInput(controller: _email, label: 'Email', hint: 'you@example.com', icon: Icons.mail_outline, keyboardType: TextInputType.emailAddress),
+                    HpInput(controller: _email, label: tr('Email'), hint: 'you@example.com', icon: Icons.mail_outline, keyboardType: TextInputType.emailAddress),
                     const SizedBox(height: HpSpace.x4),
-                    HpInput(controller: _password, label: 'Password', hint: '••••••••', icon: Icons.lock_outline, obscure: true),
+                    HpInput(controller: _password, label: tr('Password'), hint: '••••••••', icon: Icons.lock_outline, obscure: true),
                     if (_signUp) ...[
                       const SizedBox(height: HpSpace.x4),
-                      HpInput(controller: _nationalId, label: 'Somaliland national ID', hint: 'SL-0000-0000', icon: Icons.badge_outlined, mono: true, textCapitalization: TextCapitalization.characters),
+                      HpInput(controller: _nationalId, label: tr('Somaliland national ID'), hint: 'SL-0000-0000', icon: Icons.badge_outlined, mono: true, textCapitalization: TextCapitalization.characters),
                       const SizedBox(height: HpSpace.x4),
-                      HpInput(controller: _plate, label: 'Vehicle plate (optional)', hint: 'HG-0000', icon: Icons.directions_car_outlined, mono: true, textCapitalization: TextCapitalization.characters),
+                      HpInput(controller: _plate, label: tr('Vehicle plate (optional)'), hint: 'HG-0000', icon: Icons.directions_car_outlined, mono: true, textCapitalization: TextCapitalization.characters),
                       const SizedBox(height: HpSpace.x4),
                       _DobField(dob: _dob, onTap: _pickDob),
                     ],
@@ -146,13 +147,13 @@ class _CitizenAuthScreenState extends State<CitizenAuthScreen> {
                         child: Row(children: [
                           const Icon(Icons.error_outline, size: 18, color: HpColors.danger),
                           const SizedBox(width: HpSpace.x3),
-                          Expanded(child: Text(_error!, style: HpType.body(size: 13, color: HpColors.text))),
+                          Expanded(child: Text(tr(_error!), style: HpType.body(size: 13, color: HpColors.text))),
                         ]),
                       ),
                     ],
                     const SizedBox(height: HpSpace.x6),
                     HpButton(
-                      label: _signUp ? 'Create account' : 'Sign in',
+                      label: tr(_signUp ? 'Create account' : 'Sign in'),
                       size: HpButtonSize.lg,
                       expand: true,
                       loading: _busy,
@@ -167,11 +168,11 @@ class _CitizenAuthScreenState extends State<CitizenAuthScreen> {
                         }),
                         child: Text.rich(
                           TextSpan(
-                            text: _signUp ? 'Already have an account?  ' : 'New here?  ',
+                            text: '${tr(_signUp ? 'Already have an account?' : 'New here?')}  ',
                             style: HpType.body(size: 13.5, color: HpColors.text2),
                             children: [
                               TextSpan(
-                                text: _signUp ? 'Sign in' : 'Create an account',
+                                text: tr(_signUp ? 'Sign in' : 'Create an account'),
                                 style: HpType.body(size: 13.5, weight: FontWeight.w700, color: HpColors.purple300),
                               ),
                             ],
@@ -201,7 +202,7 @@ class _DobField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('Date of birth', style: HpType.body(size: 13, weight: FontWeight.w600, color: HpColors.text2)),
+        Text(tr('Date of birth'), style: HpType.body(size: 13, weight: FontWeight.w600, color: HpColors.text2)),
         const SizedBox(height: HpSpace.x2),
         InkWell(
           onTap: onTap,
@@ -219,7 +220,7 @@ class _DobField extends StatelessWidget {
                 Icon(Icons.cake_outlined, size: 18, color: HpColors.textMuted),
                 const SizedBox(width: HpSpace.x3),
                 Text(
-                  dob == null ? 'Select date' : DateFormat('d MMMM yyyy').format(dob!),
+                  dob == null ? tr('Select date') : DateFormat('d MMMM yyyy').format(dob!),
                   style: TextStyle(color: dob == null ? HpColors.textMuted : HpColors.text, fontSize: 15),
                 ),
               ],

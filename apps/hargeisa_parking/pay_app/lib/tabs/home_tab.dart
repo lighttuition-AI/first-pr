@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:hpark_firebase/hpark_firebase.dart';
 
+import '../l10n/strings.dart';
 import '../models/pay_models.dart';
 import '../screens/citation_detail.dart';
 import '../util/format.dart';
@@ -49,7 +50,7 @@ class HomeTab extends StatelessWidget {
           content: Row(children: [
             const Icon(Icons.check_circle, color: HpColors.success, size: 18),
             const SizedBox(width: HpSpace.x3),
-            Text('Paid ${slsh(amount)} via $method', style: TextStyle(color: HpColors.text)),
+            Text(trf('Paid {amount} via {method}', {'amount': slsh(amount), 'method': method}), style: TextStyle(color: HpColors.text)),
           ]),
         ),
       );
@@ -101,7 +102,7 @@ class HomeTab extends StatelessWidget {
           _BalanceCard(outstanding: outstanding, onPay: outstanding > 0 ? () => _payAll(context) : null),
           const SizedBox(height: HpSpace.x6),
           Row(children: [
-            Expanded(child: Text('Your citations', style: HpType.heading(size: 18))),
+            Expanded(child: Text(tr('Your citations'), style: HpType.heading(size: 18))),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: HpSpace.x2, vertical: 3),
               decoration: BoxDecoration(color: HpColors.overlay, borderRadius: BorderRadius.circular(HpRadius.sm), border: Border.all(color: HpColors.borderStrong)),
@@ -118,9 +119,9 @@ class HomeTab extends StatelessWidget {
                   children: [
                     const Icon(Icons.verified_outlined, size: 36, color: HpColors.success),
                     const SizedBox(height: HpSpace.x3),
-                    Text('No citations', style: HpType.heading(size: 16)),
+                    Text(tr('No citations'), style: HpType.heading(size: 16)),
                     const SizedBox(height: 4),
-                    Text('You have a clean record for ${citizen.plate}.', style: HpType.body(size: 13)),
+                    Text(trf('You have a clean record for {plate}.', {'plate': citizen.plate}), style: HpType.body(size: 13)),
                   ],
                 ),
               ),
@@ -155,13 +156,13 @@ class _AddPlateCard extends StatelessWidget {
             child: const Icon(Icons.directions_car_outlined, color: HpColors.purple300),
           ),
           const SizedBox(height: HpSpace.x4),
-          Text('Add your vehicle', style: HpType.heading(size: 20)),
+          Text(tr('Add your vehicle'), style: HpType.heading(size: 20)),
           const SizedBox(height: HpSpace.x2),
-          Text('Enter your number plate to see and pay your parking citations.',
+          Text(tr('Enter your number plate to see and pay your parking citations.'),
               style: HpType.body(size: 14)),
           const SizedBox(height: HpSpace.x5),
           HpButton(
-            label: 'Add number plate',
+            label: tr('Add number plate'),
             icon: Icons.add_rounded,
             size: HpButtonSize.lg,
             expand: true,
@@ -187,13 +188,13 @@ class _BalanceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('OUTSTANDING BALANCE', style: HpType.eyebrow),
+          Text(tr('OUTSTANDING BALANCE'), style: HpType.eyebrow),
           const SizedBox(height: HpSpace.x3),
           if (settled)
             Row(children: [
               const Icon(Icons.check_circle, color: HpColors.success, size: 26),
               const SizedBox(width: HpSpace.x3),
-              Text('All settled', style: HpType.heading(size: 26, color: HpColors.success)),
+              Text(tr('All settled'), style: HpType.heading(size: 26, color: HpColors.success)),
             ])
           else
             ShaderMask(
@@ -202,7 +203,7 @@ class _BalanceCard extends StatelessWidget {
             ),
           const SizedBox(height: HpSpace.x5),
           HpButton(
-            label: settled ? 'Nothing to pay' : 'Pay now',
+            label: tr(settled ? 'Nothing to pay' : 'Pay now'),
             size: HpButtonSize.lg,
             expand: true,
             icon: settled ? Icons.done_all_rounded : Icons.account_balance_wallet_outlined,
@@ -235,7 +236,7 @@ class _CitationCard extends StatelessWidget {
                 child: Text(citation.plate, style: HpType.mono(size: 13, weight: FontWeight.w700)),
               ),
               const Spacer(),
-              HpBadge(label: status.label, color: status.color, tint: status.tint, glyph: status.glyph),
+              HpBadge(label: tr(status.label), color: status.color, tint: status.tint, glyph: status.glyph),
             ],
           ),
           const SizedBox(height: HpSpace.x3),

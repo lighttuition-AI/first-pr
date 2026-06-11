@@ -3,6 +3,7 @@ import 'package:hpark_core/hpark_core.dart';
 import 'package:hpark_firebase/hpark_firebase.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/strings.dart';
 import '../util/format.dart';
 
 /// "Track your video appeals" — live list of the citizen's appeals (by plate),
@@ -16,13 +17,13 @@ class AppealsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Your appeals', style: HpType.heading(size: 18))),
+      appBar: AppBar(title: Text(tr('Your appeals'), style: HpType.heading(size: 18))),
       body: DecoratedBox(
         decoration: HParkTheme.backgroundWash,
         child: SafeArea(
           top: false,
           child: plate.isEmpty
-              ? _empty('Add your vehicle plate in Profile to track appeals.')
+              ? _empty(tr('Add your vehicle plate in Profile to track appeals.'))
               : StreamBuilder<List<Appeal>>(
                   stream: repo.watchByPlate(plate),
                   builder: (context, snap) {
@@ -32,8 +33,8 @@ class AppealsScreen extends StatelessWidget {
                     }
                     final appeals = snap.data ?? const [];
                     if (appeals.isEmpty) {
-                      return _empty('You haven\'t submitted any appeals.\n'
-                          'Open a citation and tap "Challenge" to appeal.');
+                      return _empty(tr('You haven\'t submitted any appeals.\n'
+                          'Open a citation and tap "Challenge" to appeal.'));
                     }
                     return ListView(
                       padding: const EdgeInsets.all(HpSpace.x5),
@@ -89,7 +90,7 @@ class _AppealCard extends StatelessWidget {
               ),
               const Spacer(),
               HpBadge(
-                  label: appeal.status.label,
+                  label: tr(appeal.status.label),
                   color: appeal.status.color,
                   tint: appeal.status.tint,
                   glyph: appeal.status.glyph),
@@ -111,11 +112,11 @@ class _AppealCard extends StatelessWidget {
               Text(slsh(appeal.fine), style: HpType.mono(size: 15, weight: FontWeight.w700, color: HpColors.text)),
               const Spacer(),
               if (appeal.status == AppealStatus.dismissed)
-                Text('Citation cancelled', style: HpType.body(size: 12.5, color: HpColors.success))
+                Text(tr('Citation cancelled'), style: HpType.body(size: 12.5, color: HpColors.success))
               else if (appeal.status == AppealStatus.upheld)
-                Text('Citation stands', style: HpType.body(size: 12.5, color: HpColors.warning))
+                Text(tr('Citation stands'), style: HpType.body(size: 12.5, color: HpColors.warning))
               else
-                Text('Awaiting decision', style: HpType.body(size: 12.5, color: HpColors.textMuted)),
+                Text(tr('Awaiting decision'), style: HpType.body(size: 12.5, color: HpColors.textMuted)),
             ],
           ),
         ],
