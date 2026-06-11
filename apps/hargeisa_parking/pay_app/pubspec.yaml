@@ -1,7 +1,7 @@
 name: hpark_pay
 description: "HPark Pay — Hargeisa Parking citizen app (citations, ZAAD/eDahab payments, district deals)."
 publish_to: 'none'
-version: 1.1.0+5
+version: 1.1.0+6
 
 environment:
   sdk: ^3.12.1

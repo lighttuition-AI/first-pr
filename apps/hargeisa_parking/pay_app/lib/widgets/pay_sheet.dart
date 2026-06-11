@@ -89,12 +89,12 @@ class _ProviderTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w700, fontSize: 16)),
+                Text(name, style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w700, fontSize: 16)),
                 Text(provider, style: HpType.body(size: 12.5, color: HpColors.textMuted)),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: HpColors.textMuted),
+          Icon(Icons.chevron_right, color: HpColors.textMuted),
         ],
       ),
     );

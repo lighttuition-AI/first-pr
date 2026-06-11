@@ -77,10 +77,10 @@ class _ZoneCard extends StatelessWidget {
 }
 
 class _Stat extends StatelessWidget {
-  const _Stat({required this.value, required this.label, this.color = HpColors.text});
+  const _Stat({required this.value, required this.label, this.color});
   final String value;
   final String label;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +88,7 @@ class _Stat extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(value, style: HpType.mono(size: 18, weight: FontWeight.w700, color: color)),
+        Text(value, style: HpType.mono(size: 18, weight: FontWeight.w700, color: color ?? HpColors.text)),
         Text(label, style: HpType.eyebrow),
       ],
     );

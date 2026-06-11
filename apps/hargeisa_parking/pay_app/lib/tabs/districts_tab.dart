@@ -100,7 +100,7 @@ class _DistrictCard extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: HpColors.textMuted),
+          Icon(Icons.chevron_right, color: HpColors.textMuted),
         ],
       ),
     );

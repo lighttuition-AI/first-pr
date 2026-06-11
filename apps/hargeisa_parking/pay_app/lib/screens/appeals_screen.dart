@@ -58,7 +58,7 @@ class AppealsScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.gavel_outlined, size: 40, color: HpColors.textMuted),
+              Icon(Icons.gavel_outlined, size: 40, color: HpColors.textMuted),
               const SizedBox(height: HpSpace.x4),
               Text(message, textAlign: TextAlign.center, style: HpType.body(size: 14)),
             ],
@@ -97,7 +97,7 @@ class _AppealCard extends StatelessWidget {
           ),
           const SizedBox(height: HpSpace.x3),
           Text(appeal.violation,
-              style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
+              style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
           const SizedBox(height: 4),
           Text('${appeal.citationId} · ${DateFormat('d MMM yyyy').format(appeal.submittedAt)}',
               style: HpType.body(size: 12.5, color: HpColors.textMuted)),

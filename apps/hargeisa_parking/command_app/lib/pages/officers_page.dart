@@ -57,7 +57,7 @@ class _Row extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(officer.fullName,
-                    style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600)),
+                    style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600)),
                 Text(officer.badgeNumber, style: HpType.mono(size: 12.5, color: HpColors.textMuted)),
               ],
             ),

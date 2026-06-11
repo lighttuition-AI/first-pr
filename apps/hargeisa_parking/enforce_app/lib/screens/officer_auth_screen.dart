@@ -194,7 +194,7 @@ class _DobField extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.cake_outlined, size: 18, color: HpColors.textMuted),
+                Icon(Icons.cake_outlined, size: 18, color: HpColors.textMuted),
                 const SizedBox(width: HpSpace.x3),
                 Text(
                   dob == null ? 'Select date' : DateFormat('d MMM yyyy').format(dob!),

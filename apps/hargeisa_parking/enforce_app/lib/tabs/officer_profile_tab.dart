@@ -61,7 +61,7 @@ class OfficerProfileTab extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(shift.offline ? 'Offline mode' : 'Online',
-                        style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
+                        style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
                     Text(
                       shift.offline
                           ? 'Citations queue locally and sync when back online'
@@ -75,6 +75,33 @@ class OfficerProfileTab extends StatelessWidget {
                 value: shift.offline,
                 onChanged: (v) => shift.setOffline(v),
                 activeThumbColor: HpColors.warning,
+                inactiveThumbColor: HpColors.text2,
+                inactiveTrackColor: HpColors.overlay,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: HpSpace.x5),
+        Text('Appearance', style: HpType.heading(size: 16)),
+        const SizedBox(height: HpSpace.x3),
+        HpCard(
+          child: Row(
+            children: [
+              Container(
+                width: 42, height: 42,
+                decoration: BoxDecoration(color: HpColors.overlay, borderRadius: BorderRadius.circular(HpRadius.md)),
+                child: Icon(hpTheme.isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
+                    color: HpColors.text2, size: 20),
+              ),
+              const SizedBox(width: HpSpace.x4),
+              Expanded(
+                child: Text(hpTheme.isDark ? 'Dark theme' : 'Light theme',
+                    style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
+              ),
+              Switch(
+                value: hpTheme.isDark,
+                onChanged: (v) => hpTheme.setDark(v),
+                activeThumbColor: HpColors.purple300,
                 inactiveThumbColor: HpColors.text2,
                 inactiveTrackColor: HpColors.overlay,
               ),

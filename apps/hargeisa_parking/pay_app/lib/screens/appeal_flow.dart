@@ -172,7 +172,7 @@ class _AppealFlowState extends State<AppealFlow> {
         ),
         Container(
           padding: const EdgeInsets.all(HpSpace.x5),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: HpColors.surface,
             border: Border(top: BorderSide(color: HpColors.border)),
           ),
@@ -248,7 +248,7 @@ class _AppealFlowState extends State<AppealFlow> {
         ),
         Container(
           padding: const EdgeInsets.all(HpSpace.x5),
-          decoration: const BoxDecoration(color: HpColors.surface, border: Border(top: BorderSide(color: HpColors.border))),
+          decoration: BoxDecoration(color: HpColors.surface, border: Border(top: BorderSide(color: HpColors.border))),
           child: HpButton(label: 'Submit appeal', icon: Icons.send_rounded, size: HpButtonSize.lg, expand: true, loading: _submitting, onPressed: _submitting ? null : _submit),
         ),
       ],
@@ -288,7 +288,7 @@ class _AppealFlowState extends State<AppealFlow> {
         ),
         Container(
           padding: const EdgeInsets.all(HpSpace.x5),
-          decoration: const BoxDecoration(color: HpColors.surface, border: Border(top: BorderSide(color: HpColors.border))),
+          decoration: BoxDecoration(color: HpColors.surface, border: Border(top: BorderSide(color: HpColors.border))),
           child: HpButton(
             label: 'Done',
             size: HpButtonSize.lg,

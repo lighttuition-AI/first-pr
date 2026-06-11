@@ -12,13 +12,13 @@ abstract final class HpType {
   static TextStyle heading({
     required double size,
     FontWeight weight = FontWeight.w700,
-    Color color = HpColors.text,
+    Color? color,
     double height = 1.05,
   }) =>
       GoogleFonts.interTight(
         fontSize: size,
         fontWeight: weight,
-        color: color,
+        color: color ?? HpColors.text,
         height: height,
         letterSpacing: size * -0.02, // -0.02em
       );
@@ -27,13 +27,13 @@ abstract final class HpType {
   static TextStyle body({
     required double size,
     FontWeight weight = FontWeight.w400,
-    Color color = HpColors.text2,
+    Color? color,
     double height = 1.5,
   }) =>
       GoogleFonts.inter(
         fontSize: size,
         fontWeight: weight,
-        color: color,
+        color: color ?? HpColors.text2,
         height: height,
       );
 
@@ -41,13 +41,13 @@ abstract final class HpType {
   static TextStyle mono({
     required double size,
     FontWeight weight = FontWeight.w500,
-    Color color = HpColors.text,
+    Color? color,
     double letterSpacing = -0.01,
   }) =>
       GoogleFonts.jetBrainsMono(
         fontSize: size,
         fontWeight: weight,
-        color: color,
+        color: color ?? HpColors.text,
         letterSpacing: letterSpacing,
         fontFeatures: const [FontFeature.tabularFigures()],
       );

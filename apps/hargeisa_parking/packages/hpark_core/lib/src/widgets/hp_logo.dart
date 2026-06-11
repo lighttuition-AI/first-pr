@@ -56,7 +56,7 @@ class HpWordmark extends StatelessWidget {
       children: [
         HpLogoMark(size: markSize),
         const SizedBox(width: 13),
-        const Column(
+        Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

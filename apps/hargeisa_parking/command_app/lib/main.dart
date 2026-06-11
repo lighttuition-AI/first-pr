@@ -9,6 +9,7 @@ import 'shell/command_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await hpTheme.load();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const HParkCommandApp());
 }
@@ -18,11 +19,16 @@ class HParkCommandApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'HPark Command',
-      debugShowCheckedModeBanner: false,
-      theme: HParkTheme.dark,
-      home: const CommandRoot(),
+    return ListenableBuilder(
+      listenable: hpTheme,
+      builder: (context, _) => MaterialApp(
+        title: 'HPark Command',
+        debugShowCheckedModeBanner: false,
+        theme: HParkTheme.light,
+        darkTheme: HParkTheme.dark,
+        themeMode: hpTheme.mode,
+        home: const CommandRoot(),
+      ),
     );
   }
 }

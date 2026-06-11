@@ -178,7 +178,7 @@ class _SidePanel extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(o.fullName, style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 13)),
+                        Text(o.fullName, style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 13)),
                         Text(districtById(o.assignedDistrictId)?.name ?? '—', style: HpType.body(size: 11.5, color: HpColors.textMuted)),
                       ],
                     ),

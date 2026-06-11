@@ -195,7 +195,7 @@ class _OfficerRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(officer.fullName,
-                    style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600)),
+                    style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600)),
                 Text(district?.name ?? 'Unassigned',
                     style: HpType.body(size: 12.5, color: HpColors.textMuted)),
               ],

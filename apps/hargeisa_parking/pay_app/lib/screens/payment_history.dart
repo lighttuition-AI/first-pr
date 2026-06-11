@@ -55,7 +55,7 @@ class PaymentHistoryScreen extends StatelessWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(c.violation, style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 14)),
+                                    Text(c.violation, style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 14)),
                                     Text('${c.id} · ${DateFormat('d MMM yyyy').format(c.issuedAt)}',
                                         style: HpType.body(size: 12, color: HpColors.textMuted)),
                                   ],

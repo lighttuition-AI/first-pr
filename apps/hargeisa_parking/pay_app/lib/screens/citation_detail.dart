@@ -41,7 +41,7 @@ class _CitationDetailScreenState extends State<CitationDetailScreen> {
           content: Row(children: [
             const Icon(Icons.check_circle, color: HpColors.success, size: 18),
             const SizedBox(width: HpSpace.x3),
-            Text('Paid ${slsh(c.amount)} via $method', style: const TextStyle(color: HpColors.text)),
+            Text('Paid ${slsh(c.amount)} via $method', style: TextStyle(color: HpColors.text)),
           ]),
         ),
       );
@@ -123,7 +123,7 @@ class _CitationDetailScreenState extends State<CitationDetailScreen> {
               if (c.status == CitationStatus.outstanding)
                 Container(
                   padding: const EdgeInsets.all(HpSpace.x5),
-                  decoration: const BoxDecoration(color: HpColors.surface, border: Border(top: BorderSide(color: HpColors.border))),
+                  decoration: BoxDecoration(color: HpColors.surface, border: Border(top: BorderSide(color: HpColors.border))),
                   child: Row(
                     children: [
                       HpButton(label: 'Challenge', variant: HpButtonVariant.ghost, size: HpButtonSize.lg, icon: Icons.videocam_outlined, onPressed: _appeal),

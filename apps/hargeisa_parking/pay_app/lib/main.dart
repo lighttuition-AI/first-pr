@@ -7,6 +7,7 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await hpTheme.load();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const HParkPayApp());
 }
@@ -16,11 +17,16 @@ class HParkPayApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'HPark Pay',
-      debugShowCheckedModeBanner: false,
-      theme: HParkTheme.dark,
-      home: const PayRoot(),
+    return ListenableBuilder(
+      listenable: hpTheme,
+      builder: (context, _) => MaterialApp(
+        title: 'HPark Pay',
+        debugShowCheckedModeBanner: false,
+        theme: HParkTheme.light,
+        darkTheme: HParkTheme.dark,
+        themeMode: hpTheme.mode,
+        home: const PayRoot(),
+      ),
     );
   }
 }
