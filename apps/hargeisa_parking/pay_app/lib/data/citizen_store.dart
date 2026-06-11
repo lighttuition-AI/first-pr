@@ -24,4 +24,18 @@ class CitizenStore {
   /// Save the citizen's vehicle plate (so HPark Pay can find their citations).
   Future<void> setPlate(String uid, String plate) =>
       _doc(uid).set({'plate': plate.trim().toUpperCase()}, SetOptions(merge: true));
+
+  /// Correct profile details a citizen can edit (e.g. a typo at sign-up).
+  Future<void> updateProfile(
+    String uid, {
+    String? nationalId,
+    DateTime? dateOfBirth,
+  }) {
+    final data = <String, dynamic>{};
+    if (nationalId != null) data['nationalId'] = nationalId.trim().toUpperCase();
+    if (dateOfBirth != null) {
+      data['dateOfBirth'] = dateOfBirth.millisecondsSinceEpoch;
+    }
+    return _doc(uid).set(data, SetOptions(merge: true));
+  }
 }

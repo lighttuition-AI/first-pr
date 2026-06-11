@@ -4,6 +4,10 @@
 <dict>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>HPark Enforce uses the camera to scan number plates and capture timestamped evidence of parking violations.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>HPark Enforce can attach a photo from your library as evidence of a parking violation.</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>

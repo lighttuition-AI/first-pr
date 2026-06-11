@@ -9,6 +9,7 @@ import '../models/pay_models.dart';
 import '../tabs/districts_tab.dart';
 import '../tabs/home_tab.dart';
 import '../tabs/profile_tab.dart';
+import 'appeals_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({
@@ -63,13 +64,56 @@ class _MainShellState extends State<MainShell> {
   }
 
   Future<void> _editPlate() async {
-    final plate = await _showPlateDialog(context, initial: _citizen.plate);
+    final plate = await _showTextDialog(
+      context,
+      title: 'Your vehicle plate',
+      blurb: 'Enter your number plate so we can show your citations.',
+      label: 'Number plate',
+      hint: 'HG-0000',
+      initial: _citizen.plate,
+    );
     if (plate == null) return;
     final clean = plate.trim().toUpperCase();
     await widget.store.setPlate(widget.uid, clean);
     if (!mounted) return;
     setState(() => _citizen = _citizen.copyWith(plate: clean));
     _listen();
+  }
+
+  Future<void> _editNationalId() async {
+    final value = await _showTextDialog(
+      context,
+      title: 'National ID',
+      blurb: 'Correct your Somaliland national ID if it was entered wrong.',
+      label: 'Somaliland national ID',
+      hint: 'SL-0000-0000',
+      initial: _citizen.nationalId,
+    );
+    if (value == null || value.trim().isEmpty) return;
+    final clean = value.trim().toUpperCase();
+    await widget.store.updateProfile(widget.uid, nationalId: clean);
+    if (!mounted) return;
+    setState(() => _citizen = _citizen.copyWith(nationalId: clean));
+  }
+
+  Future<void> _editDob() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _citizen.dateOfBirth,
+      firstDate: DateTime(1930),
+      lastDate: DateTime.now(),
+      builder: (context, child) => Theme(data: HParkTheme.dark, child: child!),
+    );
+    if (picked == null) return;
+    await widget.store.updateProfile(widget.uid, dateOfBirth: picked);
+    if (!mounted) return;
+    setState(() => _citizen = _citizen.copyWith(dateOfBirth: picked));
+  }
+
+  void _openAppeals() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => AppealsScreen(repo: _appeals, plate: _citizen.plate),
+    ));
   }
 
   @override
@@ -81,6 +125,7 @@ class _MainShellState extends State<MainShell> {
         repo: _citations,
         appeals: _appeals,
         onAddPlate: _editPlate,
+        onOpenProfile: () => setState(() => _index = 2),
       ),
       const DistrictsTab(),
       ProfileTab(
@@ -88,6 +133,9 @@ class _MainShellState extends State<MainShell> {
         citations: _list,
         onSignOut: widget.onSignOut,
         onEditPlate: _editPlate,
+        onEditNationalId: _editNationalId,
+        onEditDob: _editDob,
+        onOpenAppeals: _openAppeals,
       ),
     ];
 
@@ -104,27 +152,33 @@ class _MainShellState extends State<MainShell> {
   }
 }
 
-/// Small dialog to set / change the citizen's vehicle plate.
-Future<String?> _showPlateDialog(BuildContext context, {required String initial}) {
+/// Small reusable edit dialog (plate, national ID, …).
+Future<String?> _showTextDialog(
+  BuildContext context, {
+  required String title,
+  required String blurb,
+  required String label,
+  required String hint,
+  required String initial,
+}) {
   final ctrl = TextEditingController(text: initial);
   return showDialog<String>(
     context: context,
     builder: (_) => AlertDialog(
       backgroundColor: HpColors.elevated,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(HpRadius.xl)),
-      title: Text('Your vehicle plate', style: HpType.heading(size: 18)),
+      title: Text(title, style: HpType.heading(size: 18)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Enter your number plate so we can show your citations.',
-              style: HpType.body(size: 13.5)),
+          Text(blurb, style: HpType.body(size: 13.5)),
           const SizedBox(height: HpSpace.x4),
           HpInput(
             controller: ctrl,
-            label: 'Number plate',
-            hint: 'HG-0000',
-            icon: Icons.pin_outlined,
+            label: label,
+            hint: hint,
+            icon: Icons.edit_outlined,
             mono: true,
             textCapitalization: TextCapitalization.characters,
           ),
@@ -134,7 +188,7 @@ Future<String?> _showPlateDialog(BuildContext context, {required String initial}
         HpButton(label: 'Cancel', variant: HpButtonVariant.ghost, onPressed: () => Navigator.pop(context)),
         HpButton(
           label: 'Save',
-          onPressed: () => Navigator.pop(context, ctrl.text.trim().toUpperCase()),
+          onPressed: () => Navigator.pop(context, ctrl.text),
         ),
       ],
     ),

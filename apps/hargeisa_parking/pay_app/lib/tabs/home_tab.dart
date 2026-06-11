@@ -15,6 +15,7 @@ class HomeTab extends StatelessWidget {
     required this.repo,
     required this.appeals,
     required this.onAddPlate,
+    required this.onOpenProfile,
   });
 
   final Citizen citizen;
@@ -24,6 +25,9 @@ class HomeTab extends StatelessWidget {
 
   /// Prompt the citizen to set their vehicle plate (so their citations load).
   final VoidCallback onAddPlate;
+
+  /// Open the Profile tab (tapping the avatar).
+  final VoidCallback onOpenProfile;
 
   int get _outstanding => citations
       .where((c) => c.status == CitationStatus.outstanding)
@@ -83,7 +87,11 @@ class HomeTab extends StatelessWidget {
                 ],
               ),
             ),
-            HpAvatar(initials: citizen.initials, size: 44),
+            GestureDetector(
+              onTap: onOpenProfile,
+              behavior: HitTestBehavior.opaque,
+              child: HpAvatar(initials: citizen.initials, size: 44),
+            ),
           ],
         ),
         const SizedBox(height: HpSpace.x5),

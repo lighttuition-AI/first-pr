@@ -27,10 +27,15 @@ class Citizen {
     return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
   }
 
-  Citizen copyWith({String? plate}) => Citizen(
+  Citizen copyWith({
+    String? nationalId,
+    DateTime? dateOfBirth,
+    String? plate,
+  }) =>
+      Citizen(
         fullName: fullName,
-        nationalId: nationalId,
-        dateOfBirth: dateOfBirth,
+        nationalId: nationalId ?? this.nationalId,
+        dateOfBirth: dateOfBirth ?? this.dateOfBirth,
         email: email,
         plate: plate ?? this.plate,
       );

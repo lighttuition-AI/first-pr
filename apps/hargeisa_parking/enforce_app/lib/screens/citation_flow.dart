@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../state/shift_state.dart';
@@ -36,6 +37,9 @@ class _CitationFlowState extends State<CitationFlow> {
 
   List<String> _knownPlates = [];
   bool _looking = false;
+  bool _platePhoto = false; // a plate photo was captured on the scan screen
+
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -78,6 +82,42 @@ class _CitationFlowState extends State<CitationFlow> {
     if (_knownPlates.isEmpty) return;
     _plateCtrl.text = _knownPlates[Random().nextInt(_knownPlates.length)];
     _lookup();
+  }
+
+  /// Open the real device camera to photograph the plate. The shot is kept as
+  /// the first piece of evidence; the officer then confirms the plate number
+  /// (automatic plate reading / OCR is a planned follow-up).
+  Future<void> _scanWithCamera() async {
+    try {
+      final shot = await _picker.pickImage(source: ImageSource.camera, maxWidth: 1600);
+      if (shot == null || !mounted) return; // cancelled
+      setState(() {
+        _platePhoto = true;
+        if (_photos == 0) _photos = 1; // count the plate photo as evidence
+      });
+    } catch (_) {
+      if (mounted) _toast('Camera unavailable on this device.');
+    }
+  }
+
+  /// Capture a timestamped evidence photo with the real camera.
+  Future<void> _captureEvidence() async {
+    try {
+      final shot = await _picker.pickImage(source: ImageSource.camera, maxWidth: 1600);
+      if (shot != null && mounted) setState(() => _photos++);
+    } catch (_) {
+      if (mounted) _toast('Camera unavailable on this device.');
+    }
+  }
+
+  void _toast(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: HpColors.elevated,
+        content: Text(message, style: const TextStyle(color: HpColors.text)),
+      ),
+    );
   }
 
   void _issue() {
@@ -127,9 +167,11 @@ class _CitationFlowState extends State<CitationFlow> {
         _Step.scan => _ScanStep(
             controller: _plateCtrl,
             onLookup: _lookup,
+            onScanCamera: _scanWithCamera,
             onSimulate: _simulateLpr,
             knownPlates: _knownPlates,
             looking: _looking,
+            platePhoto: _platePhoto,
           ),
         _Step.notFound => _NotFoundStep(
             plate: _plate,
@@ -149,7 +191,7 @@ class _CitationFlowState extends State<CitationFlow> {
         _Step.evidence => _EvidenceStep(
             photos: _photos,
             video: _video,
-            onPhoto: () => setState(() => _photos++),
+            onPhoto: _captureEvidence,
             onVideo: () => setState(() => _video = !_video),
             onReview: _photos == 0 ? null : () => setState(() => _step = _Step.review),
           ),
@@ -202,15 +244,19 @@ class _ScanStep extends StatelessWidget {
   const _ScanStep({
     required this.controller,
     required this.onLookup,
+    required this.onScanCamera,
     required this.onSimulate,
     required this.knownPlates,
     required this.looking,
+    required this.platePhoto,
   });
   final TextEditingController controller;
   final VoidCallback onLookup;
+  final VoidCallback onScanCamera;
   final VoidCallback onSimulate;
   final List<String> knownPlates;
   final bool looking;
+  final bool platePhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -220,43 +266,64 @@ class _ScanStep extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.all(HpSpace.x5),
             children: [
-              AspectRatio(
-                aspectRatio: 1.5,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.black,
-                    borderRadius: BorderRadius.circular(HpRadius.xl),
-                    border: Border.all(color: HpColors.border),
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Icon(Icons.directions_car_outlined, size: 64, color: Colors.white.withValues(alpha: 0.15)),
-                      Container(
-                        width: 180,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: HpColors.teal, width: 2),
-                          borderRadius: BorderRadius.circular(HpRadius.sm),
+              GestureDetector(
+                onTap: onScanCamera,
+                child: AspectRatio(
+                  aspectRatio: 1.5,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(HpRadius.xl),
+                      border: Border.all(
+                          color: platePhoto ? HpColors.success : HpColors.border),
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Icon(
+                          platePhoto ? Icons.check_circle_outline : Icons.directions_car_outlined,
+                          size: 64,
+                          color: (platePhoto ? HpColors.success : Colors.white)
+                              .withValues(alpha: platePhoto ? 0.9 : 0.15),
                         ),
-                      ),
-                      Positioned(
-                        bottom: 14,
-                        child: Text('Point at a number plate',
-                            style: HpType.body(size: 12.5, color: Colors.white70)),
-                      ),
-                    ],
+                        if (!platePhoto)
+                          Container(
+                            width: 180,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              border: Border.all(color: HpColors.teal, width: 2),
+                              borderRadius: BorderRadius.circular(HpRadius.sm),
+                            ),
+                          ),
+                        Positioned(
+                          bottom: 14,
+                          child: Text(
+                              platePhoto ? 'Plate photo captured' : 'Tap to scan with the camera',
+                              style: HpType.body(size: 12.5, color: Colors.white70)),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
               const SizedBox(height: HpSpace.x4),
               HpButton(
-                label: 'Simulate LPR scan',
-                icon: Icons.center_focus_strong_outlined,
+                label: 'Scan with camera',
+                icon: Icons.photo_camera_outlined,
                 size: HpButtonSize.lg,
                 expand: true,
-                onPressed: knownPlates.isEmpty ? null : onSimulate,
+                onPressed: onScanCamera,
               ),
+              if (knownPlates.isNotEmpty) ...[
+                const SizedBox(height: HpSpace.x3),
+                HpButton(
+                  label: 'Use a sample plate (demo)',
+                  variant: HpButtonVariant.ghost,
+                  icon: Icons.bolt_outlined,
+                  expand: true,
+                  onPressed: onSimulate,
+                ),
+              ],
               const SizedBox(height: HpSpace.x5),
               Row(children: [
                 const Expanded(child: Divider()),
