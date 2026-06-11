@@ -13,6 +13,7 @@ import '../models/animals.dart';
 import '../models/content.dart';
 import '../models/produce.dart';
 import '../theme/tokens.dart';
+import '../services/analytics.dart';
 import '../services/vo_service.dart';
 
 const _saveKey = 'hnl-save-v1';
@@ -439,6 +440,7 @@ class AppState extends ChangeNotifier {
   }
 
   void startGame(String id) {
+    Analytics.gameStart(id);
     final g = gameById(id);
     // The produce quiz builds a fresh shuffled session before the shell shows it.
     if (g.type == GameType.produceQuiz) startProduce(g.topic);
