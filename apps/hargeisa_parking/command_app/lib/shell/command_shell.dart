@@ -49,8 +49,11 @@ class _CommandShellState extends State<CommandShell> {
 
   final FirebaseAppealRepository _appealRepo = FirebaseAppealRepository();
   final FirebaseCitationRepository _citationRepo = FirebaseCitationRepository();
+  final FirebaseVehicleRepository _vehicleRepo = FirebaseVehicleRepository();
   List<Appeal> appeals = [];
+  List<Citation> citations = [];
   StreamSubscription<List<Appeal>>? _appealSub;
+  StreamSubscription<List<Citation>>? _citationSub;
 
   CommandPage _page = CommandPage.dashboard;
 
@@ -60,11 +63,15 @@ class _CommandShellState extends State<CommandShell> {
     _appealSub = _appealRepo.watchAll().listen((list) {
       if (mounted) setState(() => appeals = list);
     }, onError: (_) {});
+    _citationSub = _citationRepo.watchAll().listen((list) {
+      if (mounted) setState(() => citations = list);
+    }, onError: (_) {});
   }
 
   @override
   void dispose() {
     _appealSub?.cancel();
+    _citationSub?.cancel();
     super.dispose();
   }
 
@@ -85,17 +92,17 @@ class _CommandShellState extends State<CommandShell> {
   Widget _buildPage() {
     switch (_page) {
       case CommandPage.dashboard:
-        return DashboardPage(repo: repo, onSeeApprovals: () => _go(CommandPage.approvals));
+        return DashboardPage(repo: repo, citations: citations, onSeeApprovals: () => _go(CommandPage.approvals));
       case CommandPage.approvals:
         return ApprovalsPage(repo: repo, adminName: widget.adminName);
       case CommandPage.officers:
         return OfficersPage(repo: repo);
       case CommandPage.vehicles:
-        return const VehicleImportPage();
+        return VehicleImportPage(vehicles: _vehicleRepo);
       case CommandPage.zones:
-        return const ZonesPage();
+        return ZonesPage(repo: repo, citations: citations);
       case CommandPage.liveMap:
-        return LiveMapPage(repo: repo);
+        return LiveMapPage(repo: repo, citations: citations);
       case CommandPage.appeals:
         return AppealsReviewPage(
           appeals: appeals,
@@ -103,7 +110,7 @@ class _CommandShellState extends State<CommandShell> {
           onDecide: _decideAppeal,
         );
       case CommandPage.reports:
-        return const ReportsPage();
+        return ReportsPage(citations: citations);
     }
   }
 

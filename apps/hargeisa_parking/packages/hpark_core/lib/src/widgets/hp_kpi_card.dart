@@ -29,21 +29,21 @@ class HpKpiCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final deltaColor = deltaUp ? HpColors.success : HpColors.danger;
     return HpCard(
-      padding: const EdgeInsets.all(HpSpace.x5),
+      padding: const EdgeInsets.all(HpSpace.x4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Expanded(child: Text(label.toUpperCase(), style: HpType.eyebrow)),
+              Expanded(child: Text(label.toUpperCase(), style: HpType.eyebrow, maxLines: 1, overflow: TextOverflow.ellipsis)),
               if (icon != null) Icon(icon, size: 18, color: accent),
             ],
           ),
-          const SizedBox(height: HpSpace.x3),
-          Text(value, style: HpType.mono(size: 28, weight: FontWeight.w700)),
+          const SizedBox(height: HpSpace.x2),
+          Text(value, style: HpType.mono(size: 26, weight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
           if (delta != null) ...[
-            const SizedBox(height: HpSpace.x2),
+            const SizedBox(height: 6),
             Row(
               children: [
                 Icon(

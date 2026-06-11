@@ -1,26 +1,131 @@
+import 'dart:convert';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
+import 'package:hpark_firebase/hpark_firebase.dart';
 
-/// Bulk vehicle-data import (Excel / CSV / Google Sheets) with a dedupe preview:
-/// incoming rows are checked against the database and split into new / updated /
-/// unchanged / conflicts before the admin commits the import.
+/// Real bulk vehicle-data import. Pick a CSV, it's parsed and deduped against
+/// the live Firestore registry, and committed to `vehicles/{plate}` — the same
+/// records an officer's plate lookup in HPark Enforce reads.
+///
+/// CSV columns (a header row is detected + skipped):
+///   plate, ownerName, ownerNationalId, make, color, permitStatus,
+///   outstandingCount, outstandingTotal
+/// permitStatus = valid | expired | none.
 class VehicleImportPage extends StatefulWidget {
-  const VehicleImportPage({super.key});
+  const VehicleImportPage({super.key, required this.vehicles});
+
+  final FirebaseVehicleRepository vehicles;
 
   @override
   State<VehicleImportPage> createState() => _VehicleImportPageState();
 }
 
 class _VehicleImportPageState extends State<VehicleImportPage> {
-  bool _uploaded = false;
+  String? _fileName;
+  List<Vehicle> _parsed = [];
+  Set<String> _existingPlates = {};
+  bool _busy = false;
+  String? _error;
 
-  static final _preview = <(String, String, Color, Color)>[
-    ('HG-9001', 'New', HpColors.success, HpColors.successTint),
-    ('HG-4821', 'Updated · owner changed', HpColors.warning, HpColors.warningTint),
-    ('HG-1190', 'Unchanged', HpColors.textMuted, HpColors.overlay),
-    ('HG-7732', 'Conflict · two owners', HpColors.danger, HpColors.dangerTint),
-    ('HG-5540', 'New', HpColors.success, HpColors.successTint),
-  ];
+  int get _newCount => _parsed.where((v) => !_existingPlates.contains(v.plate)).length;
+  int get _updateCount => _parsed.where((v) => _existingPlates.contains(v.plate)).length;
+
+  Future<void> _pickFile() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+        withData: true,
+      );
+      if (result == null) {
+        setState(() => _busy = false);
+        return; // cancelled
+      }
+      final bytes = result.files.first.bytes;
+      if (bytes == null) throw 'Could not read the file.';
+      final parsed = _parseCsv(utf8.decode(bytes, allowMalformed: true));
+      if (parsed.isEmpty) throw 'No vehicle rows found. Check the column order.';
+      final existing = await widget.vehicles.all();
+      if (!mounted) return;
+      setState(() {
+        _fileName = result.files.first.name;
+        _parsed = parsed;
+        _existingPlates = existing.map((v) => v.plate.toUpperCase()).toSet();
+        _busy = false;
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = e.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    }
+  }
+
+  Future<void> _import() async {
+    setState(() => _busy = true);
+    var written = 0;
+    for (final v in _parsed) {
+      try {
+        await widget.vehicles.upsert(v);
+        written++;
+      } catch (_) {/* skip a bad row, keep going */}
+    }
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _fileName = null;
+      _parsed = [];
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: HpColors.elevated,
+        content: Row(children: [
+          const Icon(Icons.check_circle, color: HpColors.success, size: 18),
+          const SizedBox(width: HpSpace.x3),
+          Text('Imported $written vehicle${written == 1 ? '' : 's'} to the registry',
+              style: TextStyle(color: HpColors.text)),
+        ]),
+      ),
+    );
+  }
+
+  List<Vehicle> _parseCsv(String content) {
+    final lines = content.split(RegExp(r'\r?\n')).where((l) => l.trim().isNotEmpty).toList();
+    if (lines.isEmpty) return [];
+    var start = 0;
+    if (lines.first.toLowerCase().contains('plate')) start = 1; // skip header
+    final out = <Vehicle>[];
+    for (var i = start; i < lines.length; i++) {
+      final cols = lines[i].split(',').map((s) => s.trim()).toList();
+      if (cols.isEmpty || cols.first.isEmpty) continue;
+      String at(int j) => j < cols.length ? cols[j] : '';
+      final permit = at(5).toLowerCase();
+      out.add(Vehicle(
+        plate: at(0).toUpperCase(),
+        ownerName: at(1),
+        ownerNationalId: at(2),
+        make: at(3),
+        color: at(4),
+        permitStatus: permit == 'valid'
+            ? PermitStatus.valid
+            : permit == 'expired'
+                ? PermitStatus.expired
+                : PermitStatus.none,
+        outstandingCount: int.tryParse(at(6)) ?? 0,
+        outstandingTotal: int.tryParse(at(7)) ?? 0,
+      ));
+    }
+    return out;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,11 +134,11 @@ class _VehicleImportPageState extends State<VehicleImportPage> {
       children: [
         Text('Vehicle data', style: HpType.heading(size: 18)),
         const SizedBox(height: HpSpace.x2),
-        Text('Upload the licence-plate database from Excel, CSV or Google Sheets. '
-            'New records are added; changes update existing ones; conflicts are flagged for review.',
+        Text('Upload the licence-plate registry as a CSV. New plates are added; '
+            'existing plates are updated. Officers look these up in HPark Enforce.',
             style: HpType.body(size: 13.5)),
         const SizedBox(height: HpSpace.x6),
-        if (!_uploaded) _uploadCard() else _previewSection(),
+        if (_parsed.isEmpty) _uploadCard() else _previewSection(),
       ],
     );
   }
@@ -51,19 +156,26 @@ class _VehicleImportPageState extends State<VehicleImportPage> {
           const SizedBox(height: HpSpace.x4),
           Text('Upload vehicle data', style: HpType.heading(size: 18)),
           const SizedBox(height: HpSpace.x2),
-          Text('.xlsx · .csv · Google Sheets link', style: HpType.body(size: 13)),
+          Text('CSV: plate, ownerName, ownerNationalId, make, color, permitStatus, outstandingCount, outstandingTotal',
+              textAlign: TextAlign.center, style: HpType.body(size: 12.5, color: HpColors.textMuted)),
           const SizedBox(height: HpSpace.x5),
           HpButton(
-            label: 'Choose file',
+            label: 'Choose CSV file',
             icon: Icons.folder_open_outlined,
-            onPressed: () => setState(() => _uploaded = true),
+            loading: _busy,
+            onPressed: _busy ? null : _pickFile,
           ),
+          if (_error != null) ...[
+            const SizedBox(height: HpSpace.x4),
+            Text(_error!, style: HpType.body(size: 13, color: HpColors.danger)),
+          ],
         ],
       ),
     );
   }
 
   Widget _previewSection() {
+    final preview = _parsed.take(8).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -77,31 +189,30 @@ class _VehicleImportPageState extends State<VehicleImportPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('hargeisa-vehicles.xlsx', style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600)),
-                  Text('1,248 rows parsed', style: HpType.body(size: 12.5, color: HpColors.textMuted)),
+                  Text(_fileName ?? 'data.csv', style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600)),
+                  Text('${_parsed.length} rows parsed', style: HpType.body(size: 12.5, color: HpColors.textMuted)),
                 ],
               ),
             ),
-            HpButton(label: 'Replace', variant: HpButtonVariant.ghost, size: HpButtonSize.sm, onPressed: () => setState(() => _uploaded = false)),
+            HpButton(label: 'Replace', variant: HpButtonVariant.ghost, size: HpButtonSize.sm, onPressed: () => setState(() => _parsed = [])),
           ]),
         ),
         const SizedBox(height: HpSpace.x5),
-        Text('Dedupe preview', style: HpType.heading(size: 16)),
+        Text('Preview', style: HpType.heading(size: 16)),
         const SizedBox(height: HpSpace.x3),
         LayoutBuilder(builder: (context, c) {
-          final cols = c.maxWidth > 720 ? 4 : 2;
+          final cols = c.maxWidth > 720 ? 3 : 2;
           return GridView.count(
             crossAxisCount: cols,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisSpacing: HpSpace.x4,
             mainAxisSpacing: HpSpace.x4,
-            childAspectRatio: 2.0,
-            children: const [
-              HpKpiCard(label: 'New', value: '312', icon: Icons.add_circle_outline, accent: HpColors.success),
-              HpKpiCard(label: 'Updated', value: '86', icon: Icons.sync, accent: HpColors.warning),
-              HpKpiCard(label: 'Unchanged', value: '842', icon: Icons.remove_circle_outline),
-              HpKpiCard(label: 'Conflicts', value: '8', icon: Icons.error_outline, accent: HpColors.danger),
+            childAspectRatio: 2.4,
+            children: [
+              HpKpiCard(label: 'New', value: '$_newCount', icon: Icons.add_circle_outline, accent: HpColors.success),
+              HpKpiCard(label: 'Updated', value: '$_updateCount', icon: Icons.sync, accent: HpColors.warning),
+              HpKpiCard(label: 'Total rows', value: '${_parsed.length}', icon: Icons.directions_car_outlined),
             ],
           );
         }),
@@ -110,44 +221,38 @@ class _VehicleImportPageState extends State<VehicleImportPage> {
           padding: EdgeInsets.zero,
           child: Column(
             children: [
-              for (var i = 0; i < _preview.length; i++) ...[
+              for (var i = 0; i < preview.length; i++) ...[
                 if (i > 0) const Divider(height: 1),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: HpSpace.x5, vertical: HpSpace.x4),
                   child: Row(children: [
-                    Text(_preview[i].$1, style: HpType.mono(size: 14, weight: FontWeight.w700)),
-                    const Spacer(),
-                    HpBadge(label: _preview[i].$2, color: _preview[i].$3, tint: _preview[i].$4),
+                    Text(preview[i].plate, style: HpType.mono(size: 14, weight: FontWeight.w700)),
+                    const SizedBox(width: HpSpace.x4),
+                    Expanded(child: Text('${preview[i].ownerName} · ${preview[i].make}', style: HpType.body(size: 13, color: HpColors.text2), overflow: TextOverflow.ellipsis)),
+                    HpBadge(
+                      label: _existingPlates.contains(preview[i].plate) ? 'Update' : 'New',
+                      color: _existingPlates.contains(preview[i].plate) ? HpColors.warning : HpColors.success,
+                      tint: _existingPlates.contains(preview[i].plate) ? HpColors.warningTint : HpColors.successTint,
+                    ),
                   ]),
                 ),
               ],
+              if (_parsed.length > preview.length)
+                Padding(
+                  padding: const EdgeInsets.all(HpSpace.x4),
+                  child: Text('+ ${_parsed.length - preview.length} more', style: HpType.body(size: 12.5, color: HpColors.textMuted)),
+                ),
             ],
           ),
         ),
         const SizedBox(height: HpSpace.x5),
-        Row(children: [
-          HpButton(
-            label: 'Import 398 records',
-            icon: Icons.check_rounded,
-            size: HpButtonSize.lg,
-            onPressed: () {
-              setState(() => _uploaded = false);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: HpColors.elevated,
-                  content: Row(children: [
-                    Icon(Icons.check_circle, color: HpColors.success, size: 18),
-                    SizedBox(width: HpSpace.x3),
-                    Text('Imported 398 records · 8 conflicts skipped', style: TextStyle(color: HpColors.text)),
-                  ]),
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: HpSpace.x3),
-          Text('8 conflicts need manual review', style: HpType.body(size: 13, color: HpColors.danger)),
-        ]),
+        HpButton(
+          label: 'Import ${_parsed.length} record${_parsed.length == 1 ? '' : 's'}',
+          icon: Icons.check_rounded,
+          size: HpButtonSize.lg,
+          loading: _busy,
+          onPressed: _busy ? null : _import,
+        ),
       ],
     );
   }
