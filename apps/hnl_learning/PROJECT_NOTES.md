@@ -187,12 +187,16 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   small `hnl-save-v1` blob (profiles+progress), Storage for media (recordings = files; images/gifs
   = base64 in prefs → upload decoded). Restore ONLY when local is empty (fresh install) so it can
   never harm on-device data. **Security rules are written + ready** (`firestore.rules`,
-  `storage.rules`, wired in `firebase.json`: own-uid-only). **Two hard blockers (only the owner can
-  clear):** (a) **enable Cloud Firestore + Storage in the console** — neither is enabled yet (CLI
-  403, no gcloud); (b) **anonymous auth does NOT survive an app reinstall** (new uid each install),
-  so true cross-device/reinstall restore needs a **Parent Sign-In (Apple/Google)** behind the gate —
-  a real feature (Apple entitlement + device testing). Until both are cleared, the sync code is
-  intentionally NOT shipped (would be unverifiable).
+  `storage.rules`, wired in `firebase.json`: own-uid-only). **Backend state (2026-06-11):**
+  ✅ **Cloud Firestore is ENABLED and `firestore.rules` is DEPLOYED** to the `(default)` db
+  (`firebase deploy --only firestore:rules`) — so the **profiles+progress sync is buildable now**.
+  ⛔ **Cloud Storage NOT enabled** (needs the Blaze plan; owner has no card on hand) → media backup
+  (recordings/photos) is deferred; deploy `storage.rules` once it's on. ⛔ **Parent Sign-In still
+  needed** — anonymous auth gets a new uid each reinstall, so cross-device/reinstall restore requires
+  an Apple/Google login behind the gate (Apple entitlement + device testing). So the **next sync
+  round** can build the Firestore profiles/progress mirror (anon-auth, non-destructive) immediately;
+  media + true cross-device wait on Storage(Blaze) + Sign-In. Sync code not shipped yet (unverifiable
+  end-to-end without sign-in).
 - **Android build still not verified** (gradle is Firebase-ready; needs an emulator run for Play).
 
 ## Gotchas / decisions (don't re-trip these)
