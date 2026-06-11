@@ -71,7 +71,7 @@ class AppealsReviewPage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('${decided[i].plate} · ${decided[i].violation}',
-                                style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600)),
+                                style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600)),
                             Text(decided[i].id, style: HpType.mono(size: 12, color: HpColors.textMuted)),
                           ],
                         ),
@@ -181,7 +181,7 @@ class _AppealCard extends StatelessWidget {
                   Text(DateFormat('d MMM, HH:mm').format(appeal.submittedAt), style: HpType.body(size: 12, color: HpColors.textMuted)),
                 ]),
                 const SizedBox(height: 4),
-                Text(appeal.violation, style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
+                Text(appeal.violation, style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
                 const SizedBox(height: 4),
                 Text('"${appeal.reason}"', style: HpType.body(size: 13)),
                 const SizedBox(height: HpSpace.x4),

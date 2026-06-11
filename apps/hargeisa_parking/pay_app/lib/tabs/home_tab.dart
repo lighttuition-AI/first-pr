@@ -49,7 +49,7 @@ class HomeTab extends StatelessWidget {
           content: Row(children: [
             const Icon(Icons.check_circle, color: HpColors.success, size: 18),
             const SizedBox(width: HpSpace.x3),
-            Text('Paid ${slsh(amount)} via $method', style: const TextStyle(color: HpColors.text)),
+            Text('Paid ${slsh(amount)} via $method', style: TextStyle(color: HpColors.text)),
           ]),
         ),
       );
@@ -239,7 +239,7 @@ class _CitationCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: HpSpace.x3),
-          Text(citation.violation, style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
+          Text(citation.violation, style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
           const SizedBox(height: 4),
           Text('${citation.districtName} · ${citation.id}', style: HpType.body(size: 12.5, color: HpColors.textMuted)),
           const SizedBox(height: HpSpace.x3),
@@ -247,7 +247,7 @@ class _CitationCard extends StatelessWidget {
             children: [
               Text(slsh(citation.amount), style: HpType.mono(size: 18, weight: FontWeight.w700, color: HpColors.text)),
               const Spacer(),
-              const Icon(Icons.chevron_right, color: HpColors.textMuted, size: 20),
+              Icon(Icons.chevron_right, color: HpColors.textMuted, size: 20),
             ],
           ),
         ],

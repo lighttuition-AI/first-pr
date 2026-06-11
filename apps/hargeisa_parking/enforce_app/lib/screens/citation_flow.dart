@@ -115,7 +115,7 @@ class _CitationFlowState extends State<CitationFlow> {
       SnackBar(
         behavior: SnackBarBehavior.floating,
         backgroundColor: HpColors.elevated,
-        content: Text(message, style: const TextStyle(color: HpColors.text)),
+        content: Text(message, style: TextStyle(color: HpColors.text)),
       ),
     );
   }
@@ -231,7 +231,7 @@ class _ActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(HpSpace.x5),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: HpColors.surface,
         border: Border(top: BorderSide(color: HpColors.border)),
       ),
@@ -529,7 +529,7 @@ class _ViolationStep extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(v.label, style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
+                              Text(v.label, style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
                               Text(v.code, style: HpType.mono(size: 12, color: HpColors.textMuted)),
                             ],
                           ),
@@ -591,7 +591,7 @@ class _EvidenceStep extends StatelessWidget {
               ),
               const SizedBox(height: HpSpace.x4),
               Row(children: [
-                const Icon(Icons.lock_clock_outlined, size: 16, color: HpColors.textMuted),
+                Icon(Icons.lock_clock_outlined, size: 16, color: HpColors.textMuted),
                 const SizedBox(width: HpSpace.x2),
                 Expanded(child: Text('Each capture is locked with location and timestamp.', style: HpType.body(size: 12.5, color: HpColors.textMuted))),
               ]),
@@ -635,7 +635,7 @@ class _CaptureTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
+                Text(title, style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
                 Text(detail, style: HpType.body(size: 12.5, color: captured ? HpColors.text2 : HpColors.textMuted)),
               ],
             ),

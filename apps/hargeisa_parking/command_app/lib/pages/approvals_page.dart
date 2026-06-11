@@ -99,7 +99,7 @@ class ApprovalsPage extends StatelessWidget {
           children: [
             Icon(Icons.circle, size: 10, color: color),
             const SizedBox(width: HpSpace.x3),
-            Expanded(child: Text(msg, style: const TextStyle(color: HpColors.text))),
+            Expanded(child: Text(msg, style: TextStyle(color: HpColors.text))),
           ],
         ),
       ),
@@ -279,7 +279,7 @@ class _ReviewedRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(officer.fullName,
-                    style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600)),
+                    style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600)),
                 Text(
                   district != null ? 'Assigned · ${district.name}' : officer.badgeNumber,
                   style: HpType.body(size: 12.5, color: HpColors.textMuted),
@@ -380,8 +380,8 @@ class _ApproveDialogState extends State<_ApproveDialog> {
                   value: _districtId,
                   isExpanded: true,
                   dropdownColor: HpColors.elevated,
-                  icon: const Icon(Icons.expand_more, color: HpColors.textMuted),
-                  style: const TextStyle(color: HpColors.text, fontSize: 15),
+                  icon: Icon(Icons.expand_more, color: HpColors.textMuted),
+                  style: TextStyle(color: HpColors.text, fontSize: 15),
                   items: [
                     for (final d in kHargeisaDistricts)
                       DropdownMenuItem(value: d.id, child: Text(d.name)),

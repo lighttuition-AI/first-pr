@@ -12,8 +12,8 @@ class HpCard extends StatefulWidget {
     this.padding = const EdgeInsets.all(HpSpace.x5),
     this.onTap,
     this.radius = HpRadius.lg,
-    this.color = HpColors.surface,
-    this.borderColor = HpColors.border,
+    this.color,
+    this.borderColor,
     this.selected = false,
   });
 
@@ -21,8 +21,8 @@ class HpCard extends StatefulWidget {
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
   final double radius;
-  final Color color;
-  final Color borderColor;
+  final Color? color;
+  final Color? borderColor;
   final bool selected;
 
   @override
@@ -38,7 +38,7 @@ class _HpCardState extends State<HpCard> {
     final lifted = interactive && _hover;
     final border = widget.selected
         ? HpColors.borderFocus
-        : (lifted ? HpColors.borderFocus : widget.borderColor);
+        : (lifted ? HpColors.borderFocus : (widget.borderColor ?? HpColors.border));
 
     final content = AnimatedContainer(
       duration: const Duration(milliseconds: 160),
@@ -46,7 +46,7 @@ class _HpCardState extends State<HpCard> {
       transform: Matrix4.translationValues(0, lifted ? -2 : 0, 0),
       padding: widget.padding,
       decoration: BoxDecoration(
-        color: widget.color,
+        color: widget.color ?? HpColors.surface,
         borderRadius: BorderRadius.circular(widget.radius),
         border: Border.all(color: border, width: 1),
         boxShadow: (lifted || widget.selected)

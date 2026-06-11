@@ -14,7 +14,7 @@ class VehicleImportPage extends StatefulWidget {
 class _VehicleImportPageState extends State<VehicleImportPage> {
   bool _uploaded = false;
 
-  static const _preview = <(String, String, Color, Color)>[
+  static final _preview = <(String, String, Color, Color)>[
     ('HG-9001', 'New', HpColors.success, HpColors.successTint),
     ('HG-4821', 'Updated · owner changed', HpColors.warning, HpColors.warningTint),
     ('HG-1190', 'Unchanged', HpColors.textMuted, HpColors.overlay),
@@ -77,7 +77,7 @@ class _VehicleImportPageState extends State<VehicleImportPage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('hargeisa-vehicles.xlsx', style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600)),
+                  Text('hargeisa-vehicles.xlsx', style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600)),
                   Text('1,248 rows parsed', style: HpType.body(size: 12.5, color: HpColors.textMuted)),
                 ],
               ),
@@ -136,7 +136,7 @@ class _VehicleImportPageState extends State<VehicleImportPage> {
                 SnackBar(
                   behavior: SnackBarBehavior.floating,
                   backgroundColor: HpColors.elevated,
-                  content: Row(children: const [
+                  content: Row(children: [
                     Icon(Icons.check_circle, color: HpColors.success, size: 18),
                     SizedBox(width: HpSpace.x3),
                     Text('Imported 398 records · 8 conflicts skipped', style: TextStyle(color: HpColors.text)),

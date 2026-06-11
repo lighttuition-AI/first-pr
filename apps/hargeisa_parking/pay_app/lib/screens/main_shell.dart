@@ -212,7 +212,7 @@ class _BottomNav extends StatelessWidget {
     return Container(
       height: HpSize.bottomNav + MediaQuery.of(context).padding.bottom,
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: HpColors.surface,
         border: Border(top: BorderSide(color: HpColors.border)),
       ),

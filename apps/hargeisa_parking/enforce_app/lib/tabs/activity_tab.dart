@@ -38,7 +38,7 @@ class ActivityTab extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.inbox_outlined, size: 36, color: HpColors.textMuted),
+                  Icon(Icons.inbox_outlined, size: 36, color: HpColors.textMuted),
                   const SizedBox(height: HpSpace.x3),
                   Text('No citations yet', style: HpType.heading(size: 16)),
                   const SizedBox(height: 4),
@@ -83,7 +83,7 @@ class _CitationRow extends StatelessWidget {
             ],
           ),
           const SizedBox(height: HpSpace.x3),
-          Text(citation.violation, style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
+          Text(citation.violation, style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
           const SizedBox(height: 4),
           Text('${citation.id} · ${DateFormat('HH:mm').format(citation.issuedAt)} · ${citation.photoCount} photo${citation.photoCount == 1 ? '' : 's'}${citation.hasVideo ? ' · video' : ''}',
               style: HpType.body(size: 12.5, color: HpColors.textMuted)),

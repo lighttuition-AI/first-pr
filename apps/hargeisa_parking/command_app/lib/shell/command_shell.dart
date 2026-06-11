@@ -179,7 +179,7 @@ class _Sidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: HpSize.sidebar,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: HpColors.surface,
         border: Border(right: BorderSide(color: HpColors.border)),
       ),
@@ -219,16 +219,22 @@ class _Sidebar extends StatelessWidget {
                       Text(adminName,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 14)),
-                      const Text('City operations',
+                          style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 14)),
+                      Text('City operations',
                           style: TextStyle(color: HpColors.textMuted, fontSize: 12)),
                     ],
                   ),
                 ),
                 IconButton(
+                  tooltip: hpTheme.isDark ? 'Switch to light' : 'Switch to dark',
+                  onPressed: () => hpTheme.toggle(),
+                  icon: Icon(hpTheme.isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                      color: HpColors.textMuted, size: 18),
+                ),
+                IconButton(
                   tooltip: 'Sign out',
                   onPressed: onSignOut,
-                  icon: const Icon(Icons.logout_rounded, color: HpColors.textMuted, size: 18),
+                  icon: Icon(Icons.logout_rounded, color: HpColors.textMuted, size: 18),
                 ),
               ],
             ),
@@ -289,7 +295,7 @@ class _NavItem extends StatelessWidget {
                     ),
                     child: Text(
                       '$badge',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: HpColors.bg,
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -315,7 +321,7 @@ class _TopBar extends StatelessWidget {
     return Container(
       height: HpSize.topbar,
       padding: const EdgeInsets.symmetric(horizontal: HpSpace.x8),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: HpColors.bg,
         border: Border(bottom: BorderSide(color: HpColors.border)),
       ),

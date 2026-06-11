@@ -33,7 +33,7 @@ class AuthScaffold extends StatelessWidget {
                         alignment: Alignment.centerLeft,
                         child: IconButton(
                           onPressed: onBack,
-                          icon: const Icon(Icons.arrow_back, color: HpColors.text2),
+                          icon: Icon(Icons.arrow_back, color: HpColors.text2),
                         ),
                       ),
                     child,
