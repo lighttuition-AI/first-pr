@@ -162,6 +162,25 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
 - `app.dart` — iPad stage scaling + the routed screen + overlays (studios,
   tweaks, gate, child switcher). `main.dart` — providers + service init.
 
+## Backend — Firebase (cloud sync + analytics) · foundation wired 1.2.0+5
+- **Project `hnl-learning`** (Firebase CLI logged in as app.jeeble@gmail.com). Scope: cloud
+  for **user data only** — recordings, photos, child profiles, progress + Analytics/
+  Crashlytics. **Educational content stays bundled** (offline-first; NOT moved to a backend).
+- **Foundation (done):** `firebase_core` + `firebase_analytics`; `Firebase.initializeApp(options:
+  DefaultFirebaseOptions.currentPlatform)` in `main.dart`, **wrapped in try/catch** so a bad
+  config / no network never blocks launch (logs `app_open`). `flutterfire configure` registered
+  the iOS + Android apps and generated `lib/firebase_options.dart`, `ios/Runner/
+  GoogleService-Info.plist`, `android/app/google-services.json`, `firebase.json` (all committed —
+  Firebase client config is **not** a secret; security is via Firestore/Storage rules). Android
+  gradle got the standard `com.google.gms.google-services` plugin.
+- **iOS min bumped 13 → 15** (Firebase SDK via SPM requires 15; pbxproj ×3 + Podfile). Fine —
+  iPhone 15 Pro is iOS 17+, and iOS 15+ is ~all active devices.
+- `analysis_options.yaml` now **excludes `build/`** (the Firebase SDK checks Dart test files into
+  `build/ios/SourcePackages/`, which polluted `flutter analyze`).
+- **Next increments (not done):** (2) Crashlytics + key analytics events; (3) the big one —
+  **anonymous auth + Firestore/Storage sync** of recordings/photos/profiles/progress, migrating
+  off `shared_preferences` (offline-capable). Android build not yet verified (iOS verified on sim).
+
 ## Gotchas / decisions (don't re-trip these)
 - **`record` is pinned `^6.1.1`** — `5.x` resolved an incompatible
   `record_linux 0.7.2` that broke the iOS Dart compile. Don't downgrade.
