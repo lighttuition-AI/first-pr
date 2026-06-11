@@ -24,6 +24,15 @@ class FirebaseAppealRepository {
           .toList()
         ..sort((a, b) => b.submittedAt.compareTo(a.submittedAt)));
 
+  /// A citizen's own appeals (by plate), newest-first — for "Track your appeals".
+  Stream<List<Appeal>> watchByPlate(String plate) {
+    final key = plate.trim().toUpperCase();
+    return _col.where('plate', isEqualTo: key).snapshots().map((snap) => snap.docs
+        .map((d) => Appeal.fromMap({...d.data(), 'id': d.id}))
+        .toList()
+      ..sort((a, b) => b.submittedAt.compareTo(a.submittedAt)));
+  }
+
   /// Admin decision: uphold (citation stands) or dismiss (citation cancelled).
   Future<void> decide(String id,
           {required AppealStatus status, required String by}) =>
