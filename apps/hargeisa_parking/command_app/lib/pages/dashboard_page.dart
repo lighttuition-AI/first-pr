@@ -1,16 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
+import 'package:intl/intl.dart';
 
+/// Operations overview. Every number is computed live from Firestore — officers
+/// from the repository, the rest from the citations stream. No mock data.
 class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key, required this.repo, required this.onSeeApprovals});
+  const DashboardPage({
+    super.key,
+    required this.repo,
+    required this.citations,
+    required this.onSeeApprovals,
+  });
 
   final OfficerRepository repo;
+  final List<Citation> citations;
   final VoidCallback onSeeApprovals;
 
   @override
   Widget build(BuildContext context) {
     final pending = repo.pending.length;
     final activeOfficers = repo.approved.length;
+
+    final total = citations.length;
+    final outstanding = citations.where((c) => c.status == CitationStatus.outstanding).length;
+    final paid = citations.where((c) => c.status == CitationStatus.paid).toList();
+    final resolved = citations
+        .where((c) => c.status == CitationStatus.paid || c.status == CitationStatus.dismissed)
+        .length;
+    final revenue = paid.fold<int>(0, (s, c) => s + c.amount);
+    final compliance = total == 0 ? 100 : ((resolved / total) * 100).round();
+
+    // Live citations-issued count per officer (by auth uid).
+    final byOfficer = <String, int>{};
+    for (final c in citations) {
+      if (c.officerId.isNotEmpty) byOfficer[c.officerId] = (byOfficer[c.officerId] ?? 0) + 1;
+    }
 
     return ListView(
       padding: const EdgeInsets.all(HpSpace.x8),
@@ -19,16 +43,16 @@ class DashboardPage extends StatelessWidget {
           _PendingBanner(count: pending, onReview: onSeeApprovals),
           const SizedBox(height: HpSpace.x6),
         ],
-        const _ComplianceHero(),
+        _ComplianceHero(compliance: compliance, total: total),
         const SizedBox(height: HpSpace.x6),
         LayoutBuilder(
           builder: (context, c) {
             final cols = c.maxWidth > 1040 ? 4 : (c.maxWidth > 560 ? 2 : 1);
             final cards = [
-              const HpKpiCard(
-                label: 'Revenue today',
-                value: 'SLSH 4.2M',
-                delta: '+12%',
+              HpKpiCard(
+                label: 'Revenue collected',
+                value: 'SLSH ${_money(revenue)}',
+                delta: '${paid.length} paid',
                 icon: Icons.payments_outlined,
               ),
               HpKpiCard(
@@ -38,17 +62,17 @@ class DashboardPage extends StatelessWidget {
                 icon: Icons.badge_outlined,
                 accent: HpColors.teal,
               ),
-              const HpKpiCard(
-                label: 'Compliance rate',
-                value: '87%',
-                delta: '+4%',
-                icon: Icons.verified_outlined,
+              HpKpiCard(
+                label: 'Citations issued',
+                value: '$total',
+                delta: '$outstanding open',
+                icon: Icons.receipt_long_outlined,
                 accent: HpColors.success,
               ),
-              const HpKpiCard(
-                label: 'Active violations',
-                value: '38',
-                delta: '-6%',
+              HpKpiCard(
+                label: 'Outstanding',
+                value: '$outstanding',
+                delta: 'unpaid',
                 deltaUp: false,
                 icon: Icons.report_gmailerrorred_outlined,
                 accent: HpColors.danger,
@@ -60,7 +84,7 @@ class DashboardPage extends StatelessWidget {
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: HpSpace.x4,
               mainAxisSpacing: HpSpace.x4,
-              childAspectRatio: 1.9,
+              childAspectRatio: 1.8,
               children: cards,
             );
           },
@@ -68,20 +92,34 @@ class DashboardPage extends StatelessWidget {
         const SizedBox(height: HpSpace.x6),
         Text('Officers on duty', style: HpType.heading(size: 18)),
         const SizedBox(height: HpSpace.x4),
-        HpCard(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              for (var i = 0; i < repo.approved.length; i++) ...[
-                if (i > 0) const Divider(height: 1),
-                _OfficerRow(officer: repo.approved[i]),
+        if (repo.approved.isEmpty)
+          HpCard(
+            padding: const EdgeInsets.symmetric(vertical: HpSpace.x10),
+            child: Center(child: Text('No approved officers yet.', style: HpType.body(size: 14))),
+          )
+        else
+          HpCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var i = 0; i < repo.approved.length; i++) ...[
+                  if (i > 0) const Divider(height: 1),
+                  _OfficerRow(
+                    officer: repo.approved[i],
+                    citationCount: byOfficer[repo.approved[i].id] ?? 0,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
       ],
     );
   }
+}
+
+String _money(int v) {
+  if (v == 0) return '0';
+  return NumberFormat.compact().format(v); // 4.2M / 370K / 250
 }
 
 class _PendingBanner extends StatelessWidget {
@@ -126,7 +164,9 @@ class _PendingBanner extends StatelessWidget {
 }
 
 class _ComplianceHero extends StatelessWidget {
-  const _ComplianceHero();
+  const _ComplianceHero({required this.compliance, required this.total});
+  final int compliance;
+  final int total;
 
   @override
   Widget build(BuildContext context) {
@@ -145,18 +185,18 @@ class _ComplianceHero extends StatelessWidget {
                 const SizedBox(height: HpSpace.x3),
                 ShaderMask(
                   shaderCallback: (b) => HpColors.gradient.createShader(b),
-                  child: Text('87%',
+                  child: Text('$compliance%',
                       style: HpType.heading(size: 64, weight: FontWeight.w800, color: Colors.white)),
                 ),
                 const SizedBox(height: HpSpace.x2),
                 Row(
                   children: [
-                    const Icon(Icons.arrow_upward_rounded, size: 16, color: HpColors.success),
-                    const SizedBox(width: 4),
-                    Text('+4% this week',
-                        style: HpType.body(size: 14, weight: FontWeight.w600, color: HpColors.success)),
-                    const SizedBox(width: HpSpace.x3),
-                    Text('· 8 districts · Hargeisa', style: HpType.body(size: 14)),
+                    Icon(Icons.receipt_long_outlined, size: 16, color: HpColors.text2),
+                    const SizedBox(width: 6),
+                    Text(
+                      '$total citation${total == 1 ? '' : 's'} · ${kHargeisaDistricts.length} districts · Hargeisa',
+                      style: HpType.body(size: 14),
+                    ),
                   ],
                 ),
               ],
@@ -177,8 +217,9 @@ class _ComplianceHero extends StatelessWidget {
 }
 
 class _OfficerRow extends StatelessWidget {
-  const _OfficerRow({required this.officer});
+  const _OfficerRow({required this.officer, required this.citationCount});
   final Officer officer;
+  final int citationCount;
 
   @override
   Widget build(BuildContext context) {
@@ -201,7 +242,7 @@ class _OfficerRow extends StatelessWidget {
               ],
             ),
           ),
-          Text('${officer.citationsIssued} citations',
+          Text('$citationCount citation${citationCount == 1 ? '' : 's'}',
               style: HpType.mono(size: 13, color: HpColors.text2)),
         ],
       ),
