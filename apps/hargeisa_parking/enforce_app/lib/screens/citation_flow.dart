@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
@@ -84,9 +85,10 @@ class _CitationFlowState extends State<CitationFlow> {
     _lookup();
   }
 
-  /// Open the real device camera to photograph the plate. The shot is kept as
-  /// the first piece of evidence; the officer then confirms the plate number
-  /// (automatic plate reading / OCR is a planned follow-up).
+  /// Open the real device camera to photograph the plate, then read the number
+  /// off the photo with on-device text recognition (OCR). The shot is kept as
+  /// the first piece of evidence; if the plate can't be read, the officer types
+  /// it in manually.
   Future<void> _scanWithCamera() async {
     try {
       final shot = await _picker.pickImage(source: ImageSource.camera, maxWidth: 1600);
@@ -94,10 +96,50 @@ class _CitationFlowState extends State<CitationFlow> {
       setState(() {
         _platePhoto = true;
         if (_photos == 0) _photos = 1; // count the plate photo as evidence
+        _looking = true; // reading the plate…
       });
+      final plate = await _readPlate(shot.path);
+      if (!mounted) return;
+      setState(() => _looking = false);
+      if (plate != null) {
+        _plateCtrl.text = plate;
+        _lookup(); // auto-advance to the vehicle
+      } else {
+        _toast('Couldn\'t read the plate — type it below.');
+      }
     } catch (_) {
-      if (mounted) _toast('Camera unavailable on this device.');
+      if (mounted) {
+        setState(() => _looking = false);
+        _toast('Camera unavailable on this device.');
+      }
     }
+  }
+
+  /// On-device OCR of the captured photo (works offline; no image leaves the
+  /// phone). Returns a best-effort plate string, or null if none was found.
+  Future<String?> _readPlate(String imagePath) async {
+    final recognizer = TextRecognizer();
+    try {
+      final result = await recognizer.processImage(InputImage.fromFilePath(imagePath));
+      return _extractPlate(result.text);
+    } catch (_) {
+      return null;
+    } finally {
+      await recognizer.close();
+    }
+  }
+
+  static final _plateRe = RegExp(r'([A-Z]{2,3})[\s-]?(\d{3,5})');
+
+  /// Pull a plate out of recognised text. Prefers a Hargeisa `HG-####` token,
+  /// then falls back to any letters+digits plate.
+  String? _extractPlate(String text) {
+    final up = text.toUpperCase();
+    final hg = RegExp(r'HG[\s-]?(\d{3,5})').firstMatch(up);
+    if (hg != null) return 'HG-${hg.group(1)}';
+    final m = _plateRe.firstMatch(up);
+    if (m != null) return '${m.group(1)}-${m.group(2)}';
+    return null;
   }
 
   /// Capture a timestamped evidence photo with the real camera.
