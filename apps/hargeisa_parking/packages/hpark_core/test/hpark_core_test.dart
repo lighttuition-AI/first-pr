@@ -55,6 +55,15 @@ void main() {
       expect(rejected.status, ApprovalStatus.rejected);
       expect(rejected.canUseOfficerApp, isFalse);
     });
+
+    test('a rogue officer can be deleted from the system', () async {
+      final repo = OfficerRepository.demo();
+      final before = repo.officers.length;
+      final victim = repo.officers.first;
+      await repo.delete(victim.id);
+      expect(repo.officers.length, before - 1);
+      expect(repo.byId(victim.id), isNull);
+    });
   });
 
   group('Firestore model serialization', () {

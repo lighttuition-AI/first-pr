@@ -121,6 +121,9 @@ class FirebaseOfficerRepository extends ChangeNotifier
         'approvedBy': by,
       });
 
+  @override
+  Future<void> delete(String id) => _col.doc(id).delete();
+
   Future<Officer> _patch(String id, Map<String, dynamic> data) async {
     await _col.doc(id).update(data);
     final doc = await _col.doc(id).get();

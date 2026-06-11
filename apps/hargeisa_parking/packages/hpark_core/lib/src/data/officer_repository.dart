@@ -35,6 +35,10 @@ abstract class OfficerRepository extends ChangeNotifier {
   Future<Officer> reject(String id, {required String by, String? note});
   Future<Officer> suspend(String id, {required String by});
 
+  /// Permanently remove an officer account from the system (e.g. a rogue
+  /// officer). Without their record they can no longer sign in to HPark Enforce.
+  Future<void> delete(String id);
+
   /// A seeded in-memory repository shared by the demo builds.
   factory OfficerRepository.demo() = MockOfficerRepository.seeded;
 }
@@ -140,6 +144,12 @@ class MockOfficerRepository extends ChangeNotifier implements OfficerRepository 
       id,
       (o) => o.copyWith(status: ApprovalStatus.suspended, approvedBy: by),
     );
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    _officers.removeWhere((o) => o.id == id);
+    notifyListeners();
   }
 
   Future<Officer> _update(String id, Officer Function(Officer) fn) async {
