@@ -44,6 +44,14 @@ class _MainShellState extends State<MainShell> {
   void initState() {
     super.initState();
     _listen();
+    // Rebuild immediately when the appearance or language is toggled (the
+    // MaterialApp's cached home route otherwise leaves this screen one tap behind).
+    hpTheme.addListener(_rebuild);
+    localeCtrl.addListener(_rebuild);
+  }
+
+  void _rebuild() {
+    if (mounted) setState(() {});
   }
 
   /// (Re)subscribe to the live citations for this citizen's plate.
@@ -61,6 +69,8 @@ class _MainShellState extends State<MainShell> {
   @override
   void dispose() {
     _sub?.cancel();
+    hpTheme.removeListener(_rebuild);
+    localeCtrl.removeListener(_rebuild);
     super.dispose();
   }
 

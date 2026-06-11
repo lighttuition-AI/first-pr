@@ -118,7 +118,7 @@ class _CommandShellState extends State<CommandShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListenableBuilder(
-        listenable: repo,
+        listenable: Listenable.merge([repo, hpTheme]),
         builder: (context, _) {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,

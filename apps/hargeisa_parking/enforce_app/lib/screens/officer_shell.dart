@@ -31,7 +31,7 @@ class _OfficerShellState extends State<OfficerShell> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: shift,
+      listenable: Listenable.merge([shift, hpTheme]),
       builder: (context, _) {
         final tabs = [
           PatrolTab(officer: widget.officer, shift: shift),

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:hpark_firebase/hpark_firebase.dart';
 
+import 'vehicle_grid.dart';
+
 /// Real bulk vehicle-data import. Pick a CSV, it's parsed and deduped against
 /// the live Firestore registry, and committed to `vehicles/{plate}` — the same
 /// records an officer's plate lookup in HPark Enforce reads.
@@ -139,6 +141,10 @@ class _VehicleImportPageState extends State<VehicleImportPage> {
             style: HpType.body(size: 13.5)),
         const SizedBox(height: HpSpace.x6),
         if (_parsed.isEmpty) _uploadCard() else _previewSection(),
+        const SizedBox(height: HpSpace.x8),
+        const Divider(),
+        const SizedBox(height: HpSpace.x6),
+        VehicleGrid(vehicles: widget.vehicles),
       ],
     );
   }
