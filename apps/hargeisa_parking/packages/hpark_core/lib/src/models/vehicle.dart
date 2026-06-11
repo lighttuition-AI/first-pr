@@ -57,4 +57,29 @@ class Vehicle {
 
   bool get isCompliant =>
       permitStatus == PermitStatus.valid && outstandingCount == 0;
+
+  /// Firestore-agnostic serialization (enum stored by name). One document under
+  /// `vehicles/{plate}`; the Firebase layer maps these to/from document data.
+  Map<String, dynamic> toMap() => {
+        'plate': plate,
+        'ownerName': ownerName,
+        'ownerNationalId': ownerNationalId,
+        'make': make,
+        'color': color,
+        'permitStatus': permitStatus.name,
+        'outstandingCount': outstandingCount,
+        'outstandingTotal': outstandingTotal,
+      };
+
+  static Vehicle fromMap(Map<String, dynamic> map) => Vehicle(
+        plate: map['plate'] as String? ?? '',
+        ownerName: map['ownerName'] as String? ?? '',
+        ownerNationalId: map['ownerNationalId'] as String? ?? '',
+        make: map['make'] as String? ?? '',
+        color: map['color'] as String? ?? '',
+        permitStatus: PermitStatus.values
+            .byName(map['permitStatus'] as String? ?? 'none'),
+        outstandingCount: (map['outstandingCount'] as num?)?.toInt() ?? 0,
+        outstandingTotal: (map['outstandingTotal'] as num?)?.toInt() ?? 0,
+      );
 }

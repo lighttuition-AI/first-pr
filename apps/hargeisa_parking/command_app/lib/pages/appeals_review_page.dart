@@ -9,12 +9,14 @@ class AppealsReviewPage extends StatelessWidget {
     super.key,
     required this.appeals,
     required this.adminName,
-    required this.onChanged,
+    required this.onDecide,
   });
 
   final List<Appeal> appeals;
   final String adminName;
-  final VoidCallback onChanged;
+
+  /// Persist an appeal decision (uphold = citation stands; dismiss = cancelled).
+  final Future<void> Function(Appeal appeal, AppealStatus status) onDecide;
 
   @override
   Widget build(BuildContext context) {
@@ -46,8 +48,8 @@ class AppealsReviewPage extends StatelessWidget {
               child: _AppealCard(
                 appeal: a,
                 onWatch: () => _watch(context, a),
-                onUphold: () { a.status = AppealStatus.upheld; a.decidedBy = adminName; onChanged(); },
-                onDismiss: () { a.status = AppealStatus.dismissed; a.decidedBy = adminName; onChanged(); },
+                onUphold: () { a.status = AppealStatus.upheld; a.decidedBy = adminName; onDecide(a, AppealStatus.upheld); },
+                onDismiss: () { a.status = AppealStatus.dismissed; a.decidedBy = adminName; onDecide(a, AppealStatus.dismissed); },
               ),
             ),
         if (decided.isNotEmpty) ...[

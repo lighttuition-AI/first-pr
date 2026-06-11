@@ -26,11 +26,12 @@ class _CitizenAuthScreenState extends State<CitizenAuthScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _nationalId = TextEditingController();
+  final _plate = TextEditingController();
   DateTime? _dob;
 
   @override
   void dispose() {
-    for (final c in [_name, _email, _password, _nationalId]) {
+    for (final c in [_name, _email, _password, _nationalId, _plate]) {
       c.dispose();
     }
     super.dispose();
@@ -58,6 +59,7 @@ class _CitizenAuthScreenState extends State<CitizenAuthScreen> {
             nationalId: _nationalId.text.trim(),
             dateOfBirth: _dob!,
             email: user.email ?? _email.text.trim(),
+            plate: _plate.text.trim().toUpperCase(),
           ),
         );
       } else {
@@ -131,6 +133,8 @@ class _CitizenAuthScreenState extends State<CitizenAuthScreen> {
                     if (_signUp) ...[
                       const SizedBox(height: HpSpace.x4),
                       HpInput(controller: _nationalId, label: 'Somaliland national ID', hint: 'SL-0000-0000', icon: Icons.badge_outlined, mono: true, textCapitalization: TextCapitalization.characters),
+                      const SizedBox(height: HpSpace.x4),
+                      HpInput(controller: _plate, label: 'Vehicle plate (optional)', hint: 'HG-0000', icon: Icons.directions_car_outlined, mono: true, textCapitalization: TextCapitalization.characters),
                       const SizedBox(height: HpSpace.x4),
                       _DobField(dob: _dob, onTap: _pickDob),
                     ],

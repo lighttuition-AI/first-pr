@@ -67,4 +67,36 @@ class Appeal {
     final s = videoSeconds % 60;
     return '${m.toString().padLeft(1, '0')}:${s.toString().padLeft(2, '0')}';
   }
+
+  /// Firestore-agnostic serialization (date as epoch millis, enum by name).
+  /// One document under `appeals/{id}`; the Firebase layer maps to/from it.
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'citationId': citationId,
+        'plate': plate,
+        'violation': violation,
+        'fine': fine,
+        'reason': reason,
+        'videoSeconds': videoSeconds,
+        'submittedAt': submittedAt.millisecondsSinceEpoch,
+        'appellantName': appellantName,
+        'status': status.name,
+        'decidedBy': decidedBy,
+      };
+
+  static Appeal fromMap(Map<String, dynamic> map) => Appeal(
+        id: map['id'] as String? ?? '',
+        citationId: map['citationId'] as String? ?? '',
+        plate: map['plate'] as String? ?? '',
+        violation: map['violation'] as String? ?? '',
+        fine: (map['fine'] as num?)?.toInt() ?? 0,
+        reason: map['reason'] as String? ?? '',
+        videoSeconds: (map['videoSeconds'] as num?)?.toInt() ?? 0,
+        submittedAt: DateTime.fromMillisecondsSinceEpoch(
+            (map['submittedAt'] as num?)?.toInt() ??
+                DateTime.now().millisecondsSinceEpoch),
+        appellantName: map['appellantName'] as String? ?? '',
+        status: AppealStatus.values.byName(map['status'] as String? ?? 'review'),
+        decidedBy: map['decidedBy'] as String?,
+      );
 }

@@ -1,7 +1,11 @@
 # Going live with Firebase
 
-The apps run today on an **in-memory demo backend** (seeded data, no network). This
-guide turns on the **real backend** — Firebase Auth (logins) + Cloud Firestore
+> **Status: DONE.** The apps are already live on Firebase project `hargeisa-parking`
+> (Auth + Firestore; rules deployed). This doc is kept as the from-scratch runbook for
+> standing up a **fresh** project (e.g. a second city). For the day-to-day workflow and
+> current state, see `PROJECT_NOTES.md`.
+
+This guide turns on the **real backend** — Firebase Auth (logins) + Cloud Firestore
 (shared database) — so an approval in HPark Command instantly unlocks HPark Enforce
 on a real officer's phone, and citations/appeals sync everywhere.
 

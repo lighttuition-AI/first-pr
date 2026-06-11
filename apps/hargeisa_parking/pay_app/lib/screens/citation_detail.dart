@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
+import 'package:hpark_firebase/hpark_firebase.dart';
 import 'package:intl/intl.dart';
 
 import '../models/pay_models.dart';
@@ -7,12 +8,20 @@ import '../util/format.dart';
 import '../widgets/pay_sheet.dart';
 import 'appeal_flow.dart';
 
-/// Detail view for one citation, with Pay / Challenge actions.
+/// Detail view for one citation, with Pay / Challenge actions backed by Firestore.
 class CitationDetailScreen extends StatefulWidget {
-  const CitationDetailScreen({super.key, required this.citation, required this.onChanged});
+  const CitationDetailScreen({
+    super.key,
+    required this.citation,
+    required this.citizen,
+    required this.repo,
+    required this.appeals,
+  });
 
   final Citation citation;
-  final VoidCallback onChanged;
+  final Citizen citizen;
+  final FirebaseCitationRepository repo;
+  final FirebaseAppealRepository appeals;
 
   @override
   State<CitationDetailScreen> createState() => _CitationDetailScreenState();
@@ -24,7 +33,7 @@ class _CitationDetailScreenState extends State<CitationDetailScreen> {
   void _pay() {
     showPaySheet(context, amount: c.amount, onPaid: (method) {
       setState(() => c.status = CitationStatus.paid);
-      widget.onChanged();
+      widget.repo.setStatus(c.id, CitationStatus.paid);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
@@ -41,18 +50,22 @@ class _CitationDetailScreenState extends State<CitationDetailScreen> {
 
   Future<void> _appeal() async {
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => AppealFlow(citation: c, onSubmitted: widget.onChanged)),
+      MaterialPageRoute(
+        builder: (_) => AppealFlow(
+          citation: c,
+          appellantName: widget.citizen.fullName,
+          repo: widget.repo,
+          appeals: widget.appeals,
+        ),
+      ),
     );
     if (mounted) setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final (label, color, tint, glyph) = switch (c.status) {
-      CitationStatus.outstanding => ('Outstanding', HpColors.danger, HpColors.dangerTint, '▲'),
-      CitationStatus.paid => ('Paid', HpColors.success, HpColors.successTint, '✓'),
-      CitationStatus.appealReview => ('Appeal review', HpColors.purple300, HpColors.purpleTint, '◌'),
-    };
+    final (label, color, tint, glyph) =
+        (c.status.label, c.status.color, c.status.tint, c.status.glyph);
 
     return Scaffold(
       appBar: AppBar(title: Text('Citation', style: HpType.heading(size: 18))),

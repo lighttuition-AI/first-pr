@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:intl/intl.dart';
 
-import '../models/issued_citation.dart';
 import '../state/shift_state.dart';
 
 const _gps = '9.5616° N, 44.0650° E';
@@ -33,7 +32,20 @@ class _CitationFlowState extends State<CitationFlow> {
   ViolationType? _violation;
   int _photos = 0;
   bool _video = false;
-  IssuedCitation? _result;
+  Citation? _result;
+
+  List<String> _knownPlates = [];
+  bool _looking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pull a few plates already on file so the demo "Simulate LPR" + the
+    // "Try:" hint reflect the live vehicle registry rather than a hard-coded list.
+    widget.shift.vehicles.knownPlates().then((plates) {
+      if (mounted) setState(() => _knownPlates = plates);
+    }).catchError((_) {});
+  }
 
   @override
   void dispose() {
@@ -41,28 +53,39 @@ class _CitationFlowState extends State<CitationFlow> {
     super.dispose();
   }
 
-  void _lookup() {
+  Future<void> _lookup() async {
     final plate = _plateCtrl.text.trim().toUpperCase();
-    if (plate.isEmpty) return;
-    final v = lookupVehicle(plate);
+    if (plate.isEmpty || _looking) return;
     setState(() {
       _plate = plate;
+      _looking = true;
+    });
+    Vehicle? v;
+    try {
+      v = await widget.shift.vehicles.lookup(plate);
+    } catch (_) {
+      v = null;
+    }
+    if (!mounted) return;
+    setState(() {
       _vehicle = v;
+      _looking = false;
       _step = v != null ? _Step.found : _Step.notFound;
     });
   }
 
   void _simulateLpr() {
-    final plate = knownPlates[Random().nextInt(knownPlates.length)];
-    _plateCtrl.text = plate;
+    if (_knownPlates.isEmpty) return;
+    _plateCtrl.text = _knownPlates[Random().nextInt(_knownPlates.length)];
     _lookup();
   }
 
   void _issue() {
     final citation = widget.shift.issue(
+      officer: widget.officer,
       plate: _plate,
-      violation: _violation!.label,
-      fine: _violation!.fine,
+      vehicle: _vehicle,
+      violation: _violation!,
       gps: _gps,
       photoCount: _photos,
       hasVideo: _video,
@@ -105,6 +128,8 @@ class _CitationFlowState extends State<CitationFlow> {
             controller: _plateCtrl,
             onLookup: _lookup,
             onSimulate: _simulateLpr,
+            knownPlates: _knownPlates,
+            looking: _looking,
           ),
         _Step.notFound => _NotFoundStep(
             plate: _plate,
@@ -174,10 +199,18 @@ class _ActionBar extends StatelessWidget {
 }
 
 class _ScanStep extends StatelessWidget {
-  const _ScanStep({required this.controller, required this.onLookup, required this.onSimulate});
+  const _ScanStep({
+    required this.controller,
+    required this.onLookup,
+    required this.onSimulate,
+    required this.knownPlates,
+    required this.looking,
+  });
   final TextEditingController controller;
   final VoidCallback onLookup;
   final VoidCallback onSimulate;
+  final List<String> knownPlates;
+  final bool looking;
 
   @override
   Widget build(BuildContext context) {
@@ -222,7 +255,7 @@ class _ScanStep extends StatelessWidget {
                 icon: Icons.center_focus_strong_outlined,
                 size: HpButtonSize.lg,
                 expand: true,
-                onPressed: onSimulate,
+                onPressed: knownPlates.isEmpty ? null : onSimulate,
               ),
               const SizedBox(height: HpSpace.x5),
               Row(children: [
@@ -243,14 +276,22 @@ class _ScanStep extends StatelessWidget {
                 textCapitalization: TextCapitalization.characters,
               ),
               const SizedBox(height: HpSpace.x3),
-              Text('Try: ${knownPlates.join('  ·  ')}',
-                  style: HpType.body(size: 12, color: HpColors.textMuted)),
+              if (knownPlates.isNotEmpty)
+                Text('Try: ${knownPlates.take(4).join('  ·  ')}',
+                    style: HpType.body(size: 12, color: HpColors.textMuted)),
             ],
           ),
         ),
         _ActionBar(children: [
           Expanded(
-            child: HpButton(label: 'Look up vehicle', icon: Icons.search, size: HpButtonSize.lg, expand: true, onPressed: onLookup),
+            child: HpButton(
+              label: 'Look up vehicle',
+              icon: Icons.search,
+              size: HpButtonSize.lg,
+              expand: true,
+              loading: looking,
+              onPressed: looking ? null : onLookup,
+            ),
           ),
         ]),
       ],
@@ -635,7 +676,7 @@ class _ReviewStep extends StatelessWidget {
 
 class _IssuedStep extends StatelessWidget {
   const _IssuedStep({required this.citation, required this.onDone, required this.onAnother});
-  final IssuedCitation citation;
+  final Citation citation;
   final VoidCallback onDone;
   final VoidCallback onAnother;
 
@@ -660,7 +701,7 @@ class _IssuedStep extends StatelessWidget {
                   const SizedBox(height: HpSpace.x2),
                   Text(citation.id, style: HpType.mono(size: 16, color: HpColors.text2)),
                   const SizedBox(height: HpSpace.x4),
-                  Text(_slsh(citation.fine), style: HpType.mono(size: 30, weight: FontWeight.w700)),
+                  Text(_slsh(citation.amount), style: HpType.mono(size: 30, weight: FontWeight.w700)),
                   const SizedBox(height: HpSpace.x4),
                   HpBadge(
                     label: citation.synced ? 'Synced' : 'Queued — will sync',

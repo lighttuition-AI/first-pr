@@ -20,4 +20,8 @@ class CitizenStore {
     final data = snap.data();
     return data == null ? null : Citizen.fromMap(data);
   }
+
+  /// Save the citizen's vehicle plate (so HPark Pay can find their citations).
+  Future<void> setPlate(String uid, String plate) =>
+      _doc(uid).set({'plate': plate.trim().toUpperCase()}, SetOptions(merge: true));
 }

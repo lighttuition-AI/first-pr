@@ -11,11 +11,13 @@ class ProfileTab extends StatelessWidget {
     required this.citizen,
     required this.citations,
     required this.onSignOut,
+    required this.onEditPlate,
   });
 
   final Citizen citizen;
   final List<Citation> citations;
   final VoidCallback onSignOut;
+  final VoidCallback onEditPlate;
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +39,12 @@ class ProfileTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: HpSpace.x5),
+        _NavRow(
+          icon: Icons.directions_car_outlined,
+          label: 'Vehicle plate',
+          subtitle: citizen.plate.isEmpty ? 'Tap to add your number plate' : citizen.plate,
+          onTap: onEditPlate,
+        ),
         _NavRow(
           icon: Icons.receipt_long_outlined,
           label: 'Payment history',

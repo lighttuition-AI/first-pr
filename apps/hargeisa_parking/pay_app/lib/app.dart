@@ -41,7 +41,12 @@ class _PayRootState extends State<PayRoot> {
                   dateOfBirth: DateTime(1990),
                   email: user.email ?? '',
                 );
-            return MainShell(citizen: citizen, onSignOut: _signOut);
+            return MainShell(
+              uid: user.uid,
+              citizen: citizen,
+              store: _store,
+              onSignOut: _signOut,
+            );
           },
         );
       },

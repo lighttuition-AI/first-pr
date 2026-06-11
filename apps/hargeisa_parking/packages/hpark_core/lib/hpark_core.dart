@@ -15,11 +15,12 @@ export 'src/models/district.dart';
 export 'src/models/vehicle.dart';
 export 'src/models/violation.dart';
 export 'src/models/appeal.dart';
+export 'src/models/citation.dart';
+export 'src/models/deal.dart';
 
 // Data
 export 'src/data/districts.dart';
 export 'src/data/officer_repository.dart';
-export 'src/data/enforcement_data.dart';
 export 'src/data/auth_service.dart';
 
 // Widgets
