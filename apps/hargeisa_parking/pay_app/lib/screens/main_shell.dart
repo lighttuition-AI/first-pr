@@ -5,6 +5,7 @@ import 'package:hpark_core/hpark_core.dart';
 import 'package:hpark_firebase/hpark_firebase.dart';
 
 import '../data/citizen_store.dart';
+import '../l10n/strings.dart';
 import '../models/pay_models.dart';
 import '../tabs/districts_tab.dart';
 import '../tabs/home_tab.dart';
@@ -66,9 +67,9 @@ class _MainShellState extends State<MainShell> {
   Future<void> _editPlate() async {
     final plate = await _showTextDialog(
       context,
-      title: 'Your vehicle plate',
-      blurb: 'Enter your number plate so we can show your citations.',
-      label: 'Number plate',
+      title: tr('Your vehicle plate'),
+      blurb: tr('Enter your number plate so we can show your citations.'),
+      label: tr('Number plate'),
       hint: 'HG-0000',
       initial: _citizen.plate,
     );
@@ -83,9 +84,9 @@ class _MainShellState extends State<MainShell> {
   Future<void> _editNationalId() async {
     final value = await _showTextDialog(
       context,
-      title: 'National ID',
-      blurb: 'Correct your Somaliland national ID if it was entered wrong.',
-      label: 'Somaliland national ID',
+      title: tr('National ID'),
+      blurb: tr('Correct your Somaliland national ID if it was entered wrong.'),
+      label: tr('Somaliland national ID'),
       hint: 'SL-0000-0000',
       initial: _citizen.nationalId,
     );
@@ -185,9 +186,9 @@ Future<String?> _showTextDialog(
         ],
       ),
       actions: [
-        HpButton(label: 'Cancel', variant: HpButtonVariant.ghost, onPressed: () => Navigator.pop(context)),
+        HpButton(label: tr('Cancel'), variant: HpButtonVariant.ghost, onPressed: () => Navigator.pop(context)),
         HpButton(
-          label: 'Save',
+          label: tr('Save'),
           onPressed: () => Navigator.pop(context, ctrl.text),
         ),
       ],
@@ -232,7 +233,7 @@ class _BottomNav extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _items[i].$3,
+                      tr(_items[i].$3),
                       style: TextStyle(
                         color: i == index ? HpColors.text : HpColors.textMuted,
                         fontSize: 11,

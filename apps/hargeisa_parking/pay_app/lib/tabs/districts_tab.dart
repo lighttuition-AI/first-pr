@@ -3,6 +3,8 @@ import 'package:hpark_core/hpark_core.dart';
 import 'package:hpark_firebase/hpark_firebase.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../l10n/strings.dart';
+
 /// Browse Hargeisa's 8 districts; each opens the shop deals advertised there.
 /// Deals are loaded live from Firestore (`deals` collection).
 class DistrictsTab extends StatefulWidget {
@@ -42,9 +44,9 @@ class _DistrictsTabState extends State<DistrictsTab> {
     return ListView(
       padding: const EdgeInsets.all(HpSpace.x5),
       children: [
-        Text('Districts & deals', style: HpType.heading(size: 22)),
+        Text(tr('Districts & deals'), style: HpType.heading(size: 22)),
         const SizedBox(height: HpSpace.x2),
-        Text('Tap a district to see shops advertising deals nearby.',
+        Text(tr('Tap a district to see shops advertising deals nearby.'),
             style: HpType.body(size: 14)),
         const SizedBox(height: HpSpace.x5),
         for (final d in kHargeisaDistricts)
@@ -92,10 +94,12 @@ class _DistrictCard extends StatelessWidget {
                 Text(district.name, style: HpType.heading(size: 16)),
                 Text(
                     count == null
-                        ? 'Loading deals…'
+                        ? tr('Loading deals…')
                         : count == 0
-                            ? 'No deals yet'
-                            : '$count deal${count == 1 ? '' : 's'} available',
+                            ? tr('No deals yet')
+                            : localeCtrl.isSomali
+                                ? trf('{n} deals available', {'n': '$count'})
+                                : '$count deal${count == 1 ? '' : 's'} available',
                     style: HpType.body(size: 12.5, color: HpColors.textMuted)),
               ],
             ),
@@ -120,7 +124,7 @@ class DealsScreen extends StatelessWidget {
         decoration: HParkTheme.backgroundWash,
         child: deals.isEmpty
             ? Center(
-                child: Text('No deals in this district yet.', style: HpType.body(size: 14)),
+                child: Text(tr('No deals in this district yet.'), style: HpType.body(size: 14)),
               )
             : ListView(
                 padding: const EdgeInsets.all(HpSpace.x5),
@@ -209,12 +213,12 @@ class _CouponDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: HpSpace.x4),
-            Text('Scan at the till to redeem', style: HpType.body(size: 13)),
+            Text(tr('Scan at the till to redeem'), style: HpType.body(size: 13)),
             const SizedBox(height: 4),
             Text(deal.code, style: HpType.mono(size: 15, weight: FontWeight.w700)),
             const SizedBox(height: HpSpace.x5),
             HpButton(
-              label: 'Done',
+              label: tr('Done'),
               variant: HpButtonVariant.secondary,
               expand: true,
               onPressed: () => Navigator.pop(context),

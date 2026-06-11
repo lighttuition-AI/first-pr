@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/strings.dart';
 import '../models/pay_models.dart';
 import '../screens/payment_history.dart';
 
@@ -39,10 +40,10 @@ class ProfileTab extends StatelessWidget {
           padding: EdgeInsets.zero,
           child: Column(
             children: [
-              _EditRow(label: 'National ID', value: citizen.nationalId, mono: true, onTap: onEditNationalId),
+              _EditRow(label: tr('National ID'), value: citizen.nationalId, mono: true, onTap: onEditNationalId),
               const Divider(height: 1),
               _EditRow(
-                label: 'Date of birth',
+                label: tr('Date of birth'),
                 value: DateFormat('d MMMM yyyy').format(citizen.dateOfBirth),
                 onTap: onEditDob,
               ),
@@ -52,45 +53,45 @@ class ProfileTab extends StatelessWidget {
         const SizedBox(height: HpSpace.x5),
         _NavRow(
           icon: hpTheme.isDark ? Icons.dark_mode_outlined : Icons.light_mode_outlined,
-          label: 'Appearance',
-          subtitle: hpTheme.isDark ? 'Dark' : 'Light',
+          label: tr('Appearance'),
+          subtitle: hpTheme.isDark ? tr('Dark') : tr('Light'),
           onTap: () => hpTheme.toggle(),
         ),
         _NavRow(
+          icon: Icons.translate_rounded,
+          label: tr('Language'),
+          subtitle: localeCtrl.isSomali ? 'Soomaali' : 'English',
+          onTap: () => _showLanguage(context),
+        ),
+        _NavRow(
           icon: Icons.directions_car_outlined,
-          label: 'Vehicle plate',
-          subtitle: citizen.plate.isEmpty ? 'Tap to add your number plate' : citizen.plate,
+          label: tr('Vehicle plate'),
+          subtitle: citizen.plate.isEmpty ? tr('Tap to add your number plate') : citizen.plate,
           onTap: onEditPlate,
         ),
         _NavRow(
           icon: Icons.receipt_long_outlined,
-          label: 'Payment history',
-          subtitle: 'Past ZAAD & eDahab payments',
+          label: tr('Payment history'),
+          subtitle: tr('Past ZAAD & eDahab payments'),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => PaymentHistoryScreen(citations: citations)),
           ),
         ),
         _NavRow(
           icon: Icons.gavel_outlined,
-          label: 'Appeals',
-          subtitle: 'Track your video appeals',
+          label: tr('Appeals'),
+          subtitle: tr('Track your video appeals'),
           onTap: onOpenAppeals,
         ),
         _NavRow(
-          icon: Icons.translate_rounded,
-          label: 'Language',
-          subtitle: 'English · Somali',
-          onTap: () => _showLanguage(context),
-        ),
-        _NavRow(
           icon: Icons.help_outline_rounded,
-          label: 'Help & support',
-          subtitle: 'Contact the city office',
+          label: tr('Help & support'),
+          subtitle: tr('Contact the city office'),
           onTap: () => _showHelp(context),
         ),
         const SizedBox(height: HpSpace.x5),
         HpButton(
-          label: 'Sign out',
+          label: tr('Sign out'),
           variant: HpButtonVariant.secondary,
           expand: true,
           icon: Icons.logout_rounded,
@@ -106,20 +107,31 @@ class ProfileTab extends StatelessWidget {
       backgroundColor: HpColors.elevated,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(HpRadius.xl))),
-      builder: (_) => Padding(
+      builder: (sheetCtx) => Padding(
         padding: const EdgeInsets.fromLTRB(HpSpace.x5, HpSpace.x5, HpSpace.x5, HpSpace.x8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Language', style: HpType.heading(size: 20)),
+            Text(tr('Language'), style: HpType.heading(size: 20)),
             const SizedBox(height: HpSpace.x4),
-            const _LangTile(name: 'English', selected: true, enabled: true),
+            _LangTile(
+              name: 'English',
+              selected: !localeCtrl.isSomali,
+              onTap: () {
+                localeCtrl.set(AppLang.en);
+                Navigator.pop(sheetCtx);
+              },
+            ),
             const SizedBox(height: HpSpace.x3),
-            const _LangTile(name: 'Somali (Soomaali)', selected: false, enabled: false),
-            const SizedBox(height: HpSpace.x4),
-            Text('A full Somali translation is on the way.',
-                style: HpType.body(size: 12.5, color: HpColors.textMuted)),
+            _LangTile(
+              name: 'Soomaali',
+              selected: localeCtrl.isSomali,
+              onTap: () {
+                localeCtrl.set(AppLang.so);
+                Navigator.pop(sheetCtx);
+              },
+            ),
           ],
         ),
       ),
@@ -138,15 +150,15 @@ class ProfileTab extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Help & support', style: HpType.heading(size: 20)),
+            Text(tr('Help & support'), style: HpType.heading(size: 20)),
             const SizedBox(height: HpSpace.x2),
-            Text('Hargeisa City Parking Office', style: HpType.body(size: 14, color: HpColors.text2)),
+            Text(tr('Hargeisa City Parking Office'), style: HpType.body(size: 14, color: HpColors.text2)),
             const SizedBox(height: HpSpace.x5),
-            const _HelpRow(icon: Icons.phone_outlined, label: 'Phone', value: '+252 63 4000 000'),
+            _HelpRow(icon: Icons.phone_outlined, label: tr('Phone'), value: '+252 63 4000 000'),
             const SizedBox(height: HpSpace.x3),
-            const _HelpRow(icon: Icons.mail_outline, label: 'Email', value: 'support@hargeisaparking.so'),
+            _HelpRow(icon: Icons.mail_outline, label: tr('Email'), value: 'support@hargeisaparking.so'),
             const SizedBox(height: HpSpace.x3),
-            const _HelpRow(icon: Icons.schedule_outlined, label: 'Hours', value: 'Sat–Thu · 8:00–16:00'),
+            _HelpRow(icon: Icons.schedule_outlined, label: tr('Hours'), value: 'Sat–Thu · 8:00–16:00'),
           ],
         ),
       ),
@@ -187,31 +199,24 @@ class _EditRow extends StatelessWidget {
 }
 
 class _LangTile extends StatelessWidget {
-  const _LangTile({required this.name, required this.selected, required this.enabled});
+  const _LangTile({required this.name, required this.selected, required this.onTap});
   final String name;
   final bool selected;
-  final bool enabled;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return HpCard(
+      onTap: onTap,
+      selected: selected,
       padding: const EdgeInsets.all(HpSpace.x4),
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              name,
-              style: TextStyle(
-                color: enabled ? HpColors.text : HpColors.textMuted,
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-              ),
-            ),
+            child: Text(name,
+                style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 15)),
           ),
-          if (selected)
-            const Icon(Icons.check_circle, color: HpColors.purple300, size: 20)
-          else if (!enabled)
-            Text('Coming soon', style: HpType.body(size: 12, color: HpColors.textMuted)),
+          if (selected) const Icon(Icons.check_circle, color: HpColors.purple300, size: 20),
         ],
       ),
     );

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:hpark_firebase/hpark_firebase.dart';
 
+import '../l10n/strings.dart';
 import '../util/format.dart';
 
 enum _Step { record, review, submitted }
@@ -107,7 +108,7 @@ class _AppealFlowState extends State<AppealFlow> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
-        title: Text(_titleText, style: HpType.heading(size: 18)),
+        title: Text(tr(_titleText), style: HpType.heading(size: 18)),
       ),
       body: DecoratedBox(
         decoration: HParkTheme.backgroundWash,
@@ -136,7 +137,7 @@ class _AppealFlowState extends State<AppealFlow> {
             padding: const EdgeInsets.all(HpSpace.x5),
             child: Column(
               children: [
-                Text('Explain what you\'re challenging about citation ${widget.citation.id}.',
+                Text(trf("Explain what you're challenging about citation {id}.", {'id': widget.citation.id}),
                     style: HpType.body(size: 14)),
                 const SizedBox(height: HpSpace.x4),
                 Expanded(
@@ -233,12 +234,12 @@ class _AppealFlowState extends State<AppealFlow> {
               const SizedBox(height: HpSpace.x4),
               HpInput(
                 controller: _reason,
-                label: 'Add a note (optional)',
-                hint: 'Briefly summarise your appeal',
+                label: tr('Add a note (optional)'),
+                hint: tr('Briefly summarise your appeal'),
               ),
               const SizedBox(height: HpSpace.x4),
               HpButton(
-                label: 'Re-record',
+                label: tr('Re-record'),
                 variant: HpButtonVariant.ghost,
                 icon: Icons.refresh_rounded,
                 onPressed: () => setState(() => _step = _Step.record),
@@ -249,7 +250,7 @@ class _AppealFlowState extends State<AppealFlow> {
         Container(
           padding: const EdgeInsets.all(HpSpace.x5),
           decoration: BoxDecoration(color: HpColors.surface, border: Border(top: BorderSide(color: HpColors.border))),
-          child: HpButton(label: 'Submit appeal', icon: Icons.send_rounded, size: HpButtonSize.lg, expand: true, loading: _submitting, onPressed: _submitting ? null : _submit),
+          child: HpButton(label: tr('Submit appeal'), icon: Icons.send_rounded, size: HpButtonSize.lg, expand: true, loading: _submitting, onPressed: _submitting ? null : _submit),
         ),
       ],
     );
@@ -271,11 +272,11 @@ class _AppealFlowState extends State<AppealFlow> {
                     child: const Icon(Icons.gavel_rounded, color: HpColors.purple300, size: 40),
                   ),
                   const SizedBox(height: HpSpace.x5),
-                  Text('Appeal submitted', style: HpType.heading(size: 24)),
+                  Text(tr('Appeal submitted'), style: HpType.heading(size: 24)),
                   const SizedBox(height: HpSpace.x2),
                   Text(
-                    'Your video appeal for ${widget.citation.id} is under review. '
-                    'You\'ll be notified of the decision.',
+                    trf("Your video appeal for {id} is under review. You'll be notified of the decision.",
+                        {'id': widget.citation.id}),
                     textAlign: TextAlign.center,
                     style: HpType.body(size: 14),
                   ),
