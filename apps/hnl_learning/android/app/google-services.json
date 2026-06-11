@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "105106610259",
+    "project_id": "hnl-learning",
+    "storage_bucket": "hnl-learning.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:105106610259:android:395e7a3e311cd9e3128ea6",
+        "android_client_info": {
+          "package_name": "com.hnllearning.hnl_learning"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBdIMJv_meqSgsHmOpegRZ13JePTzpC6IY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

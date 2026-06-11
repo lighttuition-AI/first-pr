@@ -1,10 +1,13 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'firebase_options.dart';
 import 'services/gif_service.dart';
 import 'services/image_service.dart';
 import 'services/vo_service.dart';
@@ -12,6 +15,16 @@ import 'state/app_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Backend (cloud sync + analytics) — project `hnl-learning`. Wrapped so a
+  // bad config / no network never blocks launch: the app stays offline-first.
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await FirebaseAnalytics.instance.logAppOpen();
+  } catch (e) {
+    debugPrint('Firebase init skipped: $e');
+  }
+
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
