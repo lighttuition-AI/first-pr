@@ -47,9 +47,10 @@ class _CommandRootState extends State<CommandRoot> {
   final FirebaseAdminUsers _adminUsers = FirebaseAdminUsers();
   FirebaseOfficerRepository? _repo;
 
-  // Resolved role for the signed-in user: admin (full powers) vs normal user.
-  bool? _isAdmin;
+  // Resolved role for the signed-in user: 'admin', 'user', or null (no access).
+  String? _role;
   String? _roleUid;
+  bool _roleResolved = false;
   bool _resolving = false;
 
   @override
@@ -59,11 +60,12 @@ class _CommandRootState extends State<CommandRoot> {
   }
 
   Future<void> _resolveRole(String uid) async {
-    final admin = await _adminUsers.isAdmin();
+    final role = await _adminUsers.currentRole();
     if (!mounted) return;
     setState(() {
-      _isAdmin = admin;
+      _role = role;
       _roleUid = uid;
+      _roleResolved = true;
       _resolving = false;
     });
   }
@@ -82,15 +84,16 @@ class _CommandRootState extends State<CommandRoot> {
         if (user == null) {
           _repo?.dispose();
           _repo = null;
-          _isAdmin = null;
+          _role = null;
           _roleUid = null;
+          _roleResolved = false;
           _resolving = false;
           return AdminAuthScreen(auth: _auth);
         }
         _repo ??= FirebaseOfficerRepository();
 
         // Resolve the role once per signed-in user before showing the shell.
-        if (_roleUid != user.uid) {
+        if (_roleUid != user.uid || !_roleResolved) {
           if (!_resolving) {
             _resolving = true;
             _resolveRole(user.uid);
@@ -100,16 +103,65 @@ class _CommandRootState extends State<CommandRoot> {
           );
         }
 
+        // A signed-in account that isn't a provisioned dashboard user (e.g. a
+        // Pay citizen) gets no dashboard access.
+        if (_role == null) {
+          return _NoAccessScreen(
+            email: user.email ?? '',
+            onSignOut: () => _auth.signOut(),
+          );
+        }
+
         final name = (user.displayName != null && user.displayName!.isNotEmpty)
             ? user.displayName!
             : (user.email ?? 'Admin');
         return CommandShell(
           repo: _repo!,
           adminName: name,
-          isAdmin: _isAdmin ?? false,
+          isAdmin: _role == 'admin',
           onSignOut: () => _auth.signOut(),
         );
       },
+    );
+  }
+}
+
+/// Shown when a signed-in account has no dashboard access (not an admin and not
+/// a provisioned normal user). An admin must add them on the Users page first.
+class _NoAccessScreen extends StatelessWidget {
+  const _NoAccessScreen({required this.email, required this.onSignOut});
+
+  final String email;
+  final VoidCallback onSignOut;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(HpSpace.x8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.lock_outline_rounded, size: 48, color: HpColors.textMuted),
+                const SizedBox(height: HpSpace.x5),
+                Text('No dashboard access', style: HpType.heading(size: 20), textAlign: TextAlign.center),
+                const SizedBox(height: HpSpace.x3),
+                Text(
+                  '${email.isEmpty ? 'This account' : email} is not set up for HPark Command. '
+                  'Ask an admin to add you on the Users page, then sign in again.',
+                  style: HpType.body(size: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: HpSpace.x6),
+                HpButton(label: 'Sign out', variant: HpButtonVariant.secondary, onPressed: onSignOut),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -70,23 +70,32 @@ class FirebaseAdminUsers {
         return list;
       });
 
-  /// Is the *currently signed-in* user an admin? True if they hold the bootstrap
-  /// `admin` custom claim, are a legacy `admins/{uid}` member, or have a
-  /// `dashboardUsers/{uid}` record with `role: 'admin'`.
-  Future<bool> isAdmin() async {
+  /// The *currently signed-in* user's dashboard role:
+  ///  - `'admin'` — bootstrap `admin` claim, legacy `admins/{uid}` member, or a
+  ///    `dashboardUsers/{uid}` record with `role: 'admin'`.
+  ///  - `'user'`  — a `dashboardUsers/{uid}` record with any other role.
+  ///  - `null`    — not a provisioned dashboard account → no dashboard access.
+  ///
+  /// The claim check comes first and is offline-safe (cached token), so a real
+  /// admin is never locked out by a transient Firestore read failure.
+  Future<String?> currentRole() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return false;
+    if (user == null) return null;
     try {
       final token = await user.getIdTokenResult();
-      if (token.claims?['admin'] == true) return true;
+      if (token.claims?['admin'] == true) return 'admin';
     } catch (_) {/* offline / no claim */}
     try {
-      if ((await _db.collection('admins').doc(user.uid).get()).exists) return true;
+      if ((await _db.collection('admins').doc(user.uid).get()).exists) return 'admin';
       final d = await _col.doc(user.uid).get();
-      if ((d.data()?['role']) == 'admin') return true;
-    } catch (_) {/* read failed — treat as non-admin */}
-    return false;
+      final data = d.data();
+      if (data != null) return data['role'] == 'admin' ? 'admin' : 'user';
+    } catch (_) {/* read failed — fail closed (no access) */}
+    return null;
   }
+
+  /// Convenience: is the signed-in user an admin?
+  Future<bool> isAdmin() async => (await currentRole()) == 'admin';
 
   /// Create a new dashboard account: a Firebase Auth login (via a throwaway
   /// secondary app, so the current session is untouched) plus their
