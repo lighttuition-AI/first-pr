@@ -1,7 +1,7 @@
 name: hpark_pay
 description: "HPark Pay — Hargeisa Parking citizen app (citations, ZAAD/eDahab payments, district deals)."
 publish_to: 'none'
-version: 1.1.0+10
+version: 1.1.0+11
 
 environment:
   sdk: ^3.12.1
@@ -26,7 +26,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.1
 
-# App-store / Play-store icon — the HPark gradient "P" + a teal coin (citizen).
+# App-store / Play-store icon — white background + the HPark gradient "P" (matches the Command dashboard).
 # Regenerate the masters with `flutter test tool/gen_icons.dart` (in enforce_app),
 # then `dart run flutter_launcher_icons`.
 flutter_launcher_icons:
@@ -34,7 +34,7 @@ flutter_launcher_icons:
   android: true
   ios: true
   remove_alpha_ios: true
-  adaptive_icon_background: "#0F0F17"
+  adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/launcher/icon_fg.png"
 
 flutter:

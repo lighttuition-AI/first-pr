@@ -1,7 +1,7 @@
 name: hpark_enforce
 description: "HPark Enforce — Hargeisa Parking officer app (registration, approval gate, patrol & citations)."
 publish_to: 'none'
-version: 1.1.0+12
+version: 1.1.0+13
 
 environment:
   sdk: ^3.12.1
@@ -26,15 +26,15 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.1
 
-# App-store / Play-store icon — the HPark gradient "P" + a purple shield (officer).
-# Regenerate the masters with `flutter test tool/gen_icons.dart`, then
-# `dart run flutter_launcher_icons`.
+# App-store / Play-store icon — white background + the HPark gradient "P"
+# (matches the Command dashboard). Masters live in assets/launcher/; regenerate
+# with `python3 ../tool/gen_white_icons.py` then `dart run flutter_launcher_icons`.
 flutter_launcher_icons:
   image_path: "assets/launcher/icon.png"
   android: true
   ios: true
   remove_alpha_ios: true
-  adaptive_icon_background: "#0F0F17"
+  adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/launcher/icon_fg.png"
 
 flutter:
