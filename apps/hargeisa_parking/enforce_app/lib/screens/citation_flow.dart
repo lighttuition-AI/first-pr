@@ -433,29 +433,35 @@ class _FoundStep extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: HpSpace.x3, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: HpColors.overlay,
-                            borderRadius: BorderRadius.circular(HpRadius.sm),
-                            border: Border.all(color: HpColors.borderStrong),
-                          ),
-                          child: Text(vehicle.plate, style: HpType.mono(size: 20, weight: FontWeight.w700)),
+                    // Top row is the plate only.
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: HpSpace.x3, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: HpColors.overlay,
+                          borderRadius: BorderRadius.circular(HpRadius.sm),
+                          border: Border.all(color: HpColors.borderStrong),
                         ),
-                        const Spacer(),
-                        HpBadge(label: vehicle.permitStatus.label, color: vehicle.permitStatus.color, tint: vehicle.permitStatus.tint, glyph: vehicle.permitStatus.glyph),
-                      ],
+                        child: Text(vehicle.plate, style: HpType.mono(size: 20, weight: FontWeight.w700)),
+                      ),
                     ),
-                    const SizedBox(height: HpSpace.x4),
-                    Text('${vehicle.make} · ${vehicle.color}', style: HpType.heading(size: 17)),
                     const SizedBox(height: HpSpace.x4),
                     const Divider(),
                     const SizedBox(height: HpSpace.x3),
+                    // National ID is intentionally NOT shown to officers — only
+                    // admins see it in HPark Command (privacy / misuse safeguard).
                     _kv('Owner', vehicle.ownerName),
                     const SizedBox(height: HpSpace.x3),
-                    _kv('National ID', vehicle.ownerNationalId, mono: true),
+                    _kv('Make', vehicle.make),
+                    const SizedBox(height: HpSpace.x3),
+                    _kv('Color', vehicle.color),
+                    const SizedBox(height: HpSpace.x4),
+                    // Permit status moves below the colour (top is plate-only).
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: HpBadge(label: vehicle.permitStatus.label, color: vehicle.permitStatus.color, tint: vehicle.permitStatus.tint, glyph: vehicle.permitStatus.glyph),
+                    ),
                   ],
                 ),
               ),

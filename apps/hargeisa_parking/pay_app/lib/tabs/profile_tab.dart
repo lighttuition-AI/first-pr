@@ -74,7 +74,7 @@ class ProfileTab extends StatelessWidget {
           label: tr('Payment history'),
           subtitle: tr('Past ZAAD & eDahab payments'),
           onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => PaymentHistoryScreen(citations: citations)),
+            MaterialPageRoute(builder: (_) => PaymentHistoryScreen(citations: citations, citizen: citizen)),
           ),
         ),
         _NavRow(
