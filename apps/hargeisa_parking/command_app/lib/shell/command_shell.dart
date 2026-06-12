@@ -11,6 +11,7 @@ import '../pages/live_map_page.dart';
 import '../pages/officers_page.dart';
 import '../pages/reports_page.dart';
 import '../pages/vehicle_import_page.dart';
+import '../pages/vehicles_database_page.dart';
 import '../pages/zones_page.dart';
 
 enum CommandPage {
@@ -18,6 +19,7 @@ enum CommandPage {
   approvals('Officer approvals', Icons.verified_user_outlined),
   officers('Officers', Icons.badge_outlined),
   vehicles('Vehicles', Icons.directions_car_outlined),
+  vehicleDb('Vehicle database', Icons.storage_outlined),
   zones('Zones', Icons.map_outlined),
   liveMap('Live map', Icons.my_location_outlined),
   appeals('Appeals', Icons.gavel_outlined),
@@ -99,6 +101,8 @@ class _CommandShellState extends State<CommandShell> {
         return OfficersPage(repo: repo);
       case CommandPage.vehicles:
         return VehicleImportPage(vehicles: _vehicleRepo);
+      case CommandPage.vehicleDb:
+        return VehiclesDatabasePage(vehicles: _vehicleRepo);
       case CommandPage.zones:
         return ZonesPage(repo: repo, citations: citations);
       case CommandPage.liveMap:
