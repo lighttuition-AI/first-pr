@@ -113,6 +113,7 @@ class _AppealVideoDialog extends StatefulWidget {
 class _AppealVideoDialogState extends State<_AppealVideoDialog> {
   VideoPlayerController? _c;
   bool _ready = false;
+  bool _failed = false;
 
   bool get _hasVideo => widget.appeal.videoUrl.isNotEmpty;
 
@@ -125,7 +126,11 @@ class _AppealVideoDialogState extends State<_AppealVideoDialog> {
         if (!mounted) return;
         setState(() => _ready = true);
         _c!.play();
-      }).catchError((_) {});
+      }).catchError((_) {
+        // Some formats (e.g. an iPhone .mov) don't play inline in every browser —
+        // fall back to the "Full screen" button, which opens the file directly.
+        if (mounted) setState(() => _failed = true);
+      });
     }
   }
 
@@ -168,8 +173,21 @@ class _AppealVideoDialogState extends State<_AppealVideoDialog> {
                         ),
                       if (_hasVideo && _ready && _c != null && !_c!.value.isPlaying)
                         const IgnorePointer(child: Icon(Icons.play_circle_outline, size: 56, color: Colors.white70)),
-                      if (_hasVideo && !_ready)
+                      if (_hasVideo && !_ready && !_failed)
                         const CircularProgressIndicator(color: Colors.white),
+                      if (_hasVideo && _failed)
+                        Padding(
+                          padding: const EdgeInsets.all(HpSpace.x6),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.open_in_new_rounded, size: 40, color: Colors.white54),
+                              const SizedBox(height: HpSpace.x3),
+                              Text("Tap Full screen to watch this clip.",
+                                  textAlign: TextAlign.center, style: HpType.body(size: 13, color: Colors.white70)),
+                            ],
+                          ),
+                        ),
                       if (!_hasVideo)
                         Column(
                           mainAxisSize: MainAxisSize.min,
