@@ -14,7 +14,10 @@ class DashboardPage extends StatelessWidget {
 
   final OfficerRepository repo;
   final List<Citation> citations;
-  final VoidCallback onSeeApprovals;
+
+  /// Jump to the approvals queue. Null for normal users (who can't approve), so
+  /// the pending-approvals banner is hidden for them.
+  final VoidCallback? onSeeApprovals;
 
   @override
   Widget build(BuildContext context) {
@@ -39,8 +42,8 @@ class DashboardPage extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(HpSpace.x8),
       children: [
-        if (pending > 0) ...[
-          _PendingBanner(count: pending, onReview: onSeeApprovals),
+        if (pending > 0 && onSeeApprovals != null) ...[
+          _PendingBanner(count: pending, onReview: onSeeApprovals!),
           const SizedBox(height: HpSpace.x6),
         ],
         _ComplianceHero(compliance: compliance, total: total),

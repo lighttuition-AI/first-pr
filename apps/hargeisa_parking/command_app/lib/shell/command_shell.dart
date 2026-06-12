@@ -35,17 +35,30 @@ enum CommandPage {
   final IconData icon;
 }
 
+/// Pages only an admin may open. Normal users never see these in the sidebar:
+/// officer approval, vehicle import, user management, and the audit log.
+const _adminOnlyPages = {
+  CommandPage.approvals,
+  CommandPage.vehicles,
+  CommandPage.users,
+  CommandPage.activity,
+};
+
 class CommandShell extends StatefulWidget {
   const CommandShell({
     super.key,
     required this.repo,
     required this.adminName,
     required this.onSignOut,
+    required this.isAdmin,
   });
 
   final OfficerRepository repo;
   final String adminName;
   final VoidCallback onSignOut;
+
+  /// True for admins (full powers); false for normal users (browse + look up).
+  final bool isAdmin;
 
   @override
   State<CommandShell> createState() => _CommandShellState();
@@ -104,17 +117,26 @@ class _CommandShellState extends State<CommandShell> {
   void _go(CommandPage p) => setState(() => _page = p);
 
   Widget _buildPage() {
+    // Defensive: a normal user should never reach an admin-only page (the nav
+    // hides them), but if they somehow do, fall back to the dashboard.
+    if (!widget.isAdmin && _adminOnlyPages.contains(_page)) {
+      return DashboardPage(repo: repo, citations: citations, onSeeApprovals: () {});
+    }
     switch (_page) {
       case CommandPage.dashboard:
-        return DashboardPage(repo: repo, citations: citations, onSeeApprovals: () => _go(CommandPage.approvals));
+        return DashboardPage(
+          repo: repo,
+          citations: citations,
+          onSeeApprovals: widget.isAdmin ? () => _go(CommandPage.approvals) : null,
+        );
       case CommandPage.approvals:
         return ApprovalsPage(repo: repo, adminName: widget.adminName, audit: _audit);
       case CommandPage.officers:
-        return OfficersPage(repo: repo, audit: _audit);
+        return OfficersPage(repo: repo, audit: _audit, canManage: widget.isAdmin);
       case CommandPage.vehicles:
         return VehicleImportPage(vehicles: _vehicleRepo, audit: _audit);
       case CommandPage.vehicleDb:
-        return VehiclesDatabasePage(vehicles: _vehicleRepo, audit: _audit);
+        return VehiclesDatabasePage(vehicles: _vehicleRepo, audit: _audit, canManage: widget.isAdmin);
       case CommandPage.zones:
         return ZonesPage(repo: repo, citations: citations);
       case CommandPage.liveMap:
@@ -124,6 +146,7 @@ class _CommandShellState extends State<CommandShell> {
           appeals: appeals,
           adminName: widget.adminName,
           onDecide: _decideAppeal,
+          canDecide: widget.isAdmin,
         );
       case CommandPage.reports:
         return ReportsPage(citations: citations);
@@ -144,7 +167,11 @@ class _CommandShellState extends State<CommandShell> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _Sidebar(
+                pages: widget.isAdmin
+                    ? CommandPage.values
+                    : CommandPage.values.where((p) => !_adminOnlyPages.contains(p)).toList(),
                 current: _page,
+                isAdmin: widget.isAdmin,
                 pendingCount: repo.pending.length,
                 appealsCount: appeals.where((a) => a.status == AppealStatus.review).length,
                 adminName: widget.adminName,
@@ -174,7 +201,9 @@ class _CommandShellState extends State<CommandShell> {
 
 class _Sidebar extends StatelessWidget {
   const _Sidebar({
+    required this.pages,
     required this.current,
+    required this.isAdmin,
     required this.pendingCount,
     required this.appealsCount,
     required this.adminName,
@@ -182,7 +211,9 @@ class _Sidebar extends StatelessWidget {
     required this.onSelect,
   });
 
+  final List<CommandPage> pages;
   final CommandPage current;
+  final bool isAdmin;
   final int pendingCount;
   final int appealsCount;
   final String adminName;
@@ -221,7 +252,7 @@ class _Sidebar extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: HpSpace.x3),
               children: [
-                for (final p in CommandPage.values)
+                for (final p in pages)
                   _NavItem(
                     page: p,
                     active: p == current,
@@ -247,7 +278,7 @@ class _Sidebar extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 14)),
-                      Text('City operations',
+                      Text(isAdmin ? 'Admin · City operations' : 'Operator',
                           style: TextStyle(color: HpColors.textMuted, fontSize: 12)),
                     ],
                   ),
