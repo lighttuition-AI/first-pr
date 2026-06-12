@@ -10,10 +10,14 @@ class AppealsReviewPage extends StatelessWidget {
     required this.appeals,
     required this.adminName,
     required this.onDecide,
+    this.canDecide = true,
   });
 
   final List<Appeal> appeals;
   final String adminName;
+
+  /// Admins decide appeals; normal users review (watch) read-only.
+  final bool canDecide;
 
   /// Persist an appeal decision (uphold = citation stands; dismiss = cancelled).
   final Future<void> Function(Appeal appeal, AppealStatus status) onDecide;
@@ -47,6 +51,7 @@ class AppealsReviewPage extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: HpSpace.x4),
               child: _AppealCard(
                 appeal: a,
+                canDecide: canDecide,
                 onWatch: () => _watch(context, a),
                 onUphold: () { a.status = AppealStatus.upheld; a.decidedBy = adminName; onDecide(a, AppealStatus.upheld); },
                 onDismiss: () { a.status = AppealStatus.dismissed; a.decidedBy = adminName; onDecide(a, AppealStatus.dismissed); },
@@ -137,12 +142,14 @@ class AppealsReviewPage extends StatelessWidget {
 class _AppealCard extends StatelessWidget {
   const _AppealCard({
     required this.appeal,
+    required this.canDecide,
     required this.onWatch,
     required this.onUphold,
     required this.onDismiss,
   });
 
   final Appeal appeal;
+  final bool canDecide;
   final VoidCallback onWatch;
   final VoidCallback onUphold;
   final VoidCallback onDismiss;
@@ -185,11 +192,14 @@ class _AppealCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text('"${appeal.reason}"', style: HpType.body(size: 13)),
                 const SizedBox(height: HpSpace.x4),
-                Row(children: [
-                  HpButton(label: 'Dismiss citation', variant: HpButtonVariant.ghost, icon: Icons.check_rounded, onPressed: onDismiss),
-                  const SizedBox(width: HpSpace.x3),
-                  HpButton(label: 'Uphold', variant: HpButtonVariant.danger, icon: Icons.gavel_rounded, onPressed: onUphold),
-                ]),
+                if (canDecide)
+                  Row(children: [
+                    HpButton(label: 'Dismiss citation', variant: HpButtonVariant.ghost, icon: Icons.check_rounded, onPressed: onDismiss),
+                    const SizedBox(width: HpSpace.x3),
+                    HpButton(label: 'Uphold', variant: HpButtonVariant.danger, icon: Icons.gavel_rounded, onPressed: onUphold),
+                  ])
+                else
+                  HpButton(label: 'Watch appeal', variant: HpButtonVariant.secondary, icon: Icons.play_arrow_rounded, onPressed: onWatch),
               ],
             ),
           ),

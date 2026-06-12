@@ -8,10 +8,18 @@ import '../data/audit_logger.dart';
 /// Browse + search the full vehicle registry. Every vehicle on file, sorted
 /// alphabetically by plate, with a live search box for a quick plate lookup.
 class VehiclesDatabasePage extends StatefulWidget {
-  const VehiclesDatabasePage({super.key, required this.vehicles, required this.audit});
+  const VehiclesDatabasePage({
+    super.key,
+    required this.vehicles,
+    required this.audit,
+    this.canManage = true,
+  });
 
   final FirebaseVehicleRepository vehicles;
   final AuditLogger audit;
+
+  /// Admins can edit / delete records; normal users browse read-only.
+  final bool canManage;
 
   @override
   State<VehiclesDatabasePage> createState() => _VehiclesDatabasePageState();
@@ -132,7 +140,7 @@ class _VehiclesDatabasePageState extends State<VehiclesDatabasePage> {
     );
     try {
       await widget.vehicles.upsert(updated);
-      await widget.audit.log('Edited vehicle', target: v.plate);
+      await widget.audit.log('Edited vehicle', target: v.plate, details: _vehicleDetails(updated));
       await _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -170,7 +178,7 @@ class _VehiclesDatabasePageState extends State<VehiclesDatabasePage> {
     if (ok != true) return;
     try {
       await widget.vehicles.delete(v.plate);
-      await widget.audit.log('Deleted vehicle', target: v.plate);
+      await widget.audit.log('Deleted vehicle', target: v.plate, details: _vehicleDetails(v));
       await _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -258,7 +266,13 @@ class _VehiclesDatabasePageState extends State<VehiclesDatabasePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _headerRow(),
-                    for (final v in rows) _DataRow(vehicle: v, onEdit: () => _edit(v), onDelete: () => _delete(v)),
+                    for (final v in rows)
+                      _DataRow(
+                        vehicle: v,
+                        canManage: widget.canManage,
+                        onEdit: () => _edit(v),
+                        onDelete: () => _delete(v),
+                      ),
                   ],
                 ),
               ),
@@ -297,9 +311,20 @@ Widget _headerRow() {
   );
 }
 
+/// One-line summary of a vehicle for the audit log (so a deletion records who
+/// owned it, their ID, the make and colour — not just the plate).
+String _vehicleDetails(Vehicle v) =>
+    'Owner: ${v.ownerName} · National ID: ${v.ownerNationalId} · Make: ${v.make} · Color: ${v.color}';
+
 class _DataRow extends StatelessWidget {
-  const _DataRow({required this.vehicle, required this.onEdit, required this.onDelete});
+  const _DataRow({
+    required this.vehicle,
+    required this.canManage,
+    required this.onEdit,
+    required this.onDelete,
+  });
   final Vehicle vehicle;
+  final bool canManage;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -330,23 +355,25 @@ class _DataRow extends StatelessWidget {
                     style: HpType.mono(size: 12.5, color: HpColors.danger))
                 : Text('—', style: HpType.body(size: 13, color: HpColors.textMuted)),
           ),
-          SizedBox(
-            width: 40,
-            child: IconButton(
-              tooltip: 'Edit',
-              onPressed: onEdit,
-              icon: Icon(Icons.edit_outlined, size: 18, color: HpColors.textMuted),
+          if (canManage) ...[
+            SizedBox(
+              width: 40,
+              child: IconButton(
+                tooltip: 'Edit',
+                onPressed: onEdit,
+                icon: Icon(Icons.edit_outlined, size: 18, color: HpColors.textMuted),
+              ),
             ),
-          ),
-          SizedBox(
-            width: 40,
-            child: IconButton(
-              tooltip: 'Delete',
-              onPressed: onDelete,
-              icon: Icon(Icons.delete_outline_rounded, size: 18, color: HpColors.textMuted),
-              hoverColor: HpColors.dangerTint,
+            SizedBox(
+              width: 40,
+              child: IconButton(
+                tooltip: 'Delete',
+                onPressed: onDelete,
+                icon: Icon(Icons.delete_outline_rounded, size: 18, color: HpColors.textMuted),
+                hoverColor: HpColors.dangerTint,
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

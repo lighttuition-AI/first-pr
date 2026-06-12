@@ -44,12 +44,28 @@ class CommandRoot extends StatefulWidget {
 
 class _CommandRootState extends State<CommandRoot> {
   final AuthService _auth = FirebaseAuthService();
+  final FirebaseAdminUsers _adminUsers = FirebaseAdminUsers();
   FirebaseOfficerRepository? _repo;
+
+  // Resolved role for the signed-in user: admin (full powers) vs normal user.
+  bool? _isAdmin;
+  String? _roleUid;
+  bool _resolving = false;
 
   @override
   void dispose() {
     _repo?.dispose();
     super.dispose();
+  }
+
+  Future<void> _resolveRole(String uid) async {
+    final admin = await _adminUsers.isAdmin();
+    if (!mounted) return;
+    setState(() {
+      _isAdmin = admin;
+      _roleUid = uid;
+      _resolving = false;
+    });
   }
 
   @override
@@ -66,15 +82,31 @@ class _CommandRootState extends State<CommandRoot> {
         if (user == null) {
           _repo?.dispose();
           _repo = null;
+          _isAdmin = null;
+          _roleUid = null;
+          _resolving = false;
           return AdminAuthScreen(auth: _auth);
         }
         _repo ??= FirebaseOfficerRepository();
+
+        // Resolve the role once per signed-in user before showing the shell.
+        if (_roleUid != user.uid) {
+          if (!_resolving) {
+            _resolving = true;
+            _resolveRole(user.uid);
+          }
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator(color: HpColors.purple)),
+          );
+        }
+
         final name = (user.displayName != null && user.displayName!.isNotEmpty)
             ? user.displayName!
             : (user.email ?? 'Admin');
         return CommandShell(
           repo: _repo!,
           adminName: name,
+          isAdmin: _isAdmin ?? false,
           onSignOut: () => _auth.signOut(),
         );
       },

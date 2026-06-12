@@ -4,10 +4,13 @@ import 'package:hpark_core/hpark_core.dart';
 import '../data/audit_logger.dart';
 
 class OfficersPage extends StatelessWidget {
-  const OfficersPage({super.key, required this.repo, required this.audit});
+  const OfficersPage({super.key, required this.repo, required this.audit, this.canManage = true});
 
   final OfficerRepository repo;
   final AuditLogger audit;
+
+  /// Admins can remove rogue officers; normal users view the roster read-only.
+  final bool canManage;
 
   Future<void> _confirmDelete(BuildContext context, Officer officer) async {
     final ok = await showDialog<bool>(
@@ -77,7 +80,7 @@ class OfficersPage extends StatelessWidget {
               children: [
                 for (var i = 0; i < officers.length; i++) ...[
                   if (i > 0) const Divider(height: 1),
-                  _Row(officer: officers[i], onDelete: () => _confirmDelete(context, officers[i])),
+                  _Row(officer: officers[i], canManage: canManage, onDelete: () => _confirmDelete(context, officers[i])),
                 ],
               ],
             ),
@@ -88,8 +91,9 @@ class OfficersPage extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row({required this.officer, required this.onDelete});
+  const _Row({required this.officer, required this.canManage, required this.onDelete});
   final Officer officer;
+  final bool canManage;
   final VoidCallback onDelete;
 
   @override
@@ -125,13 +129,15 @@ class _Row extends StatelessWidget {
             ),
           ),
           HpBadge.status(officer.status),
-          const SizedBox(width: HpSpace.x3),
-          IconButton(
-            tooltip: 'Delete officer',
-            onPressed: onDelete,
-            icon: Icon(Icons.delete_outline_rounded, size: 20, color: HpColors.textMuted),
-            hoverColor: HpColors.dangerTint,
-          ),
+          if (canManage) ...[
+            const SizedBox(width: HpSpace.x3),
+            IconButton(
+              tooltip: 'Delete officer',
+              onPressed: onDelete,
+              icon: Icon(Icons.delete_outline_rounded, size: 20, color: HpColors.textMuted),
+              hoverColor: HpColors.dangerTint,
+            ),
+          ],
         ],
       ),
     );

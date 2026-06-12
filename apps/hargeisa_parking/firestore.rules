@@ -14,13 +14,24 @@ service cloud.firestore {
 
     function isSignedIn() { return request.auth != null; }
 
-    // Admin = the bootstrap custom claim, OR a member of the `admins` collection.
-    // The collection path lets an existing admin add others without a backend
-    // (no Cloud Function / custom claim needed). The claim path bootstraps it.
+    // Admin = the bootstrap custom claim, OR a legacy `admins/{uid}` member, OR a
+    // `dashboardUsers/{uid}` record with role 'admin'. The collection paths let an
+    // existing admin add others without a backend (no Cloud Function needed); the
+    // claim path bootstraps it.
     function isAdmin() {
       return isSignedIn()
         && (request.auth.token.admin == true
-            || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+            || exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+            || (exists(/databases/$(database)/documents/dashboardUsers/$(request.auth.uid))
+                && get(/databases/$(database)/documents/dashboardUsers/$(request.auth.uid)).data.role == 'admin'));
+    }
+
+    // Any provisioned dashboard account (admin OR normal user). Normal users may
+    // browse + look up, but every write stays gated behind isAdmin().
+    function isDashboardUser() {
+      return isAdmin()
+        || (isSignedIn()
+            && exists(/databases/$(database)/documents/dashboardUsers/$(request.auth.uid)));
     }
 
     function isApprovedOfficer() {
@@ -30,8 +41,9 @@ service cloud.firestore {
     }
 
     // Officer records, keyed by auth UID. Self-create as pending; admins decide.
+    // Dashboard users (admins + normal operators) may read the roster.
     match /officers/{officerId} {
-      allow read:           if isAdmin() || (isSignedIn() && request.auth.uid == officerId);
+      allow read:           if isDashboardUser() || (isSignedIn() && request.auth.uid == officerId);
       allow create:         if isSignedIn() && request.auth.uid == officerId
                             && request.resource.data.status == 'pending';
       allow update, delete: if isAdmin();
@@ -79,17 +91,25 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // Dashboard admin accounts. Membership here grants admin powers (see isAdmin).
-    // Only an existing admin can add or remove admins.
+    // Legacy dashboard admin accounts. Membership here grants admin powers
+    // (see isAdmin). Only an existing admin can add or remove admins.
     match /admins/{uid} {
       allow read:                   if isSignedIn();
       allow create, update, delete: if isAdmin();
     }
 
-    // Append-only activity / audit log — any signed-in user may append + read;
-    // entries can never be edited or deleted.
+    // Dashboard accounts with a role ('admin' | 'user'). Only an admin can
+    // create/remove accounts; any signed-in user may read (needed so the app can
+    // resolve its own role at sign-in).
+    match /dashboardUsers/{uid} {
+      allow read:                   if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Append-only activity / audit log — only admins may read (it is closed off
+    // to normal users); any signed-in user may append; entries are immutable.
     match /audit/{id} {
-      allow read:           if isSignedIn();
+      allow read:           if isAdmin();
       allow create:         if isSignedIn();
       allow update, delete: if false;
     }

@@ -80,11 +80,12 @@ abstract final class HParkTheme {
 
 /// Drives the app-wide appearance. A single shared instance ([hpTheme]) flips
 /// [HpColors.palette] and rebuilds the MaterialApp; the choice persists per
-/// device via shared_preferences. Default is dark (the original look).
+/// device via shared_preferences. Default is light (matches the Command
+/// dashboard look); users can still flip to dark with the toggle.
 class HpThemeController extends ChangeNotifier {
   static const _key = 'hp_dark';
 
-  bool _dark = true;
+  bool _dark = false;
   bool get isDark => _dark;
   ThemeMode get mode => _dark ? ThemeMode.dark : ThemeMode.light;
 
@@ -94,9 +95,9 @@ class HpThemeController extends ChangeNotifier {
   Future<void> load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _dark = prefs.getBool(_key) ?? true;
+      _dark = prefs.getBool(_key) ?? false;
     } catch (_) {
-      _dark = true;
+      _dark = false;
     }
     _apply();
   }
