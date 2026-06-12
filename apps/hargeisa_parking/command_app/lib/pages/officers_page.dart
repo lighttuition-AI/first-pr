@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 
+import '../data/audit_logger.dart';
+
 class OfficersPage extends StatelessWidget {
-  const OfficersPage({super.key, required this.repo});
+  const OfficersPage({super.key, required this.repo, required this.audit});
 
   final OfficerRepository repo;
+  final AuditLogger audit;
 
   Future<void> _confirmDelete(BuildContext context, Officer officer) async {
     final ok = await showDialog<bool>(
@@ -27,6 +30,7 @@ class OfficersPage extends StatelessWidget {
     if (ok != true) return;
     try {
       await repo.delete(officer.id);
+      await audit.log('Deleted officer', target: officer.fullName);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

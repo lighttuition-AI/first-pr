@@ -3,12 +3,15 @@ import 'package:hpark_core/hpark_core.dart';
 import 'package:hpark_firebase/hpark_firebase.dart';
 import 'package:intl/intl.dart';
 
+import '../data/audit_logger.dart';
+
 /// Browse + search the full vehicle registry. Every vehicle on file, sorted
 /// alphabetically by plate, with a live search box for a quick plate lookup.
 class VehiclesDatabasePage extends StatefulWidget {
-  const VehiclesDatabasePage({super.key, required this.vehicles});
+  const VehiclesDatabasePage({super.key, required this.vehicles, required this.audit});
 
   final FirebaseVehicleRepository vehicles;
+  final AuditLogger audit;
 
   @override
   State<VehiclesDatabasePage> createState() => _VehiclesDatabasePageState();
@@ -129,6 +132,7 @@ class _VehiclesDatabasePageState extends State<VehiclesDatabasePage> {
     );
     try {
       await widget.vehicles.upsert(updated);
+      await widget.audit.log('Edited vehicle', target: v.plate);
       await _load();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
