@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
+import 'package:hpark_firebase/hpark_firebase.dart';
 
 import 'app.dart';
 import 'firebase_options.dart';
@@ -9,6 +10,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await hpTheme.load();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  enableOfflineCache(); // keep working offline; sync when back online
   runApp(const HParkEnforceApp());
 }
 
