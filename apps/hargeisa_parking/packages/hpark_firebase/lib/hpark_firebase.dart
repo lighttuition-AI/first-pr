@@ -15,3 +15,4 @@ export 'src/firebase_appeal_repository.dart';
 export 'src/firebase_deal_repository.dart';
 export 'src/firebase_audit_repository.dart';
 export 'src/firebase_admin_users.dart';
+export 'src/offline_cache.dart';
