@@ -37,12 +37,18 @@ const officers = [
 ];
 
 // The vehicle registry an officer's plate lookup checks against (vehicles/{plate}).
+// Plates are stored normalised (uppercase, no spaces/dashes), matching
+// FirebaseVehicleRepository.normalisePlate, so OCR + manual entry resolve to them.
+// The first three are REAL Somaliland plates (one letter + 4 digits) for OCR testing.
 const vehicles = [
-  { plate: 'HG-4821', ownerName: 'Cabdi Jaamac', ownerNationalId: 'SL-7741-0098', make: 'Toyota Vitz', color: 'Silver', permitStatus: 'none', outstandingCount: 0, outstandingTotal: 0 },
-  { plate: 'HG-1190', ownerName: 'Hodan Maxamed', ownerNationalId: 'SL-3320-7711', make: 'Nissan Sunny', color: 'White', permitStatus: 'valid', outstandingCount: 0, outstandingTotal: 0 },
-  { plate: 'HG-7732', ownerName: 'Maxamed Cali', ownerNationalId: 'SL-9012-4456', make: 'Toyota Mark X', color: 'Black', permitStatus: 'expired', outstandingCount: 0, outstandingTotal: 0 },
-  { plate: 'HG-3508', ownerName: 'Naima Yusuf', ownerNationalId: 'SL-6610-2245', make: 'Toyota Belta', color: 'Blue', permitStatus: 'valid', outstandingCount: 0, outstandingTotal: 0 },
+  { plate: 'F4154', ownerName: 'Cabdi Jaamac', ownerNationalId: 'SL-7741-0098', make: 'Toyota Vitz', color: 'Silver', permitStatus: 'valid', outstandingCount: 0, outstandingTotal: 0 },
+  { plate: 'L9019', ownerName: 'Maxamed Cali', ownerNationalId: 'SL-9012-4456', make: 'Toyota Mark X', color: 'Black', permitStatus: 'valid', outstandingCount: 0, outstandingTotal: 0 },
+  { plate: 'F4157', ownerName: 'Hodan Maxamed', ownerNationalId: 'SL-3320-7711', make: 'Nissan Sunny', color: 'White', permitStatus: 'expired', outstandingCount: 0, outstandingTotal: 0 },
+  { plate: 'HG3508', ownerName: 'Naima Yusuf', ownerNationalId: 'SL-6610-2245', make: 'Toyota Belta', color: 'Blue', permitStatus: 'valid', outstandingCount: 0, outstandingTotal: 0 },
 ];
+
+// Stale dashed demo plates from the earlier seed — remove so they don't linger.
+const staleVehiclePlates = ['HG-4821', 'HG-1190', 'HG-7732', 'HG-3508'];
 
 // District shop deals shown in HPark Pay (deals/{code}).
 const deals = [
@@ -59,6 +65,7 @@ const deals = [
 async function run() {
   const batch = db.batch();
   for (const o of officers) batch.set(db.collection('officers').doc(o.id), o);
+  for (const p of staleVehiclePlates) batch.delete(db.collection('vehicles').doc(p));
   for (const v of vehicles) batch.set(db.collection('vehicles').doc(v.plate), v);
   for (const d of deals) batch.set(db.collection('deals').doc(d.code), d);
   await batch.commit();

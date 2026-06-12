@@ -129,17 +129,23 @@ class _CitationFlowState extends State<CitationFlow> {
     }
   }
 
-  static final _plateRe = RegExp(r'([A-Z]{2,3})[\s-]?(\d{3,5})');
+  // Somaliland plates read as one letter + 4 digits (e.g. F4154, L9019, F4157),
+  // usually under a "SOMALILAND" header with small region codes (PR / MJ). The
+  // Hargeisa demo used 2-letter HG####. So accept 1–3 letters + 3–5 digits
+  // (preferring exactly 4), allowing whitespace/newlines between the letter and
+  // the number (ML Kit returns the header, plate and codes as separate blocks),
+  // then a bare digit block as a last resort.
+  static final _plate4 = RegExp(r'\b([A-Z]{1,3})[\s\-]*(\d{4})\b');
+  static final _plateAny = RegExp(r'\b([A-Z]{1,3})[\s\-]*(\d{3,5})\b');
 
-  /// Pull a plate out of recognised text. Prefers a Hargeisa `HG-####` token,
-  /// then falls back to any letters+digits plate.
   String? _extractPlate(String text) {
     final up = text.toUpperCase();
-    final hg = RegExp(r'HG[\s-]?(\d{3,5})').firstMatch(up);
-    if (hg != null) return 'HG-${hg.group(1)}';
-    final m = _plateRe.firstMatch(up);
-    if (m != null) return '${m.group(1)}-${m.group(2)}';
-    return null;
+    for (final re in [_plate4, _plateAny]) {
+      final m = re.firstMatch(up);
+      if (m != null) return '${m.group(1)}${m.group(2)}'; // e.g. F4154
+    }
+    final digits = RegExp(r'\b\d{4,5}\b').firstMatch(up);
+    return digits?.group(0);
   }
 
   /// Capture a timestamped evidence photo with the real camera.

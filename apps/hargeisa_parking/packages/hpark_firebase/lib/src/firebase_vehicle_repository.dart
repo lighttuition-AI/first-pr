@@ -16,8 +16,10 @@ class FirebaseVehicleRepository {
   CollectionReference<Map<String, dynamic>> get _col =>
       _db.collection('vehicles');
 
+  /// Canonical plate key: uppercase, stripped of spaces, dashes and any other
+  /// punctuation, so "F 4154", "F-4154" and "F4154" all resolve to one record.
   static String normalisePlate(String plate) =>
-      plate.trim().toUpperCase().replaceAll(' ', '');
+      plate.trim().toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
 
   /// Look up a vehicle by plate. Returns null when the plate isn't on file —
   /// the officer flow treats that as "no record" (issue against the plate anyway).

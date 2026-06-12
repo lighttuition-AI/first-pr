@@ -58,7 +58,7 @@ class _VehicleImportPageState extends State<VehicleImportPage> {
       setState(() {
         _fileName = result.files.first.name;
         _parsed = parsed;
-        _existingPlates = existing.map((v) => v.plate.toUpperCase()).toSet();
+        _existingPlates = existing.map((v) => FirebaseVehicleRepository.normalisePlate(v.plate)).toSet();
         _busy = false;
       });
     } catch (e) {
@@ -112,7 +112,7 @@ class _VehicleImportPageState extends State<VehicleImportPage> {
       String at(int j) => j < cols.length ? cols[j] : '';
       final permit = at(5).toLowerCase();
       out.add(Vehicle(
-        plate: at(0).toUpperCase(),
+        plate: FirebaseVehicleRepository.normalisePlate(at(0)),
         ownerName: at(1),
         ownerNationalId: at(2),
         make: at(3),
