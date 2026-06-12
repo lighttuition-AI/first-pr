@@ -13,3 +13,5 @@ export 'src/firebase_vehicle_repository.dart';
 export 'src/firebase_citation_repository.dart';
 export 'src/firebase_appeal_repository.dart';
 export 'src/firebase_deal_repository.dart';
+export 'src/firebase_audit_repository.dart';
+export 'src/firebase_admin_users.dart';

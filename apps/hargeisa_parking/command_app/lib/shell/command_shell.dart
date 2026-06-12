@@ -9,7 +9,10 @@ import '../pages/approvals_page.dart';
 import '../pages/dashboard_page.dart';
 import '../pages/live_map_page.dart';
 import '../pages/officers_page.dart';
+import '../data/audit_logger.dart';
+import '../pages/activity_log_page.dart';
 import '../pages/reports_page.dart';
+import '../pages/users_page.dart';
 import '../pages/vehicle_import_page.dart';
 import '../pages/vehicles_database_page.dart';
 import '../pages/zones_page.dart';
@@ -23,7 +26,9 @@ enum CommandPage {
   zones('Zones', Icons.map_outlined),
   liveMap('Live map', Icons.my_location_outlined),
   appeals('Appeals', Icons.gavel_outlined),
-  reports('Reports', Icons.bar_chart_rounded);
+  reports('Reports', Icons.bar_chart_rounded),
+  users('Users', Icons.group_outlined),
+  activity('Activity log', Icons.history_rounded);
 
   const CommandPage(this.title, this.icon);
   final String title;
@@ -52,6 +57,9 @@ class _CommandShellState extends State<CommandShell> {
   final FirebaseAppealRepository _appealRepo = FirebaseAppealRepository();
   final FirebaseCitationRepository _citationRepo = FirebaseCitationRepository();
   final FirebaseVehicleRepository _vehicleRepo = FirebaseVehicleRepository();
+  final AuditRepository _auditRepo = AuditRepository();
+  final FirebaseAdminUsers _adminUsers = FirebaseAdminUsers();
+  late final AuditLogger _audit = AuditLogger(_auditRepo, widget.adminName);
   List<Appeal> appeals = [];
   List<Citation> citations = [];
   StreamSubscription<List<Appeal>>? _appealSub;
@@ -87,6 +95,10 @@ class _CommandShellState extends State<CommandShell> {
     } else if (status == AppealStatus.upheld) {
       await _citationRepo.setStatus(a.citationId, CitationStatus.outstanding);
     }
+    _audit.log(
+      status == AppealStatus.dismissed ? 'Dismissed appeal (citation cancelled)' : 'Upheld appeal (citation stands)',
+      target: a.plate,
+    );
   }
 
   void _go(CommandPage p) => setState(() => _page = p);
@@ -96,13 +108,13 @@ class _CommandShellState extends State<CommandShell> {
       case CommandPage.dashboard:
         return DashboardPage(repo: repo, citations: citations, onSeeApprovals: () => _go(CommandPage.approvals));
       case CommandPage.approvals:
-        return ApprovalsPage(repo: repo, adminName: widget.adminName);
+        return ApprovalsPage(repo: repo, adminName: widget.adminName, audit: _audit);
       case CommandPage.officers:
-        return OfficersPage(repo: repo);
+        return OfficersPage(repo: repo, audit: _audit);
       case CommandPage.vehicles:
-        return VehicleImportPage(vehicles: _vehicleRepo);
+        return VehicleImportPage(vehicles: _vehicleRepo, audit: _audit);
       case CommandPage.vehicleDb:
-        return VehiclesDatabasePage(vehicles: _vehicleRepo);
+        return VehiclesDatabasePage(vehicles: _vehicleRepo, audit: _audit);
       case CommandPage.zones:
         return ZonesPage(repo: repo, citations: citations);
       case CommandPage.liveMap:
@@ -115,6 +127,10 @@ class _CommandShellState extends State<CommandShell> {
         );
       case CommandPage.reports:
         return ReportsPage(citations: citations);
+      case CommandPage.users:
+        return UsersPage(users: _adminUsers, audit: _audit);
+      case CommandPage.activity:
+        return ActivityLogPage(repo: _auditRepo);
     }
   }
 

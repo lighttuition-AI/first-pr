@@ -3,14 +3,17 @@ import 'package:flutter/services.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:hpark_firebase/hpark_firebase.dart';
 
+import '../data/audit_logger.dart';
+
 /// A spreadsheet-style editor for the vehicle registry: labelled columns (A–H,
 /// mapped to the registry fields), numbered rows, inline editing, add/remove
 /// rows and clear. A duplicate check runs against the sheet **and** the live
 /// database; the big push button stays disabled until every duplicate is cleared.
 class VehicleGrid extends StatefulWidget {
-  const VehicleGrid({super.key, required this.vehicles});
+  const VehicleGrid({super.key, required this.vehicles, required this.audit});
 
   final FirebaseVehicleRepository vehicles;
+  final AuditLogger audit;
 
   @override
   State<VehicleGrid> createState() => _VehicleGridState();
@@ -141,6 +144,7 @@ class _VehicleGridState extends State<VehicleGrid> {
         n++;
       } catch (_) {/* skip a bad row */}
     }
+    await widget.audit.log('Added $n vehicle${n == 1 ? '' : 's'}', details: 'via the data grid');
     await _loadDb();
     if (!mounted) return;
     setState(() {

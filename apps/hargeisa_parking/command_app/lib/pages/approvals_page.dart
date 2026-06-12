@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:intl/intl.dart';
 
+import '../data/audit_logger.dart';
+
 /// Officer approvals — the gate that keeps unauthorized people from operating as
 /// officers. Officers self-register in HPark Enforce and land here as *pending*;
 /// an admin reviews their identity and approves (assigning a district) or rejects.
 /// Only approved officers can sign in to the officer app.
 class ApprovalsPage extends StatelessWidget {
-  const ApprovalsPage({super.key, required this.repo, required this.adminName});
+  const ApprovalsPage({super.key, required this.repo, required this.adminName, required this.audit});
 
   final OfficerRepository repo;
   final String adminName;
+  final AuditLogger audit;
 
   @override
   Widget build(BuildContext context) {
@@ -72,6 +75,7 @@ class ApprovalsPage extends StatelessWidget {
     );
     if (districtId == null) return;
     await repo.approve(officer.id, by: adminName, districtId: districtId);
+    await audit.log('Approved officer', target: officer.fullName);
     if (context.mounted) {
       _toast(context, '${officer.fullName} approved — they can now sign in to HPark Enforce.',
           HpColors.success);
@@ -85,6 +89,7 @@ class ApprovalsPage extends StatelessWidget {
     );
     if (note == null) return;
     await repo.reject(officer.id, by: adminName, note: note);
+    await audit.log('Rejected officer', target: officer.fullName);
     if (context.mounted) {
       _toast(context, '${officer.fullName}\'s application was rejected.', HpColors.danger);
     }

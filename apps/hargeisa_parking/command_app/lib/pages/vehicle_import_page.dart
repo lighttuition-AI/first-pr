@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:hpark_firebase/hpark_firebase.dart';
 
+import '../data/audit_logger.dart';
 import 'vehicle_grid.dart';
 
 /// Real bulk vehicle-data import. Pick a CSV, it's parsed and deduped against
@@ -16,9 +17,10 @@ import 'vehicle_grid.dart';
 ///   outstandingCount, outstandingTotal
 /// permitStatus = valid | expired | none.
 class VehicleImportPage extends StatefulWidget {
-  const VehicleImportPage({super.key, required this.vehicles});
+  const VehicleImportPage({super.key, required this.vehicles, required this.audit});
 
   final FirebaseVehicleRepository vehicles;
+  final AuditLogger audit;
 
   @override
   State<VehicleImportPage> createState() => _VehicleImportPageState();
@@ -80,6 +82,7 @@ class _VehicleImportPageState extends State<VehicleImportPage> {
         written++;
       } catch (_) {/* skip a bad row, keep going */}
     }
+    await widget.audit.log('Imported $written vehicle${written == 1 ? '' : 's'}', details: 'via CSV upload');
     if (!mounted) return;
     setState(() {
       _busy = false;
@@ -144,7 +147,7 @@ class _VehicleImportPageState extends State<VehicleImportPage> {
         const SizedBox(height: HpSpace.x8),
         const Divider(),
         const SizedBox(height: HpSpace.x6),
-        VehicleGrid(vehicles: widget.vehicles),
+        VehicleGrid(vehicles: widget.vehicles, audit: widget.audit),
       ],
     );
   }
