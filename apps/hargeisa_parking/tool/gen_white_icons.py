@@ -1,104 +1,100 @@
-"""HPark app icons: white background + brand gradient "P" (matches the Command
-dashboard) with a per-app badge — checkmark circle for Pay, shield for Enforce."""
+"""HPark app icons v3 — white bg + gradient "P", purple badges (checkmark circle
+for Pay, shield for Enforce). Supersampled 3x for clean anti-aliased edges."""
 import math
 from PIL import Image, ImageDraw, ImageFont
 
-SIZE = 1024
-PURPLE = (124, 108, 248)   # #7C6CF8
-TEAL = (0, 216, 214)       # #00D8D6
+OUT = 1024
+SS = 3
+W = OUT * SS
+PURPLE = (124, 108, 248)
+TEAL = (0, 216, 214)
 WHITE = (255, 255, 255, 255)
-
-try:
-    import numpy as np
-    yy, xx = np.mgrid[0:SIZE, 0:SIZE]
-    t = (xx + yy) / (2 * (SIZE - 1))
-    r = (PURPLE[0] + (TEAL[0] - PURPLE[0]) * t).astype('uint8')
-    g = (PURPLE[1] + (TEAL[1] - PURPLE[1]) * t).astype('uint8')
-    b = (PURPLE[2] + (TEAL[2] - PURPLE[2]) * t).astype('uint8')
-    GRAD = Image.fromarray(np.dstack([r, g, b]), 'RGB').convert('RGBA')
-except Exception:
-    GRAD = Image.new('RGBA', (SIZE, SIZE), PURPLE + (255,))
-
 FONT_PATH = "/System/Library/Fonts/Supplemental/Arial Black.ttf"
 
 
-def grad_over(x0, y0, w, h):
-    """Vertical purple(top)->teal(bottom) gradient mapped across [y0, y0+h], so
-    the glyph spans the full brand gradient. numpy-free: build a 1px-wide ramp
-    and stretch it across the canvas (fast + no dependency)."""
-    col = Image.new('RGB', (1, SIZE))
+def vgrad(y0, h):
+    col = Image.new('RGB', (1, W))
     cp = col.load()
-    for y in range(SIZE):
+    for y in range(W):
         t = (y - y0) / h
         t = 0.0 if t < 0 else (1.0 if t > 1 else t)
         cp[0, y] = (int(PURPLE[0] + (TEAL[0] - PURPLE[0]) * t),
                     int(PURPLE[1] + (TEAL[1] - PURPLE[1]) * t),
                     int(PURPLE[2] + (TEAL[2] - PURPLE[2]) * t))
-    return col.resize((SIZE, SIZE)).convert('RGBA')
+    return col.resize((W, W)).convert('RGBA')
 
 
 def paste_p(canvas, cx, cy, font_size):
-    mask = Image.new('L', (SIZE, SIZE), 0)
+    mask = Image.new('L', (W, W), 0)
     d = ImageDraw.Draw(mask)
     font = ImageFont.truetype(FONT_PATH, font_size)
     l, t, r, b = d.textbbox((0, 0), "P", font=font)
     d.text((cx - (r - l) / 2 - l, cy - (b - t) / 2 - t), "P", fill=255, font=font)
-    il, it, ir, ib = mask.getbbox()  # true ink bounds (font metrics vary)
-    canvas.paste(grad_over(il, it, ir - il, ib - it), (0, 0), mask)
+    bb = mask.getbbox()
+    canvas.paste(vgrad(bb[1], bb[3] - bb[1]), (0, 0), mask)
 
 
-def draw_check(d, bx, by, rb, width):
-    pts = [(bx - 0.34 * rb, by + 0.02 * rb),
-           (bx - 0.07 * rb, by + 0.28 * rb),
-           (bx + 0.42 * rb, by - 0.30 * rb)]
+def check(d, bx, by, rb):
+    width = rb * 0.22
+    pts = [(bx - 0.36 * rb, by + 0.02 * rb),
+           (bx - 0.10 * rb, by + 0.28 * rb),
+           (bx + 0.40 * rb, by - 0.30 * rb)]
     d.line(pts, fill=WHITE, width=int(width), joint='curve')
     rc = width / 2
     for px, py in (pts[0], pts[2]):
         d.ellipse([px - rc, py - rc, px + rc, py + rc], fill=WHITE)
 
 
-def shield(cx, cy, w, h):
-    hw, hh, rc = w / 2, h / 2, w * 0.18
-    pts = []
-    for a in range(180, 271, 9):
-        pts.append((cx - hw + rc + rc * math.cos(math.radians(a)),
-                    cy - hh + rc + rc * math.sin(math.radians(a))))
-    for a in range(270, 361, 9):
-        pts.append((cx + hw - rc + rc * math.cos(math.radians(a)),
-                    cy - hh + rc + rc * math.sin(math.radians(a))))
-    pts += [(cx + hw, cy + hh * 0.12),
-            (cx + hw * 0.5, cy + hh * 0.66),
-            (cx, cy + hh),
-            (cx - hw * 0.5, cy + hh * 0.66),
-            (cx - hw, cy + hh * 0.12)]
-    return pts
+def shield_pts(cx, cy, w, h):
+    """Clean, perfectly symmetric heraldic shield: flat rounded top, straight
+    shoulders, smooth bezier curve to a centred point. Right half is built then
+    mirrored, so the two sides match exactly."""
+    hw, hh = w / 2, h / 2
+    r = w * 0.16
+    right = [(cx, cy - hh), (cx + hw - r, cy - hh)]
+    for a in range(270, 361, 3):  # top-right rounded corner
+        right.append((cx + hw - r + r * math.cos(math.radians(a)),
+                      cy - hh + r + r * math.sin(math.radians(a))))
+    sh = cy - hh + h * 0.46
+    right.append((cx + hw, sh))               # straight shoulder
+    p0, p1, p2 = (cx + hw, sh), (cx + hw, cy + hh * 0.55), (cx, cy + hh)
+    for i in range(1, 21):                     # quadratic bezier to the point
+        t = i / 20
+        right.append(((1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0],
+                      (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1]))
+    left = [(2 * cx - x, y) for (x, y) in reversed(right)][1:-1]
+    return right + left
 
 
-def build(shape, transparent, scale):
-    bg = (0, 0, 0, 0) if transparent else WHITE
-    canvas = Image.new('RGBA', (SIZE, SIZE), bg)
-    c = SIZE / 2
-    paste_p(canvas, c - 0.02 * SIZE * scale, c - 0.04 * SIZE * scale, int(SIZE * 0.70 * scale))
+def build(shape, transparent):
+    canvas = Image.new('RGBA', (W, W), (0, 0, 0, 0) if transparent else WHITE)
+    c = W / 2
+    paste_p(canvas, c - 0.02 * W, c - 0.04 * W, int(W * 0.70))
     d = ImageDraw.Draw(canvas)
-    bx, by = c + 0.21 * SIZE * scale, c + 0.22 * SIZE * scale
-    rb = 0.185 * SIZE * scale
-    ring = rb + 0.024 * SIZE * scale
+    bx, by = c + 0.21 * W, c + 0.22 * W
+    rb = 0.185 * W
+    ring = rb + 0.024 * W
     if shape == 'circle':
         d.ellipse([bx - ring, by - ring, bx + ring, by + ring], fill=WHITE)
-        d.ellipse([bx - rb, by - rb, bx + rb, by + rb], fill=TEAL + (255,))
-        draw_check(d, bx, by, rb, rb * 0.22)
+        d.ellipse([bx - rb, by - rb, bx + rb, by + rb], fill=PURPLE + (255,))
+        check(d, bx, by, rb)
     else:
-        d.polygon(shield(bx, by, 2 * ring, 2.2 * ring), fill=WHITE)
-        d.polygon(shield(bx, by, 2 * rb, 2.2 * rb), fill=PURPLE + (255,))
-        draw_check(d, bx, by - 0.04 * rb, rb, rb * 0.22)
+        d.polygon(shield_pts(bx, by, 2 * ring, 2.3 * ring), fill=WHITE)
+        d.polygon(shield_pts(bx, by, 2 * rb, 2.3 * rb), fill=PURPLE + (255,))
+        check(d, bx, by - 0.02 * rb, rb)
     return canvas
 
 
 def emit(name, shape):
-    build(shape, False, 1.0).save(f"/tmp/{name}_icon.png")
-    build(shape, True, 0.66).save(f"/tmp/{name}_icon_fg.png")
+    build(shape, False).resize((OUT, OUT), Image.LANCZOS).save(f"/tmp/{name}_icon.png")
+    full = build(shape, True)
+    s = int(W * 0.66)
+    small = full.resize((s, s), Image.LANCZOS)
+    fg = Image.new('RGBA', (W, W), (0, 0, 0, 0))
+    fg.paste(small, ((W - s) // 2, (W - s) // 2), small)
+    fg.resize((OUT, OUT), Image.LANCZOS).save(f"/tmp/{name}_icon_fg.png")
 
 
 emit('enforce', 'shield')
 emit('pay', 'circle')
-print("done:", FONT_PATH)
+print('done')
