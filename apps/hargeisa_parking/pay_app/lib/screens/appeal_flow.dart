@@ -1,10 +1,9 @@
-import 'dart:async';
 import 'dart:io';
 
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:hpark_firebase/hpark_firebase.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
 
 import '../l10n/strings.dart';
@@ -12,10 +11,11 @@ import '../util/format.dart';
 
 enum _Step { record, review, submitted }
 
-/// Citizen video-appeal flow: record a real video explanation (live camera, with
-/// a front/back flip), review the playback, submit. On submit an [Appeal] is
-/// written to Firestore (status `review`) and the citation moves to
-/// [CitationStatus.appealReview] — so the city sees it in HPark Command.
+/// Citizen video-appeal flow: record a real video with the phone's camera (the
+/// native recorder — it has the front/back flip built in), review the playback,
+/// then submit. On submit an [Appeal] is written to Firestore (status `review`)
+/// and the citation moves to [CitationStatus.appealReview] — so the city sees it
+/// in HPark Command.
 class AppealFlow extends StatefulWidget {
   const AppealFlow({
     super.key,
@@ -34,133 +34,58 @@ class AppealFlow extends StatefulWidget {
   State<AppealFlow> createState() => _AppealFlowState();
 }
 
-class _AppealFlowState extends State<AppealFlow> with WidgetsBindingObserver {
+class _AppealFlowState extends State<AppealFlow> {
   _Step _step = _Step.record;
   final _reason = TextEditingController();
+  final _picker = ImagePicker();
 
-  // Camera
-  List<CameraDescription> _cameras = const [];
-  CameraController? _controller;
-  int _camIndex = 0;
-  bool _cameraReady = false;
-  String? _camError;
-
-  // Recording
-  Timer? _timer;
-  bool _recording = false;
-  int _seconds = 0;
   XFile? _video;
-
-  // Playback (review)
   VideoPlayerController? _player;
+  int _seconds = 0;
 
+  bool _busy = false; // camera open
   bool _submitting = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _initCameras();
-  }
+  String? _error;
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _timer?.cancel();
-    _controller?.dispose();
     _player?.dispose();
     _reason.dispose();
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    final c = _controller;
-    if (c == null || !c.value.isInitialized) return;
-    if (state == AppLifecycleState.inactive && _recording) {
-      // Stop a recording if the app is backgrounded mid-capture.
-      _toggleRecord();
-    }
-  }
-
-  Future<void> _initCameras() async {
-    try {
-      _cameras = await availableCameras();
-      if (_cameras.isEmpty) {
-        setState(() => _camError = tr('No camera available on this device.'));
-        return;
-      }
-      // Prefer the back camera to start.
-      final back = _cameras.indexWhere((c) => c.lensDirection == CameraLensDirection.back);
-      await _startController(back < 0 ? 0 : back);
-    } catch (_) {
-      if (mounted) setState(() => _camError = tr('Could not open the camera.'));
-    }
-  }
-
-  Future<void> _startController(int index) async {
-    final previous = _controller;
-    final controller = CameraController(
-      _cameras[index],
-      ResolutionPreset.high,
-      enableAudio: true,
-    );
-    try {
-      await controller.initialize();
-    } catch (_) {
-      if (mounted) setState(() => _camError = tr('Could not open the camera.'));
-      return;
-    }
-    await previous?.dispose();
-    if (!mounted) {
-      await controller.dispose();
-      return;
-    }
+  /// Open the phone's native video camera (records real video, has flip).
+  Future<void> _record() async {
+    if (_busy) return;
     setState(() {
-      _controller = controller;
-      _camIndex = index;
-      _cameraReady = true;
-      _camError = null;
+      _busy = true;
+      _error = null;
     });
-  }
-
-  Future<void> _flip() async {
-    if (_cameras.length < 2 || _recording) return;
-    setState(() => _cameraReady = false);
-    await _startController((_camIndex + 1) % _cameras.length);
-  }
-
-  Future<void> _toggleRecord() async {
-    final c = _controller;
-    if (c == null || !c.value.isInitialized) return;
-    if (_recording) {
-      _timer?.cancel();
-      XFile? file;
-      try {
-        file = await c.stopVideoRecording();
-      } catch (_) {/* ignore — keep whatever we have */}
+    try {
+      final x = await _picker.pickVideo(
+        source: ImageSource.camera,
+        maxDuration: const Duration(seconds: 90),
+        preferredCameraDevice: CameraDevice.front,
+      );
       if (!mounted) return;
-      setState(() => _recording = false);
-      if (file != null) {
-        _video = file;
-        await _initPlayer();
-        if (mounted) setState(() => _step = _Step.review);
-      }
-    } else {
-      try {
-        await c.startVideoRecording();
-      } catch (_) {
+      if (x == null) {
+        setState(() => _busy = false); // cancelled
         return;
       }
+      _video = x;
+      await _initPlayer();
+      if (!mounted) return;
       setState(() {
-        _recording = true;
-        _seconds = 0;
+        _busy = false;
+        _step = _Step.review;
       });
-      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (!mounted) return;
-        setState(() => _seconds++);
-        if (_seconds >= 90) _toggleRecord(); // cap at 1:30
-      });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = tr('Could not open the camera. Check camera permission in Settings.');
+        });
+      }
     }
   }
 
@@ -172,21 +97,13 @@ class _AppealFlowState extends State<AppealFlow> with WidgetsBindingObserver {
     try {
       await p.initialize();
       await p.setLooping(true);
+      _seconds = p.value.duration.inSeconds;
     } catch (_) {}
     if (!mounted) {
       await p.dispose();
       return;
     }
     setState(() => _player = p);
-  }
-
-  void _reRecord() {
-    _player?.pause();
-    setState(() {
-      _video = null;
-      _seconds = 0;
-      _step = _Step.record;
-    });
   }
 
   String get _time {
@@ -259,56 +176,32 @@ class _AppealFlowState extends State<AppealFlow> with WidgetsBindingObserver {
           child: Padding(
             padding: const EdgeInsets.all(HpSpace.x5),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(trf("Explain what you're challenging about citation {id}.", {'id': widget.citation.id}),
                     style: HpType.body(size: 14)),
                 const SizedBox(height: HpSpace.x4),
                 Expanded(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(HpRadius.xl),
-                    child: Container(
-                      width: double.infinity,
-                      color: Colors.black,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          _preview(),
-                          if (_recording)
-                            Positioned(
-                              top: 16,
-                              left: 0,
-                              right: 0,
-                              child: Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                  decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(HpRadius.pill)),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(width: 10, height: 10, decoration: const BoxDecoration(color: HpColors.danger, shape: BoxShape.circle)),
-                                      const SizedBox(width: 6),
-                                      Text(_time, style: HpType.mono(size: 14, color: Colors.white)),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          if (_cameraReady && _cameras.length > 1 && !_recording)
-                            Positioned(
-                              top: 12,
-                              right: 12,
-                              child: Material(
-                                color: Colors.black54,
-                                shape: const CircleBorder(),
-                                child: IconButton(
-                                  tooltip: tr('Flip camera'),
-                                  icon: const Icon(Icons.cameraswitch_rounded, color: Colors.white),
-                                  onPressed: _flip,
-                                ),
-                              ),
-                            ),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 96, height: 96,
+                          decoration: const BoxDecoration(color: HpColors.purpleTint, shape: BoxShape.circle),
+                          child: const Icon(Icons.videocam_rounded, size: 44, color: HpColors.purple300),
+                        ),
+                        const SizedBox(height: HpSpace.x5),
+                        Text(tr('Record a short video explaining your appeal.'),
+                            textAlign: TextAlign.center, style: HpType.body(size: 14)),
+                        const SizedBox(height: HpSpace.x2),
+                        Text(tr('Up to 90 seconds. You can flip the camera in the recorder.'),
+                            textAlign: TextAlign.center, style: HpType.body(size: 12.5, color: HpColors.textMuted)),
+                        if (_error != null) ...[
+                          const SizedBox(height: HpSpace.x4),
+                          Text(_error!, textAlign: TextAlign.center, style: HpType.body(size: 13, color: HpColors.danger)),
                         ],
-                      ),
+                      ],
                     ),
                   ),
                 ),
@@ -318,65 +211,17 @@ class _AppealFlowState extends State<AppealFlow> with WidgetsBindingObserver {
         ),
         Container(
           padding: const EdgeInsets.all(HpSpace.x5),
-          decoration: BoxDecoration(
-            color: HpColors.surface,
-            border: Border(top: BorderSide(color: HpColors.border)),
-          ),
-          child: Center(
-            child: GestureDetector(
-              onTap: _cameraReady ? _toggleRecord : null,
-              child: Opacity(
-                opacity: _cameraReady ? 1 : 0.4,
-                child: Container(
-                  width: 72, height: 72,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: HpColors.danger, width: 4),
-                  ),
-                  child: Center(
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
-                      width: _recording ? 28 : 54,
-                      height: _recording ? 28 : 54,
-                      decoration: BoxDecoration(
-                        color: HpColors.danger,
-                        borderRadius: BorderRadius.circular(_recording ? 6 : 27),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          decoration: BoxDecoration(color: HpColors.surface, border: Border(top: BorderSide(color: HpColors.border))),
+          child: HpButton(
+            label: tr('Record video appeal'),
+            icon: Icons.videocam_rounded,
+            size: HpButtonSize.lg,
+            expand: true,
+            loading: _busy,
+            onPressed: _busy ? null : _record,
           ),
         ),
       ],
-    );
-  }
-
-  /// Live camera preview, filling the box (cover). Falls back to a message.
-  Widget _preview() {
-    if (_camError != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(HpSpace.x6),
-          child: Text(_camError!, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70, fontSize: 14)),
-        ),
-      );
-    }
-    final c = _controller;
-    if (!_cameraReady || c == null || !c.value.isInitialized) {
-      return const Center(child: CircularProgressIndicator(color: Colors.white));
-    }
-    final preview = c.value.previewSize;
-    if (preview == null) return CameraPreview(c);
-    return FittedBox(
-      fit: BoxFit.cover,
-      child: SizedBox(
-        // previewSize is reported landscape; swap for the portrait box.
-        width: preview.height,
-        height: preview.width,
-        child: CameraPreview(c),
-      ),
     );
   }
 
@@ -429,7 +274,7 @@ class _AppealFlowState extends State<AppealFlow> with WidgetsBindingObserver {
                 label: tr('Re-record'),
                 variant: HpButtonVariant.ghost,
                 icon: Icons.refresh_rounded,
-                onPressed: _reRecord,
+                onPressed: _busy ? null : _record,
               ),
             ],
           ),
