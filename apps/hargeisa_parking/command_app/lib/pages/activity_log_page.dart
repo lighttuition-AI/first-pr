@@ -136,7 +136,13 @@ void _showDetail(BuildContext context, AuditEntry entry) {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (final p in parts) _DetailLine(part: p),
-            if (parts.isNotEmpty) const SizedBox(height: HpSpace.x4),
+            if (parts.isEmpty)
+              Text(
+                'No record details were saved for this entry. (Deletes and edits '
+                'from now on capture the full owner, national ID, make and colour.)',
+                style: HpType.body(size: 12.5, color: HpColors.textMuted),
+              ),
+            const SizedBox(height: HpSpace.x4),
             const Divider(height: 1),
             const SizedBox(height: HpSpace.x4),
             _kv('By', entry.by),
