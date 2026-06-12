@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 
 /// Video-appeal review queue. Staff watch a driver's recorded challenge and
 /// uphold (citation stands) or dismiss (citation cancelled).
@@ -94,45 +96,122 @@ class AppealsReviewPage extends StatelessWidget {
   }
 
   void _watch(BuildContext context, Appeal a) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => Dialog(
-        backgroundColor: HpColors.elevated,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(HpRadius.xl)),
-        child: SizedBox(
-          width: 460,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(HpRadius.xl)),
-                child: AspectRatio(
-                  aspectRatio: 1.5,
-                  child: Container(
-                    color: Colors.black,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        const Icon(Icons.play_circle_outline, size: 56, color: Colors.white70),
-                        Positioned(bottom: 12, child: Text('${a.appellantName} · ${a.videoLabel}', style: HpType.mono(size: 13, color: Colors.white70))),
-                      ],
-                    ),
+    showDialog<void>(context: context, builder: (_) => _AppealVideoDialog(appeal: a));
+  }
+}
+
+/// Plays a submitted appeal video, with a full-screen button (opens the clip in
+/// a new browser tab). Shows a clear note when no video is attached.
+class _AppealVideoDialog extends StatefulWidget {
+  const _AppealVideoDialog({required this.appeal});
+  final Appeal appeal;
+
+  @override
+  State<_AppealVideoDialog> createState() => _AppealVideoDialogState();
+}
+
+class _AppealVideoDialogState extends State<_AppealVideoDialog> {
+  VideoPlayerController? _c;
+  bool _ready = false;
+
+  bool get _hasVideo => widget.appeal.videoUrl.isNotEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_hasVideo) {
+      _c = VideoPlayerController.networkUrl(Uri.parse(widget.appeal.videoUrl));
+      _c!.initialize().then((_) {
+        if (!mounted) return;
+        setState(() => _ready = true);
+        _c!.play();
+      }).catchError((_) {});
+    }
+  }
+
+  @override
+  void dispose() {
+    _c?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fullscreen() async {
+    try {
+      await launchUrl(Uri.parse(widget.appeal.videoUrl), mode: LaunchMode.externalApplication);
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final a = widget.appeal;
+    return Dialog(
+      backgroundColor: HpColors.elevated,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(HpRadius.xl)),
+      child: SizedBox(
+        width: 640,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(HpRadius.xl)),
+              child: AspectRatio(
+                aspectRatio: (_ready && _c != null) ? _c!.value.aspectRatio : 1.6,
+                child: Container(
+                  color: Colors.black,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (_hasVideo && _ready && _c != null)
+                        GestureDetector(
+                          onTap: () => setState(() => _c!.value.isPlaying ? _c!.pause() : _c!.play()),
+                          child: VideoPlayer(_c!),
+                        ),
+                      if (_hasVideo && _ready && _c != null && !_c!.value.isPlaying)
+                        const IgnorePointer(child: Icon(Icons.play_circle_outline, size: 56, color: Colors.white70)),
+                      if (_hasVideo && !_ready)
+                        const CircularProgressIndicator(color: Colors.white),
+                      if (!_hasVideo)
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.videocam_off_outlined, size: 44, color: Colors.white38),
+                            const SizedBox(height: HpSpace.x3),
+                            Text('No video attached to this appeal.', style: HpType.body(size: 13, color: Colors.white60)),
+                          ],
+                        ),
+                      Positioned(
+                        bottom: 12,
+                        child: Text('${a.appellantName} · ${a.videoLabel}', style: HpType.mono(size: 13, color: Colors.white70)),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(HpSpace.x5),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('"${a.reason}"', style: HpType.body(size: 14, color: HpColors.text)),
-                    const SizedBox(height: HpSpace.x4),
-                    HpButton(label: 'Close', variant: HpButtonVariant.secondary, expand: true, onPressed: () => Navigator.pop(context)),
-                  ],
-                ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(HpSpace.x5),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('"${a.reason}"', style: HpType.body(size: 14, color: HpColors.text)),
+                  const SizedBox(height: HpSpace.x4),
+                  Row(
+                    children: [
+                      if (_hasVideo) ...[
+                        Expanded(
+                          child: HpButton(label: 'Full screen', icon: Icons.fullscreen_rounded, onPressed: _fullscreen),
+                        ),
+                        const SizedBox(width: HpSpace.x3),
+                      ],
+                      Expanded(
+                        child: HpButton(label: 'Close', variant: HpButtonVariant.secondary, onPressed: () => Navigator.pop(context)),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
