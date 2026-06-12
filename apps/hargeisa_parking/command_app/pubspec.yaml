@@ -1,7 +1,7 @@
 name: hpark_command
 description: "HPark Command — Hargeisa Parking admin dashboard (officer approvals, live ops, KPIs)."
 publish_to: 'none'
-version: 1.1.0+12
+version: 1.1.0+13
 
 environment:
   sdk: ^3.12.1
@@ -13,6 +13,8 @@ dependencies:
   intl: ^0.20.2
   file_picker: ^11.0.2
   firebase_core: ^4.10.0
+  video_player: ^2.9.2
+  url_launcher: ^6.3.1
   hpark_core:
     path: ../packages/hpark_core
   hpark_firebase:

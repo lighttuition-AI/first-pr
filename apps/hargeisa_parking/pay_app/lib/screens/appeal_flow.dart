@@ -8,6 +8,7 @@ import 'package:video_player/video_player.dart';
 
 import '../l10n/strings.dart';
 import '../util/format.dart';
+import '../util/video_upload.dart';
 
 enum _Step { record, review, submitted }
 
@@ -115,6 +116,13 @@ class _AppealFlowState extends State<AppealFlow> {
   Future<void> _submit() async {
     if (_submitting) return;
     setState(() => _submitting = true);
+    // Upload the recorded video so the city can watch it in HPark Command. If it
+    // fails (e.g. offline), the appeal still submits without the clip.
+    String videoUrl = '';
+    final v = _video;
+    if (v != null) {
+      videoUrl = await uploadAppealVideo(File(v.path)) ?? '';
+    }
     final c = widget.citation;
     final now = DateTime.now();
     final appeal = Appeal(
@@ -128,6 +136,7 @@ class _AppealFlowState extends State<AppealFlow> {
       submittedAt: now,
       appellantName: widget.appellantName,
       status: AppealStatus.review,
+      videoUrl: videoUrl,
     );
     try {
       await widget.appeals.submit(appeal);

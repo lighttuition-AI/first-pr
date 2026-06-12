@@ -48,6 +48,7 @@ class Appeal {
     this.appellantName = '',
     this.status = AppealStatus.review,
     this.decidedBy,
+    this.videoUrl = '',
   });
 
   final String id; // APL-2026-0142
@@ -61,6 +62,9 @@ class Appeal {
   final String appellantName;
   AppealStatus status;
   String? decidedBy;
+
+  /// Public URL of the uploaded appeal video (empty if none / upload failed).
+  final String videoUrl;
 
   String get videoLabel {
     final m = videoSeconds ~/ 60;
@@ -82,6 +86,7 @@ class Appeal {
         'appellantName': appellantName,
         'status': status.name,
         'decidedBy': decidedBy,
+        'videoUrl': videoUrl,
       };
 
   static Appeal fromMap(Map<String, dynamic> map) => Appeal(
@@ -98,5 +103,6 @@ class Appeal {
         appellantName: map['appellantName'] as String? ?? '',
         status: AppealStatus.values.byName(map['status'] as String? ?? 'review'),
         decidedBy: map['decidedBy'] as String?,
+        videoUrl: map['videoUrl'] as String? ?? '',
       );
 }
