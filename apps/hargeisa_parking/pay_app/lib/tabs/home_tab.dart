@@ -194,7 +194,13 @@ class _BalanceCard extends StatelessWidget {
             Row(children: [
               const Icon(Icons.check_circle, color: HpColors.success, size: 26),
               const SizedBox(width: HpSpace.x3),
-              Text(tr('All settled'), style: HpType.heading(size: 26, color: HpColors.success)),
+              Expanded(
+                child: Text(
+                  tr('All settled'),
+                  style: HpType.heading(size: 24, color: HpColors.success),
+                  maxLines: 2,
+                ),
+              ),
             ])
           else
             ShaderMask(

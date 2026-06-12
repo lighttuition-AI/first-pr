@@ -61,7 +61,7 @@ class _VehicleGridState extends State<VehicleGrid> {
       final all = await widget.vehicles.all();
       if (!mounted) return;
       setState(() {
-        _dbPlates = all.map((v) => v.plate.toUpperCase()).toSet();
+        _dbPlates = all.map((v) => FirebaseVehicleRepository.normalisePlate(v.plate)).toSet();
         _loadedDb = true;
       });
     } catch (_) {
@@ -90,7 +90,7 @@ class _VehicleGridState extends State<VehicleGrid> {
       });
 
   // ---- derived ----
-  String _plate(int i) => _rows[i][0].text.trim().toUpperCase();
+  String _plate(int i) => FirebaseVehicleRepository.normalisePlate(_rows[i][0].text);
   List<int> get _filled => [for (var i = 0; i < _rows.length; i++) if (_plate(i).isNotEmpty) i];
 
   Map<String, int> get _plateCounts {
@@ -116,7 +116,7 @@ class _VehicleGridState extends State<VehicleGrid> {
     String at(int j) => _rows[i][j].text.trim();
     final permit = at(5).toLowerCase();
     return Vehicle(
-      plate: at(0).toUpperCase(),
+      plate: FirebaseVehicleRepository.normalisePlate(at(0)),
       ownerName: at(1),
       ownerNationalId: at(2),
       make: at(3),
