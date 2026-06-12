@@ -152,6 +152,44 @@ class _VehiclesDatabasePageState extends State<VehiclesDatabasePage> {
     }
   }
 
+  Future<void> _delete(Vehicle v) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: HpColors.elevated,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(HpRadius.xl)),
+        title: Text('Delete ${v.plate}?', style: HpType.heading(size: 18)),
+        content: Text('${v.plate} (${v.ownerName}) will be removed from the registry. This cannot be undone.',
+            style: HpType.body(size: 14)),
+        actions: [
+          HpButton(label: 'Cancel', variant: HpButtonVariant.ghost, onPressed: () => Navigator.pop(ctx, false)),
+          HpButton(label: 'Delete', variant: HpButtonVariant.danger, onPressed: () => Navigator.pop(ctx, true)),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await widget.vehicles.delete(v.plate);
+      await widget.audit.log('Deleted vehicle', target: v.plate);
+      await _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: HpColors.elevated,
+          content: Text('Removed ${v.plate}', style: TextStyle(color: HpColors.text)),
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: HpColors.elevated,
+          content: Text('Could not delete: $e', style: const TextStyle(color: HpColors.danger)),
+        ));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final rows = _filtered;
@@ -220,7 +258,7 @@ class _VehiclesDatabasePageState extends State<VehiclesDatabasePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _headerRow(),
-                    for (final v in rows) _DataRow(vehicle: v, onEdit: () => _edit(v)),
+                    for (final v in rows) _DataRow(vehicle: v, onEdit: () => _edit(v), onDelete: () => _delete(v)),
                   ],
                 ),
               ),
@@ -260,9 +298,10 @@ Widget _headerRow() {
 }
 
 class _DataRow extends StatelessWidget {
-  const _DataRow({required this.vehicle, required this.onEdit});
+  const _DataRow({required this.vehicle, required this.onEdit, required this.onDelete});
   final Vehicle vehicle;
   final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -292,11 +331,20 @@ class _DataRow extends StatelessWidget {
                 : Text('—', style: HpType.body(size: 13, color: HpColors.textMuted)),
           ),
           SizedBox(
-            width: 44,
+            width: 40,
             child: IconButton(
               tooltip: 'Edit',
               onPressed: onEdit,
               icon: Icon(Icons.edit_outlined, size: 18, color: HpColors.textMuted),
+            ),
+          ),
+          SizedBox(
+            width: 40,
+            child: IconButton(
+              tooltip: 'Delete',
+              onPressed: onDelete,
+              icon: Icon(Icons.delete_outline_rounded, size: 18, color: HpColors.textMuted),
+              hoverColor: HpColors.dangerTint,
             ),
           ),
         ],
