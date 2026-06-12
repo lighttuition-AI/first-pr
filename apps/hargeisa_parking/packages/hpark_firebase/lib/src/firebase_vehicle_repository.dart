@@ -40,6 +40,9 @@ class FirebaseVehicleRepository {
   Future<void> upsert(Vehicle vehicle) =>
       _col.doc(normalisePlate(vehicle.plate)).set(vehicle.toMap());
 
+  /// Remove a vehicle record from the registry.
+  Future<void> delete(String plate) => _col.doc(normalisePlate(plate)).delete();
+
   Future<List<Vehicle>> all() async {
     final snap = await _col.get();
     return snap.docs

@@ -1,12 +1,12 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 import '../state/shift_state.dart';
+import 'plate_scanner.dart';
 
 const _gps = '9.5616° N, 44.0650° E';
 final _money = NumberFormat.decimalPattern('en');
@@ -85,83 +85,17 @@ class _CitationFlowState extends State<CitationFlow> {
     _lookup();
   }
 
-  /// Open the real device camera to photograph the plate, then read the number
-  /// off the photo with on-device text recognition (OCR). The shot is kept as
-  /// the first piece of evidence; if the plate can't be read, the officer types
-  /// it in manually.
+  /// Open the live plate scanner — a continuous camera with a lock-in box that
+  /// reads the plate across many frames (so glare/shadow on any single frame
+  /// doesn't matter), then returns it. We prefill it and look the vehicle up.
   Future<void> _scanWithCamera() async {
-    try {
-      // Capture at high resolution so the plate (a small slice of the photo) has
-      // enough pixels for the text recogniser.
-      final shot = await _picker.pickImage(source: ImageSource.camera, maxWidth: 3000, imageQuality: 100);
-      if (shot == null || !mounted) return; // cancelled
-      setState(() {
-        _platePhoto = true;
-        if (_photos == 0) _photos = 1; // count the plate photo as evidence
-        _looking = true; // reading the plate…
-      });
-      final plate = await _readPlate(shot.path);
-      if (!mounted) return;
-      setState(() => _looking = false);
-      if (plate != null) {
-        _plateCtrl.text = plate;
-        _lookup(); // auto-advance to the vehicle
-      } else {
-        _toast('Couldn\'t read the plate — type it below.');
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _looking = false);
-        _toast('Camera unavailable on this device.');
-      }
-    }
-  }
-
-  /// On-device OCR of the captured photo (works offline; no image leaves the
-  /// phone). Returns a best-effort plate string, or null if none was found.
-  Future<String?> _readPlate(String imagePath) async {
-    final recognizer = TextRecognizer();
-    try {
-      final result = await recognizer.processImage(InputImage.fromFilePath(imagePath));
-      // The plate number is the LARGEST text on the plate. Score each plate-like
-      // line by its height and take the biggest, so tiny "SOMALILAND"/region
-      // codes never win. Fall back to scanning the whole text.
-      String? best;
-      double bestHeight = 0;
-      for (final block in result.blocks) {
-        for (final line in block.lines) {
-          final candidate = _extractPlate(line.text);
-          if (candidate != null && line.boundingBox.height > bestHeight) {
-            best = candidate;
-            bestHeight = line.boundingBox.height.toDouble();
-          }
-        }
-      }
-      return best ?? _extractPlate(result.text);
-    } catch (_) {
-      return null;
-    } finally {
-      await recognizer.close();
-    }
-  }
-
-  // Somaliland plates read as one letter + 4 digits (e.g. F4154, L9019, F4157),
-  // usually under a "SOMALILAND" header with small region codes (PR / MJ). The
-  // Hargeisa demo used 2-letter HG####. So accept 1–3 letters + 3–5 digits
-  // (preferring exactly 4), allowing whitespace/newlines between the letter and
-  // the number (ML Kit returns the header, plate and codes as separate blocks),
-  // then a bare digit block as a last resort.
-  static final _plate4 = RegExp(r'\b([A-Z]{1,3})[\s\-]*(\d{4})\b');
-  static final _plateAny = RegExp(r'\b([A-Z]{1,3})[\s\-]*(\d{3,5})\b');
-
-  String? _extractPlate(String text) {
-    final up = text.toUpperCase();
-    for (final re in [_plate4, _plateAny]) {
-      final m = re.firstMatch(up);
-      if (m != null) return '${m.group(1)}${m.group(2)}'; // e.g. F4154
-    }
-    final digits = RegExp(r'\b\d{4,5}\b').firstMatch(up);
-    return digits?.group(0);
+    final plate = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const PlateScanner(), fullscreenDialog: true),
+    );
+    if (!mounted || plate == null || plate.isEmpty) return;
+    _plateCtrl.text = plate;
+    setState(() => _platePhoto = true);
+    _lookup(); // auto-advance to the vehicle
   }
 
   /// Capture a timestamped evidence photo with the real camera.
