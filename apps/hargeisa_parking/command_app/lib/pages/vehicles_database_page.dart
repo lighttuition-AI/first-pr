@@ -65,6 +65,89 @@ class _VehiclesDatabasePageState extends State<VehiclesDatabasePage> {
         .toList();
   }
 
+  Future<void> _edit(Vehicle v) async {
+    final owner = TextEditingController(text: v.ownerName);
+    final nid = TextEditingController(text: v.ownerNationalId);
+    final make = TextEditingController(text: v.make);
+    final color = TextEditingController(text: v.color);
+    final permit = TextEditingController(text: v.permitStatus.name);
+    final outCount = TextEditingController(text: '${v.outstandingCount}');
+    final outTotal = TextEditingController(text: '${v.outstandingTotal}');
+
+    final save = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: HpColors.elevated,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(HpRadius.xl)),
+        title: Text('Edit ${v.plate}', style: HpType.heading(size: 18)),
+        content: SizedBox(
+          width: 420,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                HpInput(controller: owner, label: 'Owner'),
+                const SizedBox(height: HpSpace.x3),
+                HpInput(controller: nid, label: 'National ID', mono: true),
+                const SizedBox(height: HpSpace.x3),
+                HpInput(controller: make, label: 'Make'),
+                const SizedBox(height: HpSpace.x3),
+                HpInput(controller: color, label: 'Color'),
+                const SizedBox(height: HpSpace.x3),
+                HpInput(controller: permit, label: 'Permit (valid · expired · none)'),
+                const SizedBox(height: HpSpace.x3),
+                Row(children: [
+                  Expanded(child: HpInput(controller: outCount, label: 'Outstanding #', keyboardType: TextInputType.number)),
+                  const SizedBox(width: HpSpace.x3),
+                  Expanded(child: HpInput(controller: outTotal, label: 'Outstanding total', keyboardType: TextInputType.number)),
+                ]),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          HpButton(label: 'Cancel', variant: HpButtonVariant.ghost, onPressed: () => Navigator.pop(ctx, false)),
+          HpButton(label: 'Save', onPressed: () => Navigator.pop(ctx, true)),
+        ],
+      ),
+    );
+    if (save != true) return;
+    final p = permit.text.trim().toLowerCase();
+    final updated = Vehicle(
+      plate: v.plate,
+      ownerName: owner.text.trim(),
+      ownerNationalId: nid.text.trim(),
+      make: make.text.trim(),
+      color: color.text.trim(),
+      permitStatus: p == 'valid'
+          ? PermitStatus.valid
+          : p == 'expired'
+              ? PermitStatus.expired
+              : PermitStatus.none,
+      outstandingCount: int.tryParse(outCount.text.trim()) ?? 0,
+      outstandingTotal: int.tryParse(outTotal.text.trim()) ?? 0,
+    );
+    try {
+      await widget.vehicles.upsert(updated);
+      await _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: HpColors.elevated,
+          content: Text('Updated ${v.plate}', style: TextStyle(color: HpColors.text)),
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: HpColors.elevated,
+          content: Text('Could not save: $e', style: const TextStyle(color: HpColors.danger)),
+        ));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final rows = _filtered;
@@ -133,7 +216,7 @@ class _VehiclesDatabasePageState extends State<VehiclesDatabasePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _headerRow(),
-                    for (final v in rows) _DataRow(vehicle: v),
+                    for (final v in rows) _DataRow(vehicle: v, onEdit: () => _edit(v)),
                   ],
                 ),
               ),
@@ -173,8 +256,9 @@ Widget _headerRow() {
 }
 
 class _DataRow extends StatelessWidget {
-  const _DataRow({required this.vehicle});
+  const _DataRow({required this.vehicle, required this.onEdit});
   final Vehicle vehicle;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -202,6 +286,14 @@ class _DataRow extends StatelessWidget {
                 ? Text('${vehicle.outstandingCount} · SLSH ${money.format(vehicle.outstandingTotal)}',
                     style: HpType.mono(size: 12.5, color: HpColors.danger))
                 : Text('—', style: HpType.body(size: 13, color: HpColors.textMuted)),
+          ),
+          SizedBox(
+            width: 44,
+            child: IconButton(
+              tooltip: 'Edit',
+              onPressed: onEdit,
+              icon: Icon(Icons.edit_outlined, size: 18, color: HpColors.textMuted),
+            ),
           ),
         ],
       ),

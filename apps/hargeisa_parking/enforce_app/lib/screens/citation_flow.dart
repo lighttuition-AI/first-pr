@@ -91,7 +91,9 @@ class _CitationFlowState extends State<CitationFlow> {
   /// it in manually.
   Future<void> _scanWithCamera() async {
     try {
-      final shot = await _picker.pickImage(source: ImageSource.camera, maxWidth: 1600);
+      // Capture at high resolution so the plate (a small slice of the photo) has
+      // enough pixels for the text recogniser.
+      final shot = await _picker.pickImage(source: ImageSource.camera, maxWidth: 3000, imageQuality: 100);
       if (shot == null || !mounted) return; // cancelled
       setState(() {
         _platePhoto = true;
@@ -121,7 +123,21 @@ class _CitationFlowState extends State<CitationFlow> {
     final recognizer = TextRecognizer();
     try {
       final result = await recognizer.processImage(InputImage.fromFilePath(imagePath));
-      return _extractPlate(result.text);
+      // The plate number is the LARGEST text on the plate. Score each plate-like
+      // line by its height and take the biggest, so tiny "SOMALILAND"/region
+      // codes never win. Fall back to scanning the whole text.
+      String? best;
+      double bestHeight = 0;
+      for (final block in result.blocks) {
+        for (final line in block.lines) {
+          final candidate = _extractPlate(line.text);
+          if (candidate != null && line.boundingBox.height > bestHeight) {
+            best = candidate;
+            bestHeight = line.boundingBox.height.toDouble();
+          }
+        }
+      }
+      return best ?? _extractPlate(result.text);
     } catch (_) {
       return null;
     } finally {
@@ -151,8 +167,18 @@ class _CitationFlowState extends State<CitationFlow> {
   /// Capture a timestamped evidence photo with the real camera.
   Future<void> _captureEvidence() async {
     try {
-      final shot = await _picker.pickImage(source: ImageSource.camera, maxWidth: 1600);
+      final shot = await _picker.pickImage(source: ImageSource.camera, maxWidth: 2000);
       if (shot != null && mounted) setState(() => _photos++);
+    } catch (_) {
+      if (mounted) _toast('Camera unavailable on this device.');
+    }
+  }
+
+  /// Record a video evidence clip with the real camera.
+  Future<void> _captureVideo() async {
+    try {
+      final clip = await _picker.pickVideo(source: ImageSource.camera);
+      if (clip != null && mounted) setState(() => _video = true);
     } catch (_) {
       if (mounted) _toast('Camera unavailable on this device.');
     }
@@ -240,7 +266,7 @@ class _CitationFlowState extends State<CitationFlow> {
             photos: _photos,
             video: _video,
             onPhoto: _captureEvidence,
-            onVideo: () => setState(() => _video = !_video),
+            onVideo: _captureVideo,
             onReview: _photos == 0 ? null : () => setState(() => _step = _Step.review),
           ),
         _Step.review => _ReviewStep(
