@@ -21,8 +21,11 @@ class CitationDetailScreen extends StatefulWidget {
 
   final Citation citation;
   final Citizen citizen;
-  final FirebaseCitationRepository repo;
-  final FirebaseAppealRepository appeals;
+
+  /// Null for a read-only view (e.g. opened from Payment history) — the Pay /
+  /// Challenge actions only appear for an outstanding citation with a repo.
+  final FirebaseCitationRepository? repo;
+  final FirebaseAppealRepository? appeals;
 
   @override
   State<CitationDetailScreen> createState() => _CitationDetailScreenState();
@@ -34,7 +37,7 @@ class _CitationDetailScreenState extends State<CitationDetailScreen> {
   void _pay() {
     showPaySheet(context, amount: c.amount, onPaid: (method) {
       setState(() => c.status = CitationStatus.paid);
-      widget.repo.setStatus(c.id, CitationStatus.paid);
+      widget.repo?.setStatus(c.id, CitationStatus.paid);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
@@ -50,13 +53,15 @@ class _CitationDetailScreenState extends State<CitationDetailScreen> {
   }
 
   Future<void> _appeal() async {
+    final repo = widget.repo, appeals = widget.appeals;
+    if (repo == null || appeals == null) return;
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => AppealFlow(
           citation: c,
           appellantName: widget.citizen.fullName,
-          repo: widget.repo,
-          appeals: widget.appeals,
+          repo: repo,
+          appeals: appeals,
         ),
       ),
     );
@@ -121,7 +126,7 @@ class _CitationDetailScreenState extends State<CitationDetailScreen> {
                   ],
                 ),
               ),
-              if (c.status == CitationStatus.outstanding)
+              if (c.status == CitationStatus.outstanding && widget.repo != null)
                 Container(
                   padding: const EdgeInsets.all(HpSpace.x5),
                   decoration: BoxDecoration(color: HpColors.surface, border: Border(top: BorderSide(color: HpColors.border))),

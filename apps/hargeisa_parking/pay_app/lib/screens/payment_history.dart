@@ -3,13 +3,17 @@ import 'package:hpark_core/hpark_core.dart';
 import 'package:intl/intl.dart';
 
 import '../l10n/strings.dart';
+import '../models/pay_models.dart';
 import '../util/format.dart';
+import 'citation_detail.dart';
 
-/// Past payments — every citation the citizen has settled.
+/// Past payments — every citation the citizen has settled. Tap one to see the
+/// full citation.
 class PaymentHistoryScreen extends StatelessWidget {
-  const PaymentHistoryScreen({super.key, required this.citations});
+  const PaymentHistoryScreen({super.key, required this.citations, required this.citizen});
 
   final List<Citation> citations;
+  final Citizen citizen;
 
   @override
   Widget build(BuildContext context) {
@@ -42,28 +46,41 @@ class PaymentHistoryScreen extends StatelessWidget {
                     for (final c in paid)
                       Padding(
                         padding: const EdgeInsets.only(bottom: HpSpace.x3),
-                        child: HpCard(
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 42, height: 42,
-                                decoration: BoxDecoration(color: HpColors.successTint, borderRadius: BorderRadius.circular(HpRadius.md)),
-                                child: const Icon(Icons.check_rounded, color: HpColors.success),
-                              ),
-                              const SizedBox(width: HpSpace.x4),
-                              Expanded(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(c.violation, style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 14)),
-                                    Text('${c.id} · ${DateFormat('d MMM yyyy').format(c.issuedAt)}',
-                                        style: HpType.body(size: 12, color: HpColors.textMuted)),
-                                  ],
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                            builder: (_) => CitationDetailScreen(
+                              citation: c,
+                              citizen: citizen,
+                              repo: null,
+                              appeals: null,
+                            ),
+                          )),
+                          child: HpCard(
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 42, height: 42,
+                                  decoration: BoxDecoration(color: HpColors.successTint, borderRadius: BorderRadius.circular(HpRadius.md)),
+                                  child: const Icon(Icons.check_rounded, color: HpColors.success),
                                 ),
-                              ),
-                              Text(slsh(c.amount), style: HpType.mono(size: 14, weight: FontWeight.w700)),
-                            ],
+                                const SizedBox(width: HpSpace.x4),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(c.violation, style: TextStyle(color: HpColors.text, fontWeight: FontWeight.w600, fontSize: 14)),
+                                      Text('${c.id} · ${DateFormat('d MMM yyyy').format(c.issuedAt)}',
+                                          style: HpType.body(size: 12, color: HpColors.textMuted)),
+                                    ],
+                                  ),
+                                ),
+                                Text(slsh(c.amount), style: HpType.mono(size: 14, weight: FontWeight.w700)),
+                                const SizedBox(width: HpSpace.x2),
+                                Icon(Icons.chevron_right_rounded, size: 18, color: HpColors.textMuted),
+                              ],
+                            ),
                           ),
                         ),
                       ),
