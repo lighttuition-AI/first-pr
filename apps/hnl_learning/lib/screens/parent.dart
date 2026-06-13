@@ -200,7 +200,6 @@ class _ParentScreenState extends State<ParentScreen> {
                           _stat('🔥', '${app.streak}', 'day streak'),
                           _stat('⏱️', '${app.timeToday}', 'min today'),
                           _stat('⭐', '${app.stars}', 'stars'),
-                          _stat('🪐', '${app.planets.length}', 'planets'),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -334,7 +333,7 @@ class _ParentScreenState extends State<ParentScreen> {
               children: [
                 Text('Child ${i + 1}', style: AppText.display(size: 24, weight: FontWeight.w700)),
                 Text(
-                  c.isSetUp ? 'Age ${c.age} · ${c.planets.length} planets · ${c.stars} stars' : 'Setup not finished',
+                  c.isSetUp ? 'Age ${c.age} · ${c.stars} stars' : 'Setup not finished',
                   style: AppText.body(size: 18, weight: FontWeight.w700, color: C.muted),
                 ),
               ],
@@ -627,7 +626,6 @@ class _CertificateState extends State<_Certificate> {
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
                               _certStat('${app.stars}', 'stars'),
-                              _certStat('${app.planets.length}', 'planets'),
                               _certStat('${app.streak}', 'day streak'),
                             ],
                           ),

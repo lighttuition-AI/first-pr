@@ -178,6 +178,11 @@ class AppState extends ChangeNotifier {
   bool showGate = false;
   VoidCallback? gateAction;
 
+  // When set, the home map opens this world's games sheet on arrival — used to
+  // drop the child back into the "games area" (one step back) after finishing
+  // or leaving a game, instead of all the way out to the island map.
+  String? resumeWorld;
+
   // ------------------------------------------------------------
   // Children: switch / add / remove
   // ------------------------------------------------------------
@@ -442,9 +447,18 @@ class AppState extends ChangeNotifier {
   void startGame(String id) {
     Analytics.gameStart(id);
     final g = gameById(id);
+    // Tapping a game starts a play-through of its world: the queue is every
+    // game in that world from the tapped one onward, so finishing one game
+    // moves on to the next until they're all done (then back to the games
+    // list). The back button exits to the games list at any time. (Explore /
+    // looping games — Arabic, the produce quiz — are self-contained and simply
+    // don't trigger the auto-advance, which is fine.)
+    final worldIds = gamesInWorld(g.world).map((w) => w.id).toList();
+    final start = worldIds.indexOf(id);
+    final queue = start <= 0 ? worldIds : worldIds.sublist(start);
     // The produce quiz builds a fresh shuffled session before the shell shows it.
     if (g.type == GameType.produceQuiz) startProduce(g.topic);
-    session = Session([id], 0, 'single', DateTime.now().millisecondsSinceEpoch);
+    session = Session(queue, 0, 'single', DateTime.now().millisecondsSinceEpoch);
     go('game');
   }
 
@@ -549,12 +563,19 @@ class AppState extends ChangeNotifier {
     go('game');
   }
 
-  void award({String? planetId, int gainStars = 0, String? topic}) {
+  void award({int gainStars = 0, String? topic}) {
     final c = child;
     if (gainStars != 0) c.stars += gainStars;
-    if (planetId != null && !c.planets.contains(planetId)) c.planets.add(planetId);
     if (topic != null) c.skillXp[topic] = (c.skillXp[topic] ?? 0) + 1;
     _changed();
+  }
+
+  /// Abandon the current game and reopen its world's games list (the world
+  /// sheet) on the home map — "one step back" from inside a game.
+  void backToWorld(String worldId) {
+    session = null;
+    resumeWorld = worldId;
+    go('home');
   }
 
   /// Advance to the next game in the queue, or end the session.
@@ -566,11 +587,22 @@ class AppState extends ChangeNotifier {
       return;
     }
     if (s.index + 1 < s.queue.length) {
+      // Move on to the next game in this world's play-through.
+      final next = gameById(s.queue[s.index + 1]);
+      if (next.type == GameType.produceQuiz) startProduce(next.topic);
       session = s.copyWith(index: s.index + 1);
       _changed();
     } else {
+      final lastWorld = gameById(s.queue[s.index]).world;
       session = null;
-      go(s.mode == 'mission' ? 'break' : 'rewards');
+      if (s.mode == 'mission') {
+        go('break');
+      } else {
+        // A single game ends back in its world's games list — one step back,
+        // not out to the island map (no more jump to a "collecting" screen).
+        resumeWorld = lastWorld;
+        go('home');
+      }
     }
   }
 

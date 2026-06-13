@@ -12,7 +12,6 @@ import '../state/app_state.dart';
 import '../theme/tokens.dart';
 import '../widgets/img_widget.dart';
 import '../widgets/kid_button.dart';
-import '../widgets/planet.dart';
 import '../widgets/robo.dart';
 import '../widgets/shaker.dart';
 import '../widgets/speech_bubble.dart';
@@ -52,7 +51,6 @@ class GameHost extends StatefulWidget {
 
 class _GameHostState extends State<GameHost> {
   int _roundIdx = 0;
-  bool _reveal = false;
 
   Round get round => widget.game.rounds[_roundIdx];
   bool get isLast => _roundIdx >= widget.game.rounds.length - 1;
@@ -65,8 +63,9 @@ class _GameHostState extends State<GameHost> {
     Future.delayed(const Duration(milliseconds: 1100), () {
       if (!mounted) return;
       if (isLast) {
-        app.award(planetId: widget.game.reward, topic: widget.game.topic);
-        setState(() => _reveal = true);
+        // Game complete — a quick confetti celebration, then straight back to
+        // the games list. No "you unlocked a planet" reveal.
+        widget.onComplete();
       } else {
         setState(() => _roundIdx++);
       }
@@ -103,8 +102,9 @@ class _GameHostState extends State<GameHost> {
             ),
           ),
 
-          // Back to the home map (a back arrow, matching the Animals island).
-          Positioned(top: 24, left: 24, child: IconCircle(Icons.arrow_back_rounded, size: 76, onTap: () => app.go('home'))),
+          // Back one step — to this world's games list (the world sheet),
+          // not all the way out to the island map.
+          Positioned(top: 24, left: 24, child: IconCircle(Icons.arrow_back_rounded, size: 76, onTap: () => app.backToWorld(widget.game.world))),
 
           // Floating speaker (auto-plays the round line). Sits ABOVE the
           // Settings gear, which moves to the bottom-left on play screens.
@@ -156,7 +156,6 @@ class _GameHostState extends State<GameHost> {
             ),
           ),
 
-          if (_reveal) RewardReveal(planetId: widget.game.reward, onDone: widget.onComplete),
         ],
       ),
     );
@@ -1960,91 +1959,5 @@ class _ScienceGameState extends State<ScienceGame> {
   }
 }
 
-// ---------------- Reward reveal ----------------
-class RewardReveal extends StatefulWidget {
-  final String planetId;
-  final VoidCallback onDone;
-  const RewardReveal({super.key, required this.planetId, required this.onDone});
-
-  @override
-  State<RewardReveal> createState() => _RewardRevealState();
-}
-
-class _RewardRevealState extends State<RewardReveal> {
-  @override
-  void initState() {
-    super.initState();
-    final app = context.read<AppState>();
-    context.read<FxController>().fire(intensity: app.celebration);
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (!mounted) return;
-      final line = kRewardVo[widget.planetId]!;
-      context.read<VoService>().play(line.id, line.text);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final planet = planetById(widget.planetId);
-    final app = context.watch<AppState>();
-    return Positioned.fill(
-      child: ColoredBox(
-        color: C.inkA(.5),
-        child: Center(
-          child: _Pop(
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(60, 50, 60, 50),
-              decoration: BoxDecoration(color: C.paper, borderRadius: BorderRadius.circular(R.xl), boxShadow: Sh.lg),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('NEW PLANET!', style: AppText.kicker.copyWith(color: app.pal.brand, fontSize: 24)),
-                  const SizedBox(height: 20),
-                  Planet(data: planet, size: 260, spin: true),
-                  const SizedBox(height: 20),
-                  Text('You unlocked ${planet.name}!', style: AppText.h2),
-                  const SizedBox(height: 16),
-                  if (app.mascot) const Robo(size: 120, pose: 'cheer'),
-                  const SizedBox(height: 24),
-                  KidButton(
-                    large: true,
-                    onTap: widget.onDone,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [const Text('Yay!'), const SizedBox(width: 12), const Icon(Icons.arrow_forward_rounded)],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Pop extends StatefulWidget {
-  final Widget child;
-  const _Pop({required this.child});
-  @override
-  State<_Pop> createState() => _PopState();
-}
-
-class _PopState extends State<_Pop> with SingleTickerProviderStateMixin {
-  late final AnimationController _c =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 420))..forward();
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: Tween(begin: 0.7, end: 1.0).animate(CurvedAnimation(parent: _c, curve: Curves.elasticOut)),
-      child: widget.child,
-    );
-  }
-}
+// (The old "you unlocked a planet" reward reveal was removed — finishing a
+// game now just celebrates with confetti and moves on to the next game.)

@@ -14,7 +14,6 @@ import 'screens/setup.dart';
 import 'screens/home.dart';
 import 'screens/game.dart';
 import 'screens/break_screen.dart';
-import 'screens/rewards.dart';
 import 'screens/parent.dart';
 import 'screens/voice_studio.dart';
 import 'screens/picture_studio.dart';
@@ -274,8 +273,6 @@ class _StageContent extends StatelessWidget {
         return const GameRunner();
       case 'break':
         return const BreakScreen();
-      case 'rewards':
-        return const RewardsScreen();
       case 'continents':
         return const ContinentMapScreen();
       case 'animal-quiz':

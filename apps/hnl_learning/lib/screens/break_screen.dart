@@ -54,24 +54,11 @@ class _BreakScreenState extends State<BreakScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _stat('${app.stars}', '⭐ stars'),
-                _stat('${app.planets.length}', '🪐 planets'),
                 _stat('~${app.sessionLen}', '⏱ minutes'),
               ],
             ),
             const SizedBox(height: 36),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                KidButton(
-                  large: true,
-                  variant: BtnVariant.ghost,
-                  onTap: () => app.go('rewards'),
-                  child: const Text('See rewards'),
-                ),
-                const SizedBox(width: 26),
-                KidButton(large: true, onTap: () => app.go('home'), child: const Text('Back to map')),
-              ],
-            ),
+            KidButton(large: true, onTap: () => app.go('home'), child: const Text('Back to map')),
           ],
         ),
       ),
