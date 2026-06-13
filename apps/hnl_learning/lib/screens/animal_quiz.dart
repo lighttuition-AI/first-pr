@@ -54,14 +54,22 @@ class _AnimalQuizScreenState extends State<AnimalQuizScreen> {
       if (path != null) vo.registerRecording(prev, path);
       if (mounted) setState(() => _recordingId = null);
     } else {
-      try {
-        if (!await _rec.hasPermission()) return;
-        final dir = await getApplicationDocumentsDirectory();
-        final path = '${dir.path}/vo_$id.m4a';
-        await _rec.start(const RecordConfig(), path: path);
-        if (mounted) setState(() => _recordingId = id);
-      } catch (_) {/* recording unavailable here */}
+      // Starting a fresh recording is grown-ups-only — gate it behind the same
+      // 1-2-3-4 child-lock as Settings so kids can't overwrite the family's
+      // sounds without an elder present. (Stopping above never needs the code.)
+      context.read<AppState>().requireParent(() => _beginRecord(vo, id));
     }
+  }
+
+  /// Actually start recording clip [id] (only reached after the grown-up lock).
+  Future<void> _beginRecord(VoService vo, String id) async {
+    try {
+      if (!await _rec.hasPermission()) return;
+      final dir = await getApplicationDocumentsDirectory();
+      final path = '${dir.path}/vo_$id.m4a';
+      await _rec.start(const RecordConfig(), path: path);
+      if (mounted) setState(() => _recordingId = id);
+    } catch (_) {/* recording unavailable here */}
   }
 
   Future<void> _stopRecIfNeeded() async {
