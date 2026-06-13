@@ -133,12 +133,18 @@ class _AppealVideoDialogState extends State<_AppealVideoDialog> {
           ..src = url
           ..controls = true
           ..autoplay = true
+          // Safari blocks autoplay of UN-muted video (Chrome is laxer) — start
+          // muted so it always plays; the reviewer unmutes via the controls.
+          ..muted = true
+          ..defaultMuted = true
           ..style.width = '100%'
           ..style.height = '100%'
           ..style.border = 'none'
           ..style.backgroundColor = '#000'
           ..style.objectFit = 'contain';
+        v.setAttribute('muted', '');
         v.setAttribute('playsinline', 'true');
+        v.setAttribute('preload', 'auto');
         return v;
       });
     }
