@@ -393,22 +393,22 @@ void main() {
     expect(app.skillXp['logic'], 1);
   });
 
-  test('tapping a game plays through its whole world, then back to the games list', () async {
+  test('tapping a game plays through up to 5 games of its world, then back to the list', () async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     final app = AppState(prefs);
     final discovery = gamesInWorld('discovery').map((g) => g.id).toList();
-    expect(discovery.length, greaterThan(1));
+    expect(discovery.length, greaterThan(AppState.kMaxRunGames)); // 13 games
 
-    // Tapping the first game queues the whole world in order.
+    // Tapping the first game queues a run of at most kMaxRunGames, in order.
     app.startGame(discovery.first);
     expect(app.screen, 'game');
     expect(app.session!.mode, 'single');
-    expect(app.session!.queue, discovery);
+    expect(app.session!.queue, discovery.take(AppState.kMaxRunGames).toList());
 
-    // Tapping a middle game queues from there to the end (not the whole world).
+    // Tapping a middle game queues from there onward, still capped to the run.
     app.startGame(discovery[2]);
-    expect(app.session!.queue, discovery.sublist(2));
+    expect(app.session!.queue, discovery.sublist(2, 2 + AppState.kMaxRunGames));
 
     // Finishing a non-last game moves on to the NEXT game in the world.
     app.startGame(discovery.first);

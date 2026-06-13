@@ -270,7 +270,7 @@ Locked-in identity (all permanent / must match App Store Connect):
   `DEVELOPMENT_TEAM` on the 3 Runner configs + automatic signing. ⚠️ Gotcha: the cert
   name shows "Khadar Ainashe (BLGU4D968K)" — `BLGU4D968K` is a CERT id, **not** the team;
   the team is `4696KN59VV` (confirmed by the issued provisioning profile + Xcode plist).
-- **Display name** `HNL Learning`; **version `1.4.1+10`** (1.0.0+1 was the first
+- **Display name** `HNL Learning`; **version `1.4.2+11`** (1.0.0+1 was the first
   TestFlight build; 1.1.0 added Flip the Letters + Letter Sounds; +3 moved the harakat
   Studio section; 1.3.1+8 locked **all** inline recording behind the 1-2-3-4 grown-up
   gate + gave the game shell a back arrow instead of an "X"; 1.4.0+9 added **10 themed
@@ -281,11 +281,14 @@ Locked-in identity (all permanent / must match App Store Connect):
   play screens so it stops overlapping the Next button; 1.4.1+10 **removed planet
   collecting from gameplay** (deleted the "you unlocked a planet" reveal + the rewards
   collection screen + the 🪐 chip/break button/parent stats; finishing a game no longer
-  jumps to a collecting area) and made tapping a game **play through its whole world** —
-  `startGame` queues all of that world's games from the tapped one; `finishGame` advances
-  to the next, and the last game (or the back button, via `backToWorld`) drops back into
-  that world's games sheet via `AppState.resumeWorld` (one step back, not out to the island
-  map). NOTE: the planet *data* (`kPlanets`/`Planet`) is kept — still used by the logo
+  jumps to a collecting area) and made tapping a game **play through a short run of its
+  world** — `startGame` queues up to `AppState.kMaxRunGames` (**5**) *completable* games of
+  that world from the tapped one (Discovery has 13, so it caps at 5; 1.4.2+11 added the cap +
+  the completable-only filter, which also stops explore games like the Arabic board from
+  stalling a queue); `finishGame` advances to the next, and the last game (or the back
+  button, via `backToWorld`) drops back into that world's games sheet via
+  `AppState.resumeWorld` (one step back, not out to the island map). NOTE: the planet
+  *data* (`kPlanets`/`Planet`) is kept — still used by the logo
   branding + the Picture Studio slots — and the inert `Game.reward` field remains on each
   game (no longer awarded). **Bump the `+build` in pubspec before each new upload** — it
   must increase monotonically — App Store Connect rejects a reused build number).

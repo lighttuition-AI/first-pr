@@ -444,20 +444,34 @@ class AppState extends ChangeNotifier {
     return out;
   }
 
+  /// Most games chained in one world play-through — keeps a sitting to ~3–5
+  /// games, not a marathon (Discovery World alone has 13).
+  static const int kMaxRunGames = 5;
+
   void startGame(String id) {
     Analytics.gameStart(id);
     final g = gameById(id);
-    // Tapping a game starts a play-through of its world: the queue is every
-    // game in that world from the tapped one onward, so finishing one game
-    // moves on to the next until they're all done (then back to the games
-    // list). The back button exits to the games list at any time. (Explore /
-    // looping games — Arabic, the produce quiz — are self-contained and simply
-    // don't trigger the auto-advance, which is fine.)
-    final worldIds = gamesInWorld(g.world).map((w) => w.id).toList();
-    final start = worldIds.indexOf(id);
-    final queue = start <= 0 ? worldIds : worldIds.sublist(start);
-    // The produce quiz builds a fresh shuffled session before the shell shows it.
-    if (g.type == GameType.produceQuiz) startProduce(g.topic);
+    // Completable games (the ones that reach a "win" through the game shell)
+    // chain into a short play-through of their world: finishing one moves on to
+    // the next, up to kMaxRunGames in a row, then back to the games list. The
+    // back button exits to the games list at any time. Explore / looping games
+    // (the Arabic board/trace/order/flip/sounds and the produce quiz) are
+    // self-contained — they play on their own and don't auto-advance.
+    const chainable = {
+      GameType.pick, GameType.count, GameType.pattern, GameType.memory,
+      GameType.letter, GameType.sort, GameType.science,
+    };
+    List<String> queue;
+    if (chainable.contains(g.type)) {
+      final runnable =
+          gamesInWorld(g.world).where((w) => chainable.contains(w.type)).map((w) => w.id).toList();
+      final start = runnable.indexOf(id);
+      queue = runnable.sublist(start < 0 ? 0 : start).take(kMaxRunGames).toList();
+    } else {
+      queue = [id];
+      // The produce quiz builds a fresh shuffled session before the shell shows it.
+      if (g.type == GameType.produceQuiz) startProduce(g.topic);
+    }
     session = Session(queue, 0, 'single', DateTime.now().millisecondsSinceEpoch);
     go('game');
   }
