@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:video_compress/video_compress.dart';
 
 // --- Supabase Storage (public `appeals` bucket) -----------------------------
 // The Project URL + anon key are public by design (safe to embed); what the key
@@ -14,26 +15,28 @@ const _bucket = 'appeals';
 /// Uploads an appeal video to Supabase Storage and returns its public URL, or
 /// null on failure (the appeal still submits without a clip).
 ///
-/// SWAP POINT — the entire storage backend lives in this one function. To move
-/// to private/signed-URL storage later, change only here; callers just hand in a
-/// File and get a URL back.
+/// The phone records `.mov` (QuickTime), which browsers can't play — so we first
+/// convert to `.mp4` (H.264) so the dashboard plays it in any browser.
+///
+/// SWAP POINT — the storage backend lives in this one file. To move to
+/// private/signed-URL storage later, change only here.
 Future<String?> uploadAppealVideo(File file) async {
   try {
-    final ext = file.path.contains('.') ? file.path.split('.').last.toLowerCase() : 'mp4';
-    final name = 'APL-${DateTime.now().millisecondsSinceEpoch}.$ext';
-    final bytes = await file.readAsBytes();
+    final playable = await _toMp4(file);
+    final name = 'APL-${DateTime.now().millisecondsSinceEpoch}.mp4';
+    final bytes = await playable.readAsBytes();
     final resp = await http
         .post(
           Uri.parse('$_supabaseUrl/storage/v1/object/$_bucket/$name'),
           headers: {
             'apikey': _supabaseAnonKey,
             'Authorization': 'Bearer $_supabaseAnonKey',
-            'Content-Type': _contentType(ext),
+            'Content-Type': 'video/mp4',
             'x-upsert': 'true',
           },
           body: bytes,
         )
-        .timeout(const Duration(seconds: 120));
+        .timeout(const Duration(seconds: 180));
     if (resp.statusCode != 200 && resp.statusCode != 201) return null;
     // Public bucket → this URL plays directly in the dashboard.
     return '$_supabaseUrl/storage/v1/object/public/$_bucket/$name';
@@ -42,9 +45,18 @@ Future<String?> uploadAppealVideo(File file) async {
   }
 }
 
-String _contentType(String ext) => switch (ext) {
-      'mov' => 'video/quicktime',
-      'm4v' => 'video/x-m4v',
-      'mp4' => 'video/mp4',
-      _ => 'application/octet-stream',
-    };
+/// Re-wraps/transcodes the recording to a browser-friendly .mp4 (H.264) using
+/// the OS encoder. Returns the original file if conversion isn't available.
+Future<File> _toMp4(File input) async {
+  if (input.path.toLowerCase().endsWith('.mp4')) return input;
+  try {
+    final info = await VideoCompress.compressVideo(
+      input.path,
+      quality: VideoQuality.MediumQuality,
+      includeAudio: true,
+    );
+    final out = info?.file;
+    if (out != null && await out.exists() && await out.length() > 0) return out;
+  } catch (_) {/* fall back to the original */}
+  return input;
+}
