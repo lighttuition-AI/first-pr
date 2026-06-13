@@ -264,6 +264,36 @@ void main() {
     expect(find.text(app.currentProduce!.en), findsOneWidget);
   });
 
+  testWidgets('Recording is grown-ups-only: tapping a mic shows the 1-2-3-4 lock', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1366, 1024));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final app = AppState(prefs);
+    app.startProduce('fruit');
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: app),
+          ChangeNotifierProvider.value(value: VoService(prefs)),
+          ChangeNotifierProvider.value(value: ImageService(prefs)),
+          ChangeNotifierProvider.value(value: FxController()),
+        ],
+        child: const MaterialApp(home: Scaffold(body: ProduceQuiz(category: 'fruit'))),
+      ),
+    );
+    await tester.pump();
+
+    // A fresh item has no recording yet, so the mic shows its record icon.
+    expect(app.showGate, isFalse);
+    await tester.tap(find.byIcon(Icons.mic_rounded).first);
+    await tester.pump();
+
+    // Tapping it must raise the grown-up lock, NOT start recording straight away.
+    expect(app.showGate, isTrue);
+  });
+
   test('Animals: 7 continents, non-empty pools, unique animal ids', () {
     expect(kContinents.length, 7);
     final ids = <String>[];

@@ -103,8 +103,8 @@ class _GameHostState extends State<GameHost> {
             ),
           ),
 
-          // Close
-          Positioned(top: 24, left: 24, child: IconCircle(Icons.close_rounded, size: 76, onTap: () => app.go('home'))),
+          // Back to the home map (a back arrow, matching the Animals island).
+          Positioned(top: 24, left: 24, child: IconCircle(Icons.arrow_back_rounded, size: 76, onTap: () => app.go('home'))),
 
           // Floating speaker (auto-plays the round line)
           Positioned(
