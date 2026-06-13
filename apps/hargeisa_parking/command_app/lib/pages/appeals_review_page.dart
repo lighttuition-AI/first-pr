@@ -1,8 +1,13 @@
+// Command runs only on Flutter web; a native <video> element is the most
+// reliable player there (Flutter's video_player struggled with these clips).
+// ignore_for_file: deprecated_member_use, avoid_web_libraries_in_flutter
+import 'dart:html' as html;
+import 'dart:ui_web' as ui_web;
+
 import 'package:flutter/material.dart';
 import 'package:hpark_core/hpark_core.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:video_player/video_player.dart';
 
 /// Video-appeal review queue. Staff watch a driver's recorded challenge and
 /// uphold (citation stands) or dismiss (citation cancelled).
@@ -100,8 +105,9 @@ class AppealsReviewPage extends StatelessWidget {
   }
 }
 
-/// Plays a submitted appeal video, with a full-screen button (opens the clip in
-/// a new browser tab). Shows a clear note when no video is attached.
+/// Plays a submitted appeal video using a native browser <video> element (the
+/// most reliable web player — native controls + fullscreen). "Open in new tab"
+/// is a backup; a clear note shows when no video is attached.
 class _AppealVideoDialog extends StatefulWidget {
   const _AppealVideoDialog({required this.appeal});
   final Appeal appeal;
@@ -111,36 +117,34 @@ class _AppealVideoDialog extends StatefulWidget {
 }
 
 class _AppealVideoDialogState extends State<_AppealVideoDialog> {
-  VideoPlayerController? _c;
-  bool _ready = false;
-  bool _failed = false;
+  late final String _viewType;
 
   bool get _hasVideo => widget.appeal.videoUrl.isNotEmpty;
 
   @override
   void initState() {
     super.initState();
+    // Unique per dialog so re-opening never double-registers the factory.
+    _viewType = 'appeal-video-${DateTime.now().microsecondsSinceEpoch}';
     if (_hasVideo) {
-      _c = VideoPlayerController.networkUrl(Uri.parse(widget.appeal.videoUrl));
-      _c!.initialize().then((_) {
-        if (!mounted) return;
-        setState(() => _ready = true);
-        _c!.play();
-      }).catchError((_) {
-        // Some formats (e.g. an iPhone .mov) don't play inline in every browser —
-        // fall back to the "Full screen" button, which opens the file directly.
-        if (mounted) setState(() => _failed = true);
+      final url = widget.appeal.videoUrl;
+      ui_web.platformViewRegistry.registerViewFactory(_viewType, (int _) {
+        final v = html.VideoElement()
+          ..src = url
+          ..controls = true
+          ..autoplay = true
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.border = 'none'
+          ..style.backgroundColor = '#000'
+          ..style.objectFit = 'contain';
+        v.setAttribute('playsinline', 'true');
+        return v;
       });
     }
   }
 
-  @override
-  void dispose() {
-    _c?.dispose();
-    super.dispose();
-  }
-
-  Future<void> _fullscreen() async {
+  Future<void> _openInTab() async {
     try {
       await launchUrl(Uri.parse(widget.appeal.videoUrl), mode: LaunchMode.externalApplication);
     } catch (_) {}
@@ -153,56 +157,28 @@ class _AppealVideoDialogState extends State<_AppealVideoDialog> {
       backgroundColor: HpColors.elevated,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(HpRadius.xl)),
       child: SizedBox(
-        width: 640,
+        width: 680,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(HpRadius.xl)),
               child: AspectRatio(
-                aspectRatio: (_ready && _c != null) ? _c!.value.aspectRatio : 1.6,
+                aspectRatio: 16 / 10,
                 child: Container(
                   color: Colors.black,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      if (_hasVideo && _ready && _c != null)
-                        GestureDetector(
-                          onTap: () => setState(() => _c!.value.isPlaying ? _c!.pause() : _c!.play()),
-                          child: VideoPlayer(_c!),
-                        ),
-                      if (_hasVideo && _ready && _c != null && !_c!.value.isPlaying)
-                        const IgnorePointer(child: Icon(Icons.play_circle_outline, size: 56, color: Colors.white70)),
-                      if (_hasVideo && !_ready && !_failed)
-                        const CircularProgressIndicator(color: Colors.white),
-                      if (_hasVideo && _failed)
-                        Padding(
-                          padding: const EdgeInsets.all(HpSpace.x6),
+                  child: _hasVideo
+                      ? HtmlElementView(viewType: _viewType)
+                      : Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.open_in_new_rounded, size: 40, color: Colors.white54),
+                              const Icon(Icons.videocam_off_outlined, size: 44, color: Colors.white38),
                               const SizedBox(height: HpSpace.x3),
-                              Text("Tap Full screen to watch this clip.",
-                                  textAlign: TextAlign.center, style: HpType.body(size: 13, color: Colors.white70)),
+                              Text('No video attached to this appeal.', style: HpType.body(size: 13, color: Colors.white60)),
                             ],
                           ),
                         ),
-                      if (!_hasVideo)
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.videocam_off_outlined, size: 44, color: Colors.white38),
-                            const SizedBox(height: HpSpace.x3),
-                            Text('No video attached to this appeal.', style: HpType.body(size: 13, color: Colors.white60)),
-                          ],
-                        ),
-                      Positioned(
-                        bottom: 12,
-                        child: Text('${a.appellantName} · ${a.videoLabel}', style: HpType.mono(size: 13, color: Colors.white70)),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ),
@@ -211,13 +187,15 @@ class _AppealVideoDialogState extends State<_AppealVideoDialog> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text('${a.appellantName} · ${a.videoLabel}', style: HpType.mono(size: 12.5, color: HpColors.textMuted)),
+                  const SizedBox(height: HpSpace.x2),
                   Text('"${a.reason}"', style: HpType.body(size: 14, color: HpColors.text)),
                   const SizedBox(height: HpSpace.x4),
                   Row(
                     children: [
                       if (_hasVideo) ...[
                         Expanded(
-                          child: HpButton(label: 'Full screen', icon: Icons.fullscreen_rounded, onPressed: _fullscreen),
+                          child: HpButton(label: 'Open in new tab', icon: Icons.open_in_new_rounded, onPressed: _openInTab),
                         ),
                         const SizedBox(width: HpSpace.x3),
                       ],
