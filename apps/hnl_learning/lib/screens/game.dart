@@ -106,10 +106,11 @@ class _GameHostState extends State<GameHost> {
           // Back to the home map (a back arrow, matching the Animals island).
           Positioned(top: 24, left: 24, child: IconCircle(Icons.arrow_back_rounded, size: 76, onTap: () => app.go('home'))),
 
-          // Floating speaker (auto-plays the round line)
+          // Floating speaker (auto-plays the round line). Sits ABOVE the
+          // Settings gear, which moves to the bottom-left on play screens.
           Positioned(
             left: 24,
-            bottom: 24,
+            bottom: 96,
             child: FloatingSpeaker(
               key: ValueKey(voIdForRound(round)),
               voId: voIdForRound(round),

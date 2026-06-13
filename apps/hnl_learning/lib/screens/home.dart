@@ -509,6 +509,11 @@ class _GameCard extends StatelessWidget {
       case GameType.produceQuiz:
         subtitle = 'Guess & hear · EN + Somali';
         trailing = customGameTrailing(game.id) ?? Text(game.topic == 'fruit' ? '🍎' : '🥕', style: const TextStyle(fontSize: 34));
+      case GameType.memory:
+        subtitle = 'Flip & match · ${game.rounds.first.deck.length} pairs';
+        trailing = done
+            ? Text('✓', style: AppText.display(size: 34, weight: FontWeight.w800, color: const Color(0xFF15B886)))
+            : Planet(data: planetById(game.reward), size: 44);
       default:
         subtitle = '${game.rounds.length} rounds';
         trailing = done
