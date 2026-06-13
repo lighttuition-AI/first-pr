@@ -256,6 +256,41 @@ final List<Game> kGames = [
     Round(id: 'mm1', vo: 'Flip the cards two at a time and find the matching pairs. Use your memory!', deck: ['🦊', '🐢', '🦉', '🐝'], bg: Color(0xFFEFF6EE)),
     Round(id: 'mm2', vo: 'Find all the matching pairs. Remember where each picture is!', deck: ['🍓', '🌸', '🚀', '🐳', '🎈'], bg: Color(0xFFFFF0F4)),
   ]),
+  // ---- Discovery World · 10 extra "Flip & Match" memory games -------------
+  // Each is the same flip-two-cards-find-the-pair game with a themed deck, so
+  // a child can match Arabic letters, animals, numbers, etc. Explore-only
+  // (mission:false) so they don't flood the Daily Mission; they cycle the 9
+  // planet rewards. Decks hold only DISTINCT glyphs (the match key is the glyph).
+  Game('mem-arabic', GameType.memory, 'discovery', 'memory', 'Arabic Match', 'p1', [
+    Round(id: 'mem-arabic', vo: 'Flip the cards and match the Arabic letters!', deck: ['ا', 'ب', 'ت', 'ث', 'ج', 'ح'], bg: Color(0xFFEAF0FB)),
+  ], mission: false),
+  Game('mem-animals', GameType.memory, 'discovery', 'memory', 'Animal Match', 'p2', [
+    Round(id: 'mem-animals', vo: 'Flip the cards and find the matching animals!', deck: ['🦁', '🐘', '🦒', '🦓', '🦊', '🐢'], bg: Color(0xFFEFF6EE)),
+  ], mission: false),
+  Game('mem-sea', GameType.memory, 'discovery', 'memory', 'Sea Life Match', 'p3', [
+    Round(id: 'mem-sea', vo: 'Flip the cards and match the sea animals!', deck: ['🐠', '🐙', '🦀', '🐳', '🐬', '🦈'], bg: Color(0xFFE7F4F8)),
+  ], mission: false),
+  Game('mem-fruits', GameType.memory, 'discovery', 'memory', 'Fruit Match', 'p4', [
+    Round(id: 'mem-fruits', vo: 'Flip the cards and find the matching fruits!', deck: ['🍎', '🍌', '🍇', '🍓', '🍊', '🍉'], bg: Color(0xFFFFF0F0)),
+  ], mission: false),
+  Game('mem-veggies', GameType.memory, 'discovery', 'memory', 'Veggie Match', 'p5', [
+    Round(id: 'mem-veggies', vo: 'Flip the cards and match the vegetables!', deck: ['🥕', '🌽', '🥦', '🍅', '🥔', '🍆'], bg: Color(0xFFEFF6E6)),
+  ], mission: false),
+  Game('mem-numbers', GameType.memory, 'discovery', 'memory', 'Number Match', 'p6', [
+    Round(id: 'mem-numbers', vo: 'Flip the cards and match the numbers!', deck: ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣'], bg: Color(0xFFEDEFFF)),
+  ], mission: false),
+  Game('mem-shapes', GameType.memory, 'discovery', 'memory', 'Shape Match', 'p7', [
+    Round(id: 'mem-shapes', vo: 'Flip the cards and find the matching shapes!', deck: ['🔺', '🔵', '🟥', '🟢', '🔶', '⭐'], bg: Color(0xFFF1ECFB)),
+  ], mission: false),
+  Game('mem-vehicles', GameType.memory, 'discovery', 'memory', 'Vehicle Match', 'p8', [
+    Round(id: 'mem-vehicles', vo: 'Flip the cards and match the vehicles!', deck: ['🚗', '🚌', '🚒', '✈️', '🚀', '🚲'], bg: Color(0xFFFFF3E6)),
+  ], mission: false),
+  Game('mem-food', GameType.memory, 'discovery', 'memory', 'Yummy Match', 'p9', [
+    Round(id: 'mem-food', vo: 'Flip the cards and find the matching foods!', deck: ['🍕', '🍔', '🌭', '🍟', '🍩', '🍦'], bg: Color(0xFFFFF1E8)),
+  ], mission: false),
+  Game('mem-weather', GameType.memory, 'discovery', 'memory', 'Weather Match', 'p1', [
+    Round(id: 'mem-weather', vo: 'Flip the cards and match the weather!', deck: ['☀️', '🌧️', '⛈️', '❄️', '🌈', '🌙'], bg: Color(0xFFEAF3FB)),
+  ], mission: false),
   // 5 — LETTERS: match letter to picture
   Game('letters-match', GameType.letter, 'discovery', 'letters', 'Letter sounds', 'p5', [
     Round(id: 'lt1', vo: 'This is the letter B. Buh — B! Tap the picture that starts with B!', letter: 'B', bg: Color(0xFFFFF7E8), options: [PickOption('🍌', correct: true, label: 'Banana'), PickOption('🍎', label: 'Apple'), PickOption('🐱', label: 'Cat')]),

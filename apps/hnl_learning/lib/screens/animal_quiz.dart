@@ -33,6 +33,10 @@ class _AnimalQuizScreenState extends State<AnimalQuizScreen> {
   final AudioRecorder _rec = AudioRecorder();
   String? _recordingId; // the VO id currently being recorded (name or sound), or null
   bool _done = false;
+  // Once a grown-up has entered the 1-2-3-4 code on this screen, recording is
+  // "armed" — but we never auto-start; the grown-up taps the mic to begin.
+  // Resets when the screen is left (a fresh visit needs the code again).
+  bool _recordUnlocked = false;
 
   @override
   void dispose() {
@@ -53,11 +57,17 @@ class _AnimalQuizScreenState extends State<AnimalQuizScreen> {
       final path = await _rec.stop();
       if (path != null) vo.registerRecording(prev, path);
       if (mounted) setState(() => _recordingId = null);
+    } else if (!_recordUnlocked) {
+      // Recording is grown-ups-only — gate it behind the same 1-2-3-4 child-lock
+      // as Settings so kids can't overwrite the family's sounds without an elder
+      // present. Entering the code only ARMS recording; it never starts on its
+      // own — the grown-up then taps the mic to begin. (Stopping never gates.)
+      context.read<AppState>().requireParent(() {
+        if (mounted) setState(() => _recordUnlocked = true);
+      });
     } else {
-      // Starting a fresh recording is grown-ups-only — gate it behind the same
-      // 1-2-3-4 child-lock as Settings so kids can't overwrite the family's
-      // sounds without an elder present. (Stopping above never needs the code.)
-      context.read<AppState>().requireParent(() => _beginRecord(vo, id));
+      // Already unlocked on this screen — the grown-up is starting a recording.
+      _beginRecord(vo, id);
     }
   }
 

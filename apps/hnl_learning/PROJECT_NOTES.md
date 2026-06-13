@@ -270,13 +270,18 @@ Locked-in identity (all permanent / must match App Store Connect):
   `DEVELOPMENT_TEAM` on the 3 Runner configs + automatic signing. ⚠️ Gotcha: the cert
   name shows "Khadar Ainashe (BLGU4D968K)" — `BLGU4D968K` is a CERT id, **not** the team;
   the team is `4696KN59VV` (confirmed by the issued provisioning profile + Xcode plist).
-- **Display name** `HNL Learning`; **version `1.3.1+8`** (1.0.0+1 was the first
+- **Display name** `HNL Learning`; **version `1.4.0+9`** (1.0.0+1 was the first
   TestFlight build; 1.1.0 added Flip the Letters + Letter Sounds; +3 moved the harakat
-  Studio section; 1.3.1+8 locks **all** inline recording behind the 1-2-3-4 grown-up
-  gate + gives the game shell a back arrow instead of an "X" — **bump the `+build` in
-  pubspec before each new upload**, it must increase monotonically — App Store Connect
-  rejects a reused build number). **STANDING RULE: after every improvement, build a
-  fresh App-Store IPA + reveal it in Finder for the user to push to TestFlight.**
+  Studio section; 1.3.1+8 locked **all** inline recording behind the 1-2-3-4 grown-up
+  gate + gave the game shell a back arrow instead of an "X"; 1.4.0+9 added **10 themed
+  Flip & Match games** to Discovery World (`GameType.memory`, ids `mem-*`, explore-only,
+  themed decks: Arabic/animals/sea/fruit/veggie/numbers/shapes/vehicles/food/weather),
+  made the recording gate ARM-only (entering the code no longer auto-starts recording —
+  the grown-up taps the mic to begin), and moved the Settings gear to the bottom-LEFT on
+  play screens so it stops overlapping the Next button — **bump the `+build` in pubspec
+  before each new upload**, it must increase monotonically — App Store Connect rejects a
+  reused build number). **STANDING RULE: after every improvement, build a fresh
+  App-Store IPA + reveal it in Finder for the user to push to TestFlight.**
 - **App icon (1.2.0+)**: the **three Somali Village sisters** (pink · gold · purple, tiaras
   + scepters) on a warm savanna ground — original art composed from `widgets/village.dart`
   `SomaliGirl`. Reproducible: `flutter test tool/gen_app_icon.dart` renders the 1024 master

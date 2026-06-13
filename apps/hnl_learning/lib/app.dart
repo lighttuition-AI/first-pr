@@ -219,8 +219,16 @@ class _StageContent extends StatelessWidget {
         // Celebration FX above everything.
         const Positioned.fill(child: FxLayer()),
 
-        // Floating Tweaks gear (designer/parent live options).
-        const Positioned(right: 22, bottom: 22, child: TweaksButton()),
+        // Floating Tweaks gear (designer/parent live options). On the play
+        // screens a big "Next / Finish" button sits bottom-right, so the gear
+        // moves to the bottom-LEFT there — keeps little fingers reaching for
+        // Next from fat-fingering Settings. Bottom-right everywhere else.
+        Positioned(
+          left: _gearOnLeft(app.screen) ? 22 : null,
+          right: _gearOnLeft(app.screen) ? null : 22,
+          bottom: 22,
+          child: const TweaksButton(),
+        ),
         if (app.showTweaks) const Positioned.fill(child: TweaksPanel()),
 
         // The creative-control Studios.
@@ -281,3 +289,7 @@ class _StageContent extends StatelessWidget {
     }
   }
 }
+
+/// The play screens put a big "Next / Finish" button in the bottom-right, so the
+/// floating Settings gear moves to the bottom-LEFT on these to avoid overlap.
+bool _gearOnLeft(String screen) => screen == 'game' || screen == 'animal-quiz';

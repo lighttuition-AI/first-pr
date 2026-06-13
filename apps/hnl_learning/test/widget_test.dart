@@ -25,10 +25,14 @@ import 'package:hnl_learning/widgets/sea.dart';
 import 'package:hnl_learning/widgets/village.dart';
 
 void main() {
-  test('all 14 games present (7 mini-games + 5 Arabic + 2 produce)', () {
-    expect(kGames.length, 14);
-    // 13 distinct types — Fruits + Veggies share GameType.produceQuiz.
+  test('all 24 games present (7 mini-games + 10 Flip & Match + 5 Arabic + 2 produce)', () {
+    expect(kGames.length, 24);
+    // 13 distinct types — Fruits + Veggies share produceQuiz; the 10 themed
+    // Flip & Match games all reuse GameType.memory.
     expect(kGames.map((g) => g.type).toSet().length, 13);
+    // The 10 themed Flip & Match games live in Discovery World, explore-only.
+    expect(gamesInWorld('discovery').where((g) => g.type == GameType.memory).length, 11);
+    expect(kGames.where((g) => g.id.startsWith('mem-')).every((g) => !g.mission), isTrue);
     // The Arabic-world games are explore-only (never join a mission).
     expect(kGames.firstWhere((g) => g.type == GameType.alphabet).mission, isFalse);
     expect(kGames.firstWhere((g) => g.type == GameType.trace).mission, isFalse);
@@ -61,15 +65,16 @@ void main() {
     expect(find.byType(IconTile), findsNWidgets(kGames.length));
   });
 
-  test('voiceover registry: 20 groups, every line id unique', () {
+  test('voiceover registry: 30 groups, every line id unique', () {
     final groups = buildVoRegistry();
-    expect(groups.length, 20); // one VO group per game (14) + 5 flow groups + rewards
+    expect(groups.length, 30); // one VO group per game (24) + 5 flow groups + rewards
     // 45 original + Splash (1 bg music + 3 names) + alphabet group (1 instruction
     // + 28 letters) + trace + order + sounds instructions + flip group (1
-    // instruction + its OWN 28 letters) + 2 produce instructions. (The 84 harakat
-    // sounds live in their own Studio section, not the flat registry.)
+    // instruction + its OWN 28 letters) + 2 produce instructions + 10 Flip &
+    // Match instructions. (The 84 harakat sounds live in their own Studio
+    // section, not the flat registry.)
     final total = groups.fold<int>(0, (sum, g) => sum + g.lines.length);
-    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 1 + (1 + kArabicLetters.length) + 2);
+    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 1 + (1 + kArabicLetters.length) + 2 + 10);
     final ids = groups.expand((g) => g.lines.map((l) => l.id)).toList();
     expect(ids.toSet().length, ids.length);
     // the splash names are recordable
@@ -190,20 +195,27 @@ void main() {
     expect(find.text(kHarakatLetters[1].forms[2].glyph), findsOneWidget); // بُ
   });
 
-  test('image registry: 11 groups, 79 unique slots (one upload syncs everywhere)', () {
+  test('image registry: 21 groups, unique slots (one upload syncs everywhere)', () {
     final groups = buildImgRegistry();
-    expect(groups.length, 11);
-    // 78 + the new Arabic world icon. Shared emoji appear in multiple game
-    // groups but share ONE slot id, so one upload applies everywhere.
+    expect(groups.length, 21); // + the 10 themed Flip & Match games
+    // Shared emoji appear in multiple game groups but share ONE slot id, so one
+    // upload applies everywhere.
     final uniqueIds = groups.expand((g) => g.items.map((s) => s.id)).toSet();
-    expect(uniqueIds.length, 80);
+    expect(uniqueIds.length, 121); // 80 + 41 new Flip & Match card slots (after dedup)
   });
 
-  test('planets: 9 total; the 7 reward-bearing games map to unique planets', () {
+  test('planets: 9 total; 17 reward-bearing games span all 9 planets', () {
     expect(kPlanets.length, 9);
     final rewards = kGames.map((g) => g.reward).where((r) => r.isNotEmpty).toList();
-    expect(rewards.length, 7);
-    expect(rewards.toSet().length, rewards.length);
+    // 7 original mini-games + 10 themed Flip & Match games.
+    expect(rewards.length, 17);
+    // The 10 Flip & Match games intentionally REUSE the 9 planets (cycling),
+    // so rewards are no longer all-unique — but every planet is still used.
+    expect(rewards.toSet().length, 9);
+    // Every reward names a real planet (no dangling ids).
+    for (final r in rewards) {
+      expect(kPlanets.any((p) => p.id == r), isTrue, reason: '$r must be a real planet');
+    }
   });
 
   test('Animals: the island world exists with a giraffe icon', () {
@@ -292,6 +304,37 @@ void main() {
 
     // Tapping it must raise the grown-up lock, NOT start recording straight away.
     expect(app.showGate, isTrue);
+  });
+
+  testWidgets('Flip & Match: a themed 6-pair memory game lays out 12 cards, no overflow', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1366, 1024));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    // All 10 new games share GameType.memory and live in Discovery World.
+    final game = kGames.firstWhere((g) => g.id == 'mem-animals');
+    expect(game.type, GameType.memory);
+    expect(game.world, 'discovery');
+    expect(game.rounds.first.deck.length, 6);
+    // Decks hold only distinct glyphs (the match key is the glyph itself).
+    expect(game.rounds.first.deck.toSet().length, 6);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider.value(value: AppState(prefs)),
+          ChangeNotifierProvider.value(value: FxController()),
+        ],
+        child: MaterialApp(
+          home: Scaffold(body: Center(child: MemoryGame(round: game.rounds.first, onSolved: () {}))),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull); // 12 cards fit with no overflow
+    // 6 pairs → 12 cards, all face-down showing '?'.
+    expect(find.text('?'), findsNWidgets(12));
   });
 
   test('Animals: 7 continents, non-empty pools, unique animal ids', () {

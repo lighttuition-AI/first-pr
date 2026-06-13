@@ -45,6 +45,28 @@ Widget? customGameIcon(String gameId, {double size = 52}) {
       return SortIcon(size: size);
     case 'science-fact':
       return ScienceIcon(size: size);
+    // Discovery World · the 10 themed Flip & Match games — a themed glyph on a
+    // colour tile so each is recognisable at a glance.
+    case 'mem-arabic':
+      return ProduceIcon(emoji: 'أ', grad: const [Color(0xFF5C7CFA), Color(0xFF3F5FD8)], size: size);
+    case 'mem-animals':
+      return ProduceIcon(emoji: '🦁', grad: const [Color(0xFF9BE15D), Color(0xFF5FB836)], size: size);
+    case 'mem-sea':
+      return ProduceIcon(emoji: '🐠', grad: const [Color(0xFF39C7DE), Color(0xFF1E9FC4)], size: size);
+    case 'mem-fruits':
+      return ProduceIcon(emoji: '🍓', grad: const [Color(0xFFFF8FA3), Color(0xFFFF6B9D)], size: size);
+    case 'mem-veggies':
+      return ProduceIcon(emoji: '🥕', grad: const [Color(0xFFFFB458), Color(0xFFF0822E)], size: size);
+    case 'mem-numbers':
+      return ProduceIcon(emoji: '🔢', grad: const [Color(0xFFB07EE8), Color(0xFF7C5BD0)], size: size);
+    case 'mem-shapes':
+      return ProduceIcon(emoji: '🔷', grad: const [Color(0xFF2ED3A3), Color(0xFF0E9E73)], size: size);
+    case 'mem-vehicles':
+      return ProduceIcon(emoji: '🚗', grad: const [Color(0xFFFF7A59), Color(0xFFE85D3D)], size: size);
+    case 'mem-food':
+      return ProduceIcon(emoji: '🍕', grad: const [Color(0xFFFFD23F), Color(0xFFFFB01F)], size: size);
+    case 'mem-weather':
+      return ProduceIcon(emoji: '🌈', grad: const [Color(0xFF39C7DE), Color(0xFF1E9FC4)], size: size);
   }
   return null;
 }
