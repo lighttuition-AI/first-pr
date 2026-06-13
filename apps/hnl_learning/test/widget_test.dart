@@ -384,15 +384,68 @@ void main() {
     expect(queue.toSet().length, queue.length); // no duplicates
   });
 
-  test('award grants stars, a planet, and skill xp', () async {
+  test('award grants stars and skill xp', () async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     final app = AppState(prefs);
-    app.award(planetId: 'p1', gainStars: 8, topic: 'logic');
+    app.award(gainStars: 8, topic: 'logic');
     expect(app.stars, 8);
-    expect(app.planets, contains('p1'));
     expect(app.skillXp['logic'], 1);
   });
+
+  test('tapping a game plays through its whole world, then back to the games list', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final app = AppState(prefs);
+    final discovery = gamesInWorld('discovery').map((g) => g.id).toList();
+    expect(discovery.length, greaterThan(1));
+
+    // Tapping the first game queues the whole world in order.
+    app.startGame(discovery.first);
+    expect(app.screen, 'game');
+    expect(app.session!.mode, 'single');
+    expect(app.session!.queue, discovery);
+
+    // Tapping a middle game queues from there to the end (not the whole world).
+    app.startGame(discovery[2]);
+    expect(app.session!.queue, discovery.sublist(2));
+
+    // Finishing a non-last game moves on to the NEXT game in the world.
+    app.startGame(discovery.first);
+    app.finishGame();
+    expect(app.screen, 'game');
+    expect(app.session!.index, 1);
+    expect(app.session!.queue[app.session!.index], discovery[1]);
+  });
+
+  test('finishing the last game in a world drops back into its games list', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final app = AppState(prefs);
+    final discovery = gamesInWorld('discovery').map((g) => g.id).toList();
+
+    // Start at the last game so the queue is a single game.
+    app.startGame(discovery.last);
+    expect(app.session!.queue, [discovery.last]);
+    app.finishGame();
+    // Back to the home map with that world's games sheet queued to reopen —
+    // NOT a jump to any planet/collecting screen.
+    expect(app.screen, 'home');
+    expect(app.resumeWorld, 'discovery');
+    expect(app.session, isNull);
+  });
+
+  test('back from a game returns to its world games list (one step back)', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final app = AppState(prefs);
+    app.startGame('mem-animals');
+    app.backToWorld('discovery');
+    expect(app.screen, 'home');
+    expect(app.resumeWorld, 'discovery');
+    expect(app.session, isNull);
+  });
+
 
   test('multiple children have separate, isolated progress', () async {
     SharedPreferences.setMockInitialValues({});
@@ -401,7 +454,7 @@ void main() {
     expect(app.children.length, 1);
 
     app.setAge(5);
-    app.award(planetId: 'p1', gainStars: 8);
+    app.award(gainStars: 8);
     expect(app.stars, 8);
 
     app.addChild(); // child 2 becomes active
@@ -411,8 +464,7 @@ void main() {
     expect(app.stars, 3);
 
     app.setActiveChild(0); // back to child 1
-    expect(app.stars, 8);
-    expect(app.planets, contains('p1'));
+    expect(app.stars, 8); // child 1's stars are intact and isolated
 
     app.removeChild(1);
     expect(app.children.length, 1);

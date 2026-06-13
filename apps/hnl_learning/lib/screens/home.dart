@@ -15,7 +15,6 @@ import '../widgets/common.dart';
 import '../widgets/game_icons.dart';
 import '../widgets/img_widget.dart';
 import '../widgets/kid_button.dart';
-import '../widgets/planet.dart';
 import '../widgets/robo.dart';
 import '../widgets/speech_bubble.dart';
 
@@ -42,6 +41,15 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    final app = context.read<AppState>();
+    // Coming back from a game? Reopen that world's games list (the "games
+    // area") instead of leaving the child on the bare island map.
+    final resume = app.resumeWorld;
+    if (resume != null) {
+      app.resumeWorld = null;
+      final w = kWorlds.where((x) => x.id == resume);
+      if (w.isNotEmpty) _world = w.first;
+    }
     final v = kScreenVo['home']!;
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) context.read<VoService>().play(v.id, v.text);
@@ -194,13 +202,7 @@ class _HomeHeader extends StatelessWidget {
           const Spacer(),
           const Logo(small: true),
           const Spacer(),
-          Row(
-            children: [
-              HnlChip(icon: '⭐', value: '${app.stars}'),
-              const SizedBox(width: 14),
-              HnlChip(icon: '🪐', value: '${app.planets.length}', onTap: () => app.go('rewards')),
-            ],
-          ),
+          HnlChip(icon: '⭐', value: '${app.stars}'),
         ],
       ),
     );
@@ -461,7 +463,6 @@ class _WorldSheetState extends State<WorldSheet> with SingleTickerProviderStateM
                           for (final g in games)
                             _GameCard(
                               game: g,
-                              done: app.planets.contains(g.reward),
                               onTap: () => widget.onPlay(g.id),
                             ),
                           for (int i = 0; i < 2; i++) const _LockedCard(),
@@ -481,13 +482,20 @@ class _WorldSheetState extends State<WorldSheet> with SingleTickerProviderStateM
 
 class _GameCard extends StatelessWidget {
   final Game game;
-  final bool done;
   final VoidCallback onTap;
-  const _GameCard({required this.game, required this.done, required this.onTap});
+  const _GameCard({required this.game, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final topic = topicById(game.topic);
+    final pal = context.read<AppState>().pal;
+    // A friendly "tap to play" badge (planet collecting was removed).
+    final Widget playDot = Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(color: pal.brandSoft, shape: BoxShape.circle),
+      child: Icon(Icons.play_arrow_rounded, color: pal.brand, size: 28),
+    );
     final String subtitle;
     final Widget trailing;
     switch (game.type) {
@@ -511,14 +519,10 @@ class _GameCard extends StatelessWidget {
         trailing = customGameTrailing(game.id) ?? Text(game.topic == 'fruit' ? '🍎' : '🥕', style: const TextStyle(fontSize: 34));
       case GameType.memory:
         subtitle = 'Flip & match · ${game.rounds.first.deck.length} pairs';
-        trailing = done
-            ? Text('✓', style: AppText.display(size: 34, weight: FontWeight.w800, color: const Color(0xFF15B886)))
-            : Planet(data: planetById(game.reward), size: 44);
+        trailing = playDot;
       default:
         subtitle = '${game.rounds.length} rounds';
-        trailing = done
-            ? Text('✓', style: AppText.display(size: 34, weight: FontWeight.w800, color: const Color(0xFF15B886)))
-            : Planet(data: planetById(game.reward), size: 44);
+        trailing = playDot;
     }
 
     return Pressable(
