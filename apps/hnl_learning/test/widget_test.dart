@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hnl_learning/models/animals.dart';
 import 'package:hnl_learning/models/content.dart';
 import 'package:hnl_learning/models/produce.dart';
+import 'package:hnl_learning/models/story.dart';
 import 'package:hnl_learning/screens/animal_quiz.dart';
 import 'package:hnl_learning/screens/game.dart';
 import 'package:hnl_learning/screens/produce_quiz.dart';
@@ -22,6 +23,7 @@ import 'package:hnl_learning/widgets/common.dart';
 import 'package:hnl_learning/widgets/game_icons.dart';
 import 'package:hnl_learning/widgets/scene.dart';
 import 'package:hnl_learning/widgets/sea.dart';
+import 'package:hnl_learning/widgets/story_art.dart';
 import 'package:hnl_learning/widgets/village.dart';
 
 void main() {
@@ -71,9 +73,9 @@ void main() {
     expect(find.byType(IconTile), findsNWidgets(kGames.length));
   });
 
-  test('voiceover registry: 50 groups, every line id unique', () {
+  test('voiceover registry: 51 groups, every line id unique', () {
     final groups = buildVoRegistry();
-    expect(groups.length, 50); // one VO group per game (44) + 5 flow groups + rewards
+    expect(groups.length, 51); // 44 games + 5 flow + 1 Story group + rewards
     // 45 original + Splash (1 bg music + 3 names) + alphabet group (1 instruction
     // + 28 letters) + trace + order + sounds instructions + flip group (1
     // instruction + its OWN 28 letters) + 2 produce instructions + 10 Flip &
@@ -81,7 +83,8 @@ void main() {
     // sort 5 + count 10 + pattern 10). (The 84 harakat sounds live in their own
     // Studio section, not the flat registry.)
     final total = groups.fold<int>(0, (sum, g) => sum + g.lines.length);
-    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 1 + (1 + kArabicLetters.length) + 2 + 10 + 35);
+    // + 12 story-narration lines (Fox & Lion: 6 scenes × Somali + English).
+    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 1 + (1 + kArabicLetters.length) + 2 + 10 + 35 + 12);
     final ids = groups.expand((g) => g.lines.map((l) => l.id)).toList();
     expect(ids.toSet().length, ids.length);
     // the splash names are recordable
@@ -208,7 +211,7 @@ void main() {
     // Shared emoji appear in multiple game groups but share ONE slot id, so one
     // upload applies everywhere.
     final uniqueIds = groups.expand((g) => g.items.map((s) => s.id)).toSet();
-    expect(uniqueIds.length, 146); // 121 + 25 new distinct option/item/choice slots
+    expect(uniqueIds.length, 147); // 121 + 25 game slots + the Story island emoji
   });
 
   test('planets: 9 total; 17 reward-bearing games span all 9 planets', () {
@@ -228,7 +231,7 @@ void main() {
   test('Animals: the island world exists with a giraffe icon', () {
     final animals = kWorlds.firstWhere((w) => w.id == 'animals');
     expect(animals.emoji, '🦒');
-    expect(kWorlds.length, 6); // + Fruit & Veggies
+    expect(kWorlds.length, 7); // + Fruit & Veggies + Story Time
   });
 
   test('Fruit & Veggies: world, two games, distinct-emoji pools', () {
@@ -839,5 +842,47 @@ void main() {
     // The harakat section really renders its 28 consonant tiles (Baa's header).
     expect(find.text('Baa'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  test('Story library: Fox & Lion is a complete, valid story', () {
+    // Storytelling island exists as the 7th world.
+    expect(kWorlds.any((w) => w.id == 'story'), isTrue);
+    final fox = storyById('fox-lion');
+    expect(fox.ready, isTrue);
+    expect(fox.titleSo, 'Dawaco iyo Libaax');
+    expect(fox.scenes.length, 6);
+    expect(fox.questions.length, 2);
+    expect(fox.moralEn.isNotEmpty && fox.moralSo.isNotEmpty, isTrue);
+    // Every scene has both-language narration; each question has exactly one
+    // correct answer; both languages are present on every option.
+    for (final s in fox.scenes) {
+      expect(s.narrationEn.isNotEmpty && s.narrationSo.isNotEmpty, isTrue);
+    }
+    for (final q in fox.questions) {
+      expect(q.options.where((o) => o.correct).length, 1);
+      expect(q.options.every((o) => o.labelEn.isNotEmpty && o.labelSo.isNotEmpty), isTrue);
+    }
+    // Narration VO ids are unique + registered in the Voiceover Studio so a
+    // grown-up can record real Somali narration.
+    final voIds = [
+      for (final s in fox.scenes) ...[storyVoId(fox.id, s.id, 'so'), storyVoId(fox.id, s.id, 'en')]
+    ];
+    expect(voIds.toSet().length, voIds.length);
+    final storyGroup = buildVoRegistry().firstWhere((g) => g.group.contains('Dawaco iyo Libaax'));
+    expect(storyGroup.lines.length, 12);
+    // The recurring-cast folktales are scaffolded as "coming soon".
+    expect(kStories.where((s) => !s.ready).length, greaterThanOrEqualTo(5));
+  });
+
+  testWidgets('Story scene art renders the fox + lion with no overflow', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(body: SizedBox(width: 760, height: 460, child: StorySceneArt(art: 'friends'))),
+    ));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.takeException(), isNull);
+    expect(find.byType(LibaaxLion), findsOneWidget);
+    expect(find.byType(DawacoFox), findsOneWidget);
   });
 }

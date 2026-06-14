@@ -22,6 +22,8 @@ import 'screens/child_switcher.dart';
 import 'screens/tweaks.dart';
 import 'screens/continents.dart';
 import 'screens/animal_quiz.dart';
+import 'screens/story_library.dart';
+import 'screens/story_player.dart';
 import 'widgets/splash.dart';
 
 class HnlApp extends StatelessWidget {
@@ -277,6 +279,10 @@ class _StageContent extends StatelessWidget {
         return const ContinentMapScreen();
       case 'animal-quiz':
         return const AnimalQuizScreen();
+      case 'stories':
+        return const StoryLibraryScreen();
+      case 'story':
+        return const StoryPlayerScreen();
       case 'gate':
         return const GateScreen();
       case 'parent':
@@ -289,4 +295,4 @@ class _StageContent extends StatelessWidget {
 
 /// The play screens put a big "Next / Finish" button in the bottom-right, so the
 /// floating Settings gear moves to the bottom-LEFT on these to avoid overlap.
-bool _gearOnLeft(String screen) => screen == 'game' || screen == 'animal-quiz';
+bool _gearOnLeft(String screen) => screen == 'game' || screen == 'animal-quiz' || screen == 'story';

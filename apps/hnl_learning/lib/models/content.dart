@@ -6,6 +6,7 @@
 // ============================================================
 import 'package:flutter/material.dart';
 import '../theme/tokens.dart';
+import 'story.dart';
 
 class Topic {
   final String id, label, emoji, world;
@@ -62,6 +63,8 @@ const List<World> kWorlds = [
       'Hop around the world and meet amazing animals from every continent!'),
   World('produce', 'Fruit & Veggies', 'Fruits & vegetables', '🍎🥕',
       'Meet yummy fruits and veggies — hear each name in English and Somali!'),
+  World('story', 'Story Time', 'Somali folktales', '📖',
+      'Watch animated Somali stories — the clever fox, the proud lion, and more!'),
 ];
 
 class PlanetData {
@@ -655,6 +658,16 @@ List<VoGroup> buildVoRegistry() {
       }
     }
     groups.add(VoGroup(g.title, lines));
+  }
+  // Story Library — each ready story's narration (Somali + English per scene)
+  // is recordable, so a grown-up can voice the tales in their own Somali.
+  for (final st in kStories.where((s) => s.ready)) {
+    final lines = <VoLineData>[];
+    for (final sc in st.scenes) {
+      lines.add(VoLineData(storyVoId(st.id, sc.id, 'so'), sc.narrationSo, '${st.titleSo} · Soomaali'));
+      lines.add(VoLineData(storyVoId(st.id, sc.id, 'en'), sc.narrationEn, '${st.titleEn} · English'));
+    }
+    groups.add(VoGroup('📖 ${st.titleSo}', lines));
   }
   groups.add(VoGroup('Planet rewards', kRewardVo.values.toList()));
   return groups;
