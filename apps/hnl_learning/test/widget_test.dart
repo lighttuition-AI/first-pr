@@ -73,9 +73,9 @@ void main() {
     expect(find.byType(IconTile), findsNWidgets(kGames.length));
   });
 
-  test('voiceover registry: 51 groups, every line id unique', () {
+  test('voiceover registry: 54 groups, every line id unique', () {
     final groups = buildVoRegistry();
-    expect(groups.length, 51); // 44 games + 5 flow + 1 Story group + rewards
+    expect(groups.length, 54); // 44 games + 5 flow + Story music + 3 stories + rewards
     // 45 original + Splash (1 bg music + 3 names) + alphabet group (1 instruction
     // + 28 letters) + trace + order + sounds instructions + flip group (1
     // instruction + its OWN 28 letters) + 2 produce instructions + 10 Flip &
@@ -83,8 +83,9 @@ void main() {
     // sort 5 + count 10 + pattern 10). (The 84 harakat sounds live in their own
     // Studio section, not the flat registry.)
     final total = groups.fold<int>(0, (sum, g) => sum + g.lines.length);
-    // + 12 story-narration lines (Fox & Lion: 6 scenes × Somali + English).
-    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 1 + (1 + kArabicLetters.length) + 2 + 10 + 35 + 12);
+    // + 1 Story-music line + 34 story-narration lines (Fox&Lion 12, Lion&Mouse
+    // 12, Proud Camel 10 — each scene × Somali + English).
+    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 1 + (1 + kArabicLetters.length) + 2 + 10 + 35 + 1 + 34);
     final ids = groups.expand((g) => g.lines.map((l) => l.id)).toList();
     expect(ids.toSet().length, ids.length);
     // the splash names are recordable
@@ -872,6 +873,30 @@ void main() {
     expect(storyGroup.lines.length, 12);
     // The recurring-cast folktales are scaffolded as "coming soon".
     expect(kStories.where((s) => !s.ready).length, greaterThanOrEqualTo(5));
+  });
+
+  test('Story library: 3 stories are fully built and valid', () {
+    final ready = kStories.where((s) => s.ready).toList();
+    expect(ready.map((s) => s.id).toSet(), {'fox-lion', 'lion-mouse', 'proud-camel'});
+    final voIds = <String>[];
+    for (final st in ready) {
+      expect(st.scenes.length, greaterThanOrEqualTo(5));
+      expect(st.questions.length, greaterThanOrEqualTo(1));
+      expect(st.moralEn.isNotEmpty && st.moralSo.isNotEmpty, isTrue);
+      for (final s in st.scenes) {
+        expect(s.narrationEn.isNotEmpty && s.narrationSo.isNotEmpty, isTrue);
+        voIds..add(storyVoId(st.id, s.id, 'so'))..add(storyVoId(st.id, s.id, 'en'));
+      }
+      for (final q in st.questions) {
+        expect(q.options.where((o) => o.correct).length, 1);
+      }
+    }
+    // All narration ids across every story are globally unique.
+    expect(voIds.toSet().length, voIds.length);
+    // The background-music bed is an uploadable Studio line backed by the harp.
+    expect(kStoryMusic.id, 'story-music');
+    expect(kStoryMusic.asset, 'audio/harp.wav');
+    expect(buildVoRegistry().any((g) => g.lines.any((l) => l.id == 'story-music')), isTrue);
   });
 
   testWidgets('Story scene art renders the fox + lion with no overflow', (tester) async {

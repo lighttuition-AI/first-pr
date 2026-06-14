@@ -198,11 +198,198 @@ const _kFoxLion = Story(
   moralSo: 'Caqliga iyo naxariistu way ka xoog badan yihiin xoogga keligiis.',
 );
 
+const _kLionMouse = Story(
+  id: 'lion-mouse',
+  titleEn: 'The Lion and the Mouse',
+  titleSo: 'Libaax iyo Jiir',
+  emoji: '🐭',
+  ageRange: '3-5',
+  blurbEn: 'A mighty lion spares a tiny mouse — who repays the kindness.',
+  blurbSo: 'Libaax weyn ayaa u naxariistay jiir yar — kaasoo abaalgudaya naxariista.',
+  ready: true,
+  scenes: [
+    StoryScene(
+      id: 's1',
+      art: 'lm-sleep',
+      narrationEn: 'Libaax the lion was napping in the shade when a tiny mouse scampered right over his paw and woke him up.',
+      narrationSo: 'Libaax wuxuu ku hurday hooska markii jiir yaru uu cagtiisa kor uga orday oo uu toosiyey.',
+      bgTop: Color(0xFFFFE9B0),
+      bgBottom: Color(0xFFFFC76B),
+    ),
+    StoryScene(
+      id: 's2',
+      art: 'lm-catch',
+      narrationEn: 'The lion caught the little mouse under his big paw. The mouse squeaked up at him, trembling.',
+      narrationSo: 'Libaax wuxuu jiirka yar ku qabtay cagtiisa weyn. Jiirkii oo gariiraya ayaa kor u qayliyey.',
+      speaker: Speaker.fox, // bubble from the small character (mouse)
+      lineEn: 'Please let me go! One day I may help you!',
+      lineSo: 'Fadlan i sii daa! Maalin maalmaha ka mid ah ayaan ku caawin karaa!',
+      bgTop: Color(0xFFFFD98A),
+      bgBottom: Color(0xFFE8A24D),
+    ),
+    StoryScene(
+      id: 's3',
+      art: 'lm-free',
+      narrationEn: 'Libaax laughed — "How could someone so small ever help me?" — but kindly, he let the mouse go.',
+      narrationSo: 'Libaax wuu qoslay — "Sidee mid sidaas u yar iigu caawin karaa?" — laakiin si naxariis leh ayuu jiirkii u sii daayey.',
+      speaker: Speaker.lion,
+      lineEn: 'Off you go, little one!',
+      lineSo: 'Soco, yarow!',
+      bgTop: Color(0xFFCDEBA6),
+      bgBottom: Color(0xFFFFD98A),
+    ),
+    StoryScene(
+      id: 's4',
+      art: 'lm-net',
+      narrationEn: 'A few days later, the lion was caught in a hunter\'s net. He roared and pulled, but he could not get free.',
+      narrationSo: 'Dhowr maalmood ka dib, Libaax wuxuu ku dhacay shabag ugaadhsade. Wuu ciyey oo wuu jiiday, laakiin wuu samri waayey.',
+      speaker: Speaker.lion,
+      lineEn: 'Help! I am trapped!',
+      lineSo: 'I caawiya! Waan xidhmay!',
+      bgTop: Color(0xFFE8C27A),
+      bgBottom: Color(0xFFB98A48),
+    ),
+    StoryScene(
+      id: 's5',
+      art: 'lm-rescue',
+      narrationEn: 'The little mouse heard him and came running. With his sharp teeth he gnawed and gnawed until the ropes broke.',
+      narrationSo: 'Jiirkii yaraa ayaa maqlay oo soo orday. Ilkihiisa afaysan ayuu ku ruugay ilaa xadhkihii ay go\'aan.',
+      bgTop: Color(0xFFE8C27A),
+      bgBottom: Color(0xFFB98A48),
+    ),
+    StoryScene(
+      id: 's6',
+      art: 'lm-friends',
+      narrationEn: 'The lion was free! He smiled at his tiny friend. "Even the smallest friend can do the greatest things." And they were friends forever.',
+      narrationSo: 'Libaax wuu xoroobay! Wuxuu u dhoolla caddeeyey saaxiibkiisa yar. "Xitaa saaxiibka ugu yar ayaa samayn kara waxyaabaha ugu waaweyn." Waxayna noqdeen saaxiibo weligood ah.',
+      speaker: Speaker.lion,
+      lineEn: 'Thank you, little friend!',
+      lineSo: 'Mahadsanid, saaxiib yarow!',
+      bgTop: Color(0xFFBFE8FF),
+      bgBottom: Color(0xFFCDEBA6),
+    ),
+  ],
+  questions: [
+    StoryQuestion(
+      'q1',
+      'How did the little mouse help the lion?',
+      'Sidee jiirka yaru u caawiyey Libaax?',
+      [
+        StoryOption('🦷', 'He gnawed the ropes', 'Xadhkihii ayuu ruugay', correct: true),
+        StoryOption('🦁', 'He roared', 'Wuu ciyey'),
+        StoryOption('🏃', 'He ran away', 'Wuu cararay'),
+      ],
+    ),
+    StoryQuestion(
+      'q2',
+      'What did the lion learn?',
+      'Maxuu Libaax bartay?',
+      [
+        StoryOption('🤝', 'Even small friends can help', 'Xitaa saaxiibada yaryar way caawin karaan', correct: true),
+        StoryOption('💪', 'Only big animals matter', 'Xayawaanka waaweyn oo keliya ayaa muhiim ah'),
+        StoryOption('🙅', 'Never make friends', 'Waligaa saaxiib ha yeelan'),
+      ],
+    ),
+  ],
+  moralEn: 'Everyone has value — even the smallest can do great things.',
+  moralSo: 'Qof walba qiimo buu leeyahay — xitaa kan ugu yari wax waaweyn buu qaban karaa.',
+);
+
+const _kProudCamel = Story(
+  id: 'proud-camel',
+  titleEn: 'The Proud Camel',
+  titleSo: 'Geelkii Faanka Badnaa',
+  emoji: '🐫',
+  ageRange: '6-8',
+  blurbEn: 'A boastful camel learns that everyone matters — big and small.',
+  blurbSo: 'Geel faan badan ayaa bartay in qof walba muhiim yahay — yar iyo weynba.',
+  ready: true,
+  scenes: [
+    StoryScene(
+      id: 's1',
+      art: 'pc-proud',
+      narrationEn: 'Geel the camel loved to boast. He stood tall on the dunes for all to see.',
+      narrationSo: 'Geel wuxuu jeclaa faanka. Wuxuu si dheer ugu istaagay cammuudaha si dhammaan loo arko.',
+      speaker: Speaker.lion, // bubble from the big character (camel)
+      lineEn: 'I am the biggest and the best! No one is as great as me!',
+      lineSo: 'Anigaa ugu weyn oo ugu fiican! Cidna iguma weyna!',
+      bgTop: Color(0xFFFFE0A3),
+      bgBottom: Color(0xFFEAB45E),
+    ),
+    StoryScene(
+      id: 's2',
+      art: 'pc-boast',
+      narrationEn: 'Dawaco the fox smiled up at him. "Everyone is good at something, Geel," she said. But the camel just snorted.',
+      narrationSo: 'Dawaco ayaa kor ugu dhoolla caddaysay. "Qof walba wax buu ku fiican yahay, Geel," ayay tidhi. Laakiin Geel wuu ka hindhisay.',
+      speaker: Speaker.fox,
+      lineEn: 'Everyone is good at something, Geel.',
+      lineSo: 'Qof walba wax buu ku fiican yahay, Geel.',
+      bgTop: Color(0xFFCDEBA6),
+      bgBottom: Color(0xFFEAD08A),
+    ),
+    StoryScene(
+      id: 's3',
+      art: 'pc-stuck',
+      narrationEn: 'Strutting proudly, Geel did not watch his step — and walked straight into deep, sticky mud. He sank and could not pull free!',
+      narrationSo: 'Isagoo si kibir ah u socda, Geel ma uu fiirin meeshuu dhigayo — wuxuuna toos u galay dhoobo qoto dheer oo dhakhso ah. Wuu ku liimbaaday, samrina waayey!',
+      speaker: Speaker.lion,
+      lineEn: 'Oh no! I am stuck! Help!',
+      lineSo: 'Hoogay! Waan dhegay! I caawiya!',
+      bgTop: Color(0xFFC9E6F2),
+      bgBottom: Color(0xFFCE9A52),
+    ),
+    StoryScene(
+      id: 's4',
+      art: 'pc-help',
+      narrationEn: 'Clever Dawaco called all the animals. Together — big and small — they pulled and pulled until Geel popped free.',
+      narrationSo: 'Dawaco oo caqli badan ayaa u yeedhay xayawaanka oo dhan. Iyagoo wada jira — yar iyo weynba — way jiideen ilaa Geel ka soo baxay.',
+      speaker: Speaker.fox,
+      lineEn: 'Everyone pull together — heave!',
+      lineSo: 'Dhammaan wada jiida — riix!',
+      bgTop: Color(0xFFC9E6F2),
+      bgBottom: Color(0xFFCE9A52),
+    ),
+    StoryScene(
+      id: 's5',
+      art: 'pc-humble',
+      narrationEn: 'Safe at last, Geel thanked his friends. "I see now — everyone matters, even the small ones." And he never boasted again.',
+      narrationSo: 'Ugu dambeyntii oo nabad galay, Geel wuxuu u mahadceliyey saaxiibadiis. "Hadda waan arkay — qof walba waa muhiim, xitaa kuwa yaryar." Mar dambena ma uu faanin.',
+      speaker: Speaker.lion,
+      lineEn: 'Thank you, my friends. Everyone matters!',
+      lineSo: 'Mahadsanidiin, saaxiibadayaal. Qof walba waa muhiim!',
+      bgTop: Color(0xFFBFE8FF),
+      bgBottom: Color(0xFFCDEBA6),
+    ),
+  ],
+  questions: [
+    StoryQuestion(
+      'q1',
+      'Why did Geel get stuck?',
+      'Maxaa Geel u dhegay?',
+      [
+        StoryOption('🐫', 'He strutted proudly into the mud', 'Si kibir ah ayuu dhoobada u galay', correct: true),
+        StoryOption('😴', 'He was sleeping', 'Wuu hurday'),
+        StoryOption('🌧️', 'It was raining', 'Roob ayaa da\'ayey'),
+      ],
+    ),
+    StoryQuestion(
+      'q2',
+      'What is the lesson?',
+      'Waa maxay casharka?',
+      [
+        StoryOption('🤝', 'Be humble — everyone matters', 'Is-hoosaysii — qof walba waa muhiim', correct: true),
+        StoryOption('🐫', 'Big is always best', 'Weynaanta ayaa had iyo jeer fiican'),
+        StoryOption('🙅', 'Do not help others', 'Dadka ha caawin'),
+      ],
+    ),
+  ],
+  moralEn: 'Be humble — everyone is important, big and small.',
+  moralSo: 'Is-hoosaysii — qof walba waa muhiim, yar iyo weynba.',
+);
+
 // The recognisable Somali folktales — scaffolded; built out one at a time.
 const _kComingSoon = [
   Story(id: 'fox-hyena', titleEn: 'The Fox and the Hyena', titleSo: 'Dawaco iyo Waraabe', emoji: '🐺', ageRange: '6-8', blurbEn: 'The clever fox outwits a greedy hyena.', blurbSo: 'Dawaco caqli badan ayaa ka adkaata Waraabe hunguri weyn.'),
-  Story(id: 'lion-mouse', titleEn: 'The Lion and the Mouse', titleSo: 'Libaax iyo Jiir', emoji: '🐭', ageRange: '3-5', blurbEn: 'A tiny mouse repays a mighty lion\'s kindness.', blurbSo: 'Jiir yar ayaa ka abaalgudaya naxariista Libaax weyn.'),
-  Story(id: 'proud-camel', titleEn: 'The Proud Camel', titleSo: 'Geelkii Faanka Badnaa', emoji: '🐫', ageRange: '6-8', blurbEn: 'A boastful camel learns to be humble.', blurbSo: 'Geel faan badan ayaa bartay is-hoosaysiinta.'),
   Story(id: 'goat-hyena', titleEn: 'The Goat and the Hyena', titleSo: 'Ari iyo Waraabe', emoji: '🐐', ageRange: '3-5', blurbEn: 'A clever goat escapes a hungry hyena.', blurbSo: 'Ari caqli badan ayaa ka baxsata Waraabe gaajaysan.'),
   Story(id: 'brave-bird', titleEn: 'The Brave Little Bird', titleSo: 'Shimbirta Yar ee Geesiga Ah', emoji: '🐦', ageRange: '3-5', blurbEn: 'A tiny bird is braver than all the big animals.', blurbSo: 'Shimbir yar ayaa ka geesinimo badan xayawaanka waaweyn.'),
   Story(id: 'wiil-waal', titleEn: 'Wiil Waal, the Clever Boy', titleSo: 'Wiil Waal', emoji: '🤓', ageRange: '9-12', blurbEn: 'A clever boy solves what grown-ups cannot.', blurbSo: 'Wiil caqli badan ayaa xalliya wax dadka waaweyni ay ku guuldareystaan.'),
@@ -211,4 +398,4 @@ const _kComingSoon = [
   Story(id: 'dhegdheer', titleEn: 'Dhegdheer, the Ogre', titleSo: 'Dhegdheer', emoji: '👹', ageRange: '9-12', blurbEn: 'Clever children outwit the long-eared ogre.', blurbSo: 'Carruur caqli badan ayaa ka baxsata Dhegdheer.'),
 ];
 
-final List<Story> kStories = [_kFoxLion, ..._kComingSoon];
+final List<Story> kStories = [_kFoxLion, _kLionMouse, _kProudCamel, ..._kComingSoon];

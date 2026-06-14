@@ -578,6 +578,15 @@ const VoLineData kSplashMusic = VoLineData(
   asset: 'audio/harp.wav',
 );
 
+/// The Story Time background-music bed — an overridable line so a grown-up can
+/// upload their own gentle tune in the Studio (else the bundled harp plays).
+const VoLineData kStoryMusic = VoLineData(
+  'story-music',
+  'Gentle music bed under the stories',
+  'Story Time · background music',
+  asset: 'audio/harp.wav',
+);
+
 /// Non-game screen VO (id → text). Order matters for grouping.
 const Map<String, VoLineData> kScreenVo = {
   'age': VoLineData('vo-age', 'How old is your child? Tap their age.', 'Child setup'),
@@ -659,8 +668,10 @@ List<VoGroup> buildVoRegistry() {
     }
     groups.add(VoGroup(g.title, lines));
   }
-  // Story Library — each ready story's narration (Somali + English per scene)
-  // is recordable, so a grown-up can voice the tales in their own Somali.
+  // Story Library — the background-music bed (upload your own), then each ready
+  // story's narration (Somali + English per scene) — recordable, so a grown-up
+  // can voice the tales in their own Somali.
+  groups.add(VoGroup('📖 Story Time · music', [kStoryMusic]));
   for (final st in kStories.where((s) => s.ready)) {
     final lines = <VoLineData>[];
     for (final sc in st.scenes) {
