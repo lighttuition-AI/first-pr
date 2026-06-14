@@ -89,6 +89,24 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   Veggies"). Pools are distinct-emoji only (~17 fruits, ~19 veggies) so a child
   can tell them apart — well under 100 by design. Somali names are best-effort
   re-recordable defaults (same convention as animals).
+- **Story Time** (7th island, 📖, **1.6.0+13**): an in-app **animated Somali
+  storybook**. Tapping the island → `screens/story_library.dart` (the folktale
+  list) → `screens/story_player.dart` (scene-by-scene player). Data in
+  `models/story.dart` (`Story`/`StoryScene`/`StoryQuestion`, `kStories`,
+  `storyVoId`). Each scene = an original animated scene (`widgets/story_art.dart`
+  — hand-drawn CustomPaint, App-Store-safe) + **bilingual narration** (Somali +
+  English, tap-to-hear, **recordable in the Voiceover Studio** so elders can voice
+  real Somali — registered via the new "📖 …" VO group), an optional character
+  speech bubble, scene dots + Back/Next; at the end, interactive questions then a
+  **moral screen**. Auto-plays Somali narration if a recording exists, else
+  English. **Story 1 fully built: `fox-lion` (Dawaco iyo Libaax)** — 6 scenes, 2
+  questions, moral. Cast so far: **LibaaxLion** (golden mane + BIG teeth when
+  roaring, per the brief) and **DawacoFox** (bright orange fur + a big bushy tail
+  that sways). The other 9 recognisable folktales (Dhegdheer w/ one giant ear,
+  Wiil Waal w/ glasses+book, etc.) are scaffolded `ready:false` ("coming soon") —
+  each new story is then mostly content + a couple of new character painters.
+  `AppState.openStories()/startStory(id)`, `currentStory`, screens `stories` +
+  `story` (both in `kTransientScreens`); the Settings gear moves left on `story`.
 - **Launch splash** (`widgets/splash.dart`): the three Somali sisters, each in a
   round badge with a **colourful progress ring** that fills (sparkles at the
   leading edge, a glow when complete) while her name is announced — Nimoo →
@@ -270,7 +288,7 @@ Locked-in identity (all permanent / must match App Store Connect):
   `DEVELOPMENT_TEAM` on the 3 Runner configs + automatic signing. ⚠️ Gotcha: the cert
   name shows "Khadar Ainashe (BLGU4D968K)" — `BLGU4D968K` is a CERT id, **not** the team;
   the team is `4696KN59VV` (confirmed by the issued provisioning profile + Xcode plist).
-- **Display name** `HNL Learning`; **version `1.5.0+12`** (1.0.0+1 was the first
+- **Display name** `HNL Learning`; **version `1.6.0+13`** (1.0.0+1 was the first
   TestFlight build; 1.1.0 added Flip the Letters + Letter Sounds; +3 moved the harakat
   Studio section; 1.3.1+8 locked **all** inline recording behind the 1-2-3-4 grown-up
   gate + gave the game shell a back arrow instead of an "X"; 1.4.0+9 added **10 themed

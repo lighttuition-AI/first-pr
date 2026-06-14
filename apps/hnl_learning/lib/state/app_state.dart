@@ -183,6 +183,9 @@ class AppState extends ChangeNotifier {
   // or leaving a game, instead of all the way out to the island map.
   String? resumeWorld;
 
+  // Storytelling island — the id of the story currently being read (or null).
+  String? currentStory;
+
   // ------------------------------------------------------------
   // Children: switch / add / remove
   // ------------------------------------------------------------
@@ -350,6 +353,7 @@ class AppState extends ChangeNotifier {
       final s = d['screen'] as String?;
       const kTransientScreens = {
         'game', 'continents', 'animal-quiz', 'break', 'rewards', 'gate',
+        'stories', 'story',
       };
       if (s != null && !s.startsWith('game') && !kTransientScreens.contains(s)) {
         screen = s;
@@ -490,6 +494,17 @@ class AppState extends ChangeNotifier {
 
   /// Open the continent map.
   void openContinents() => go('continents');
+
+  // ---- Storytelling island ----
+  /// Open the story library (the list of Somali folktales).
+  void openStories() => go('stories');
+
+  /// Begin reading [storyId] (the player handles scene-by-scene navigation).
+  void startStory(String storyId) {
+    Analytics.worldOpen('story:$storyId');
+    currentStory = storyId;
+    go('story');
+  }
 
   /// Build a fresh quiz for [continentId]: up to 20 animals the child hasn't
   /// seen yet; once a continent is exhausted the "seen" set resets (reshuffle).

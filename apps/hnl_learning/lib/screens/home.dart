@@ -26,6 +26,7 @@ const List<Offset> _worldPos = [
   Offset(0.30, 0.40), // arabic  (mid-centre)
   Offset(0.02, 0.03), // animals (top-left)
   Offset(0.74, 0.33), // produce (right)
+  Offset(0.54, 0.40), // story   (mid-right, lower)
 ];
 
 class HomeScreen extends StatefulWidget {
@@ -148,15 +149,21 @@ class _HomeScreenState extends State<HomeScreen> {
       top: h * ty,
       child: _Island(
         world: world,
-        onTap: world.id == 'animals'
-            ? () {
-                Analytics.worldOpen('animals');
-                app.openContinents();
-              }
-            : () {
-                Analytics.worldOpen(world.id);
-                setState(() => _world = world);
-              },
+        onTap: switch (world.id) {
+          // Animals & Story open their own screens; the rest open a games sheet.
+          'animals' => () {
+              Analytics.worldOpen('animals');
+              app.openContinents();
+            },
+          'story' => () {
+              Analytics.worldOpen('story');
+              app.openStories();
+            },
+          _ => () {
+              Analytics.worldOpen(world.id);
+              setState(() => _world = world);
+            },
+        },
       ),
     );
   }
@@ -335,6 +342,8 @@ _IslandScheme _islandScheme(String world) {
       return const _IslandScheme(Color(0xFFFFDDA0), Color(0xFFFFB04D), Color(0xFF36C98E), Color(0xFF17A06A));
     case 'produce':
       return const _IslandScheme(Color(0xFFFFC6AC), Color(0xFFFF7E54), Color(0xFF24B5A6), Color(0xFF0E8A7E));
+    case 'story':
+      return const _IslandScheme(Color(0xFFFFD2E0), Color(0xFFFF8FB3), Color(0xFFB07CF0), Color(0xFF7C4DD0));
     default:
       return const _IslandScheme(Color(0xFFCDBBFF), Color(0xFF8A5BFF), Color(0xFF2BD4E8), Color(0xFF0E9BC4));
   }
