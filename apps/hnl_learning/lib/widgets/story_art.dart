@@ -887,6 +887,248 @@ class _ElderPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter old) => false;
 }
 
+// ------------------------------------------------------------
+// Ari the goat — cream body, little horns, beard.
+// ------------------------------------------------------------
+class AriGoat extends StatefulWidget {
+  final double size;
+  const AriGoat({super.key, this.size = 200});
+  @override
+  State<AriGoat> createState() => _AriGoatState();
+}
+
+class _AriGoatState extends State<AriGoat> with SingleTickerProviderStateMixin {
+  late final AnimationController _c =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 2100))..repeat(reverse: true);
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: AnimatedBuilder(animation: _c, builder: (_, _) => CustomPaint(painter: _GoatPainter(_c.value))),
+      );
+}
+
+class _GoatPainter extends CustomPainter {
+  final double t;
+  _GoatPainter(this.t);
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    canvas.translate(0, math.sin(t * math.pi * 2) * h * 0.012);
+    double x(double f) => f * w;
+    double y(double f) => f * h;
+    const cream = Color(0xFFF3ECDD);
+    const creamDk = Color(0xFFD9CFB8);
+    const horn = Color(0xFFB79A6A);
+    const dark = Color(0xFF33302A);
+    final body = Paint()..color = cream;
+    // legs
+    for (final lx in [0.34, 0.46, 0.58, 0.70]) {
+      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x(lx), y(0.70), w * 0.06, h * 0.26), Radius.circular(w * 0.02)), Paint()..color = creamDk);
+    }
+    // body
+    canvas.drawOval(Rect.fromCenter(center: Offset(x(0.52), y(0.62)), width: w * 0.52, height: h * 0.34), body);
+    // head (left)
+    final hc = Offset(x(0.30), y(0.44));
+    canvas.drawOval(Rect.fromCenter(center: hc, width: w * 0.26, height: h * 0.24), body);
+    // horns
+    for (final ex in [-1, 1]) {
+      canvas.drawPath(
+        Path()
+          ..moveTo(hc.dx + ex * w * 0.05, hc.dy - h * 0.10)
+          ..quadraticBezierTo(hc.dx + ex * w * 0.12, hc.dy - h * 0.22, hc.dx + ex * w * 0.04, hc.dy - h * 0.24)
+          ..quadraticBezierTo(hc.dx + ex * w * 0.06, hc.dy - h * 0.18, hc.dx + ex * w * 0.02, hc.dy - h * 0.10)
+          ..close(),
+        Paint()..color = horn,
+      );
+    }
+    // floppy ears
+    for (final ex in [-1, 1]) {
+      canvas.drawOval(Rect.fromCenter(center: hc.translate(ex * w * 0.12, h * 0.0), width: w * 0.10, height: h * 0.05), Paint()..color = creamDk);
+    }
+    // snout + beard
+    canvas.drawOval(Rect.fromCenter(center: hc.translate(-w * 0.08, h * 0.05), width: w * 0.12, height: h * 0.10), Paint()..color = creamDk);
+    canvas.drawPath(
+      Path()
+        ..moveTo(hc.dx - w * 0.12, hc.dy + h * 0.09)
+        ..lineTo(hc.dx - w * 0.06, hc.dy + h * 0.09)
+        ..lineTo(hc.dx - w * 0.09, hc.dy + h * 0.18)
+        ..close(),
+      Paint()..color = Colors.white,
+    );
+    // eye + smile
+    canvas.drawCircle(hc.translate(-w * 0.01, -h * 0.01), w * 0.028, Paint()..color = dark);
+    canvas.drawCircle(hc.translate(-w * 0.10, h * 0.04), w * 0.014, Paint()..color = dark);
+  }
+
+  @override
+  bool shouldRepaint(covariant _GoatPainter old) => old.t != t;
+}
+
+// ------------------------------------------------------------
+// Shimbir the little bird — tiny, bright, flapping wings.
+// ------------------------------------------------------------
+class ShimbirBird extends StatefulWidget {
+  final double size;
+  const ShimbirBird({super.key, this.size = 120});
+  @override
+  State<ShimbirBird> createState() => _ShimbirBirdState();
+}
+
+class _ShimbirBirdState extends State<ShimbirBird> with SingleTickerProviderStateMixin {
+  late final AnimationController _c =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 600))..repeat(reverse: true);
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: AnimatedBuilder(animation: _c, builder: (_, _) => CustomPaint(painter: _BirdPainter(_c.value))),
+      );
+}
+
+class _BirdPainter extends CustomPainter {
+  final double t;
+  _BirdPainter(this.t);
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    final flap = math.sin(t * math.pi * 2) * 0.5;
+    double x(double f) => f * w;
+    double y(double f) => f * h;
+    const blue = Color(0xFF3FA0E8);
+    const blueDk = Color(0xFF2A7CC0);
+    const belly = Color(0xFFFFE08A);
+    const beak = Color(0xFFFF9F2E);
+    const dark = Color(0xFF22303A);
+    final cx = x(0.5), cy = y(0.55);
+    // tail
+    canvas.drawPath(Path()..moveTo(cx - w * 0.18, cy)..lineTo(cx - w * 0.34, cy - h * 0.06)..lineTo(cx - w * 0.34, cy + h * 0.10)..close(), Paint()..color = blueDk);
+    // body
+    canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: w * 0.42, height: h * 0.40), Paint()..color = blue);
+    canvas.drawOval(Rect.fromCenter(center: Offset(cx + w * 0.04, cy + h * 0.06), width: w * 0.24, height: h * 0.24), Paint()..color = belly);
+    // wing (flaps)
+    canvas.save();
+    canvas.translate(cx + w * 0.02, cy - h * 0.04);
+    canvas.rotate(-0.3 + flap);
+    canvas.drawOval(Rect.fromCenter(center: Offset(0, h * 0.06), width: w * 0.16, height: h * 0.26), Paint()..color = blueDk);
+    canvas.restore();
+    // head
+    final hc = Offset(cx + w * 0.16, cy - h * 0.16);
+    canvas.drawCircle(hc, w * 0.13, Paint()..color = blue);
+    // beak
+    canvas.drawPath(Path()..moveTo(hc.dx + w * 0.10, hc.dy)..lineTo(hc.dx + w * 0.22, hc.dy + h * 0.02)..lineTo(hc.dx + w * 0.10, hc.dy + h * 0.05)..close(), Paint()..color = beak);
+    // eye
+    canvas.drawCircle(hc.translate(w * 0.04, -h * 0.01), w * 0.03, Paint()..color = Colors.white);
+    canvas.drawCircle(hc.translate(w * 0.05, -h * 0.01), w * 0.016, Paint()..color = dark);
+    // legs
+    final lp = Paint()..color = beak..strokeWidth = w * 0.015..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(cx, cy + h * 0.18), Offset(cx, cy + h * 0.30), lp);
+    canvas.drawLine(Offset(cx + w * 0.06, cy + h * 0.18), Offset(cx + w * 0.06, cy + h * 0.30), lp);
+  }
+
+  @override
+  bool shouldRepaint(covariant _BirdPainter old) => old.t != t;
+}
+
+// ------------------------------------------------------------
+// Boqor the king — royal robe + gold crown.
+// ------------------------------------------------------------
+class KingChar extends StatefulWidget {
+  final double size;
+  const KingChar({super.key, this.size = 220});
+  @override
+  State<KingChar> createState() => _KingCharState();
+}
+
+class _KingCharState extends State<KingChar> with SingleTickerProviderStateMixin {
+  late final AnimationController _c =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 2600))..repeat(reverse: true);
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: AnimatedBuilder(animation: _c, builder: (_, _) => CustomPaint(painter: _KingPainter(_c.value))),
+      );
+}
+
+class _KingPainter extends CustomPainter {
+  final double t;
+  _KingPainter(this.t);
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    canvas.translate(0, math.sin(t * math.pi * 2) * h * 0.008);
+    double x(double f) => f * w;
+    double y(double f) => f * h;
+    const skin = Color(0xFF8A5A36);
+    const robe = Color(0xFF8B3A62);
+    const gold = Color(0xFFFFC83D);
+    const dark = Color(0xFF221A12);
+    final cx = x(0.5);
+    // robe
+    canvas.drawPath(
+      Path()
+        ..moveTo(x(0.30), y(0.50))
+        ..lineTo(x(0.70), y(0.50))
+        ..lineTo(x(0.82), y(0.98))
+        ..lineTo(x(0.18), y(0.98))
+        ..close(),
+      Paint()..color = robe,
+    );
+    canvas.drawRect(Rect.fromCenter(center: Offset(cx, y(0.74)), width: w * 0.08, height: h * 0.48), Paint()..color = gold); // sash
+    // head
+    final hc = Offset(cx, y(0.36));
+    canvas.drawCircle(hc, w * 0.18, Paint()..color = skin);
+    // beard
+    canvas.drawPath(
+      Path()
+        ..moveTo(hc.dx - w * 0.15, hc.dy + h * 0.04)
+        ..quadraticBezierTo(hc.dx, hc.dy + h * 0.24, hc.dx + w * 0.15, hc.dy + h * 0.04)
+        ..close(),
+      Paint()..color = const Color(0xFFEDEDED),
+    );
+    // crown
+    canvas.drawPath(
+      Path()
+        ..moveTo(hc.dx - w * 0.17, hc.dy - h * 0.12)
+        ..lineTo(hc.dx - w * 0.17, hc.dy - h * 0.20)
+        ..lineTo(hc.dx - w * 0.08, hc.dy - h * 0.13)
+        ..lineTo(hc.dx, hc.dy - h * 0.24)
+        ..lineTo(hc.dx + w * 0.08, hc.dy - h * 0.13)
+        ..lineTo(hc.dx + w * 0.17, hc.dy - h * 0.20)
+        ..lineTo(hc.dx + w * 0.17, hc.dy - h * 0.12)
+        ..close(),
+      Paint()..color = gold,
+    );
+    canvas.drawCircle(hc.translate(0, -h * 0.155), w * 0.02, Paint()..color = const Color(0xFFE0573D));
+    // eyes
+    for (final ex in [-1, 1]) {
+      canvas.drawCircle(hc.translate(ex * w * 0.06, -h * 0.01), w * 0.02, Paint()..color = dark);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _KingPainter old) => old.t != t;
+}
+
 // A hunter's rope net (crisscross) — drawn over a trapped animal.
 class _NetPainter extends CustomPainter {
   @override
@@ -1189,6 +1431,120 @@ class StorySceneArt extends StatelessWidget {
               ..add(Positioned(bottom: h * 0.12, right: w * 0.10, child: Text('🏡', style: TextStyle(fontSize: h * 0.30))))
               ..add(Positioned(bottom: h * 0.12, left: w * 0.12, child: const StoryKid(size: 120)))
               ..add(Positioned(bottom: h * 0.12, left: w * 0.30, child: const StoryKid(size: 120, girl: true)));
+            break;
+
+          // ---- Goat & Hyena ----
+          case 'gh-graze':
+            children..add(acacia)..add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: AriGoat(size: h * 0.6))));
+            break;
+          case 'gh-meet':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.06, child: AriGoat(size: h * 0.54)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.06, child: WaraabeHyena(size: h * 0.56)));
+            break;
+          case 'gh-trick':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.08, child: AriGoat(size: h * 0.54)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.08, child: WaraabeHyena(size: h * 0.52)))
+              ..add(Positioned(top: h * 0.10, right: w * 0.30, child: Text('🦁❓', style: TextStyle(fontSize: h * 0.08))));
+            break;
+          case 'gh-flee':
+            children
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.06, child: Transform.rotate(angle: 0.12, child: WaraabeHyena(size: h * 0.56))))
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.10, child: AriGoat(size: h * 0.5)));
+            break;
+          case 'gh-safe':
+            children..add(acacia)..add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: AriGoat(size: h * 0.6))));
+            break;
+
+          // ---- Brave Little Bird ----
+          case 'bb-intro':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.06, child: LibaaxLion(size: h * 0.5, roaring: false)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.10, child: GeelCamel(size: h * 0.5)))
+              ..add(Positioned(top: h * 0.16, left: 0, right: 0, child: Center(child: ShimbirBird(size: h * 0.22))));
+            break;
+          case 'bb-danger':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.08, child: LibaaxLion(size: h * 0.48, roaring: false)))
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.40, child: GeelCamel(size: h * 0.48)))
+              ..add(Positioned(bottom: h * 0.14, right: w * 0.06, child: Text('🔥', style: TextStyle(fontSize: h * 0.26))));
+            break;
+          case 'bb-fly':
+            children
+              ..add(Positioned(top: h * 0.06, left: 0, right: 0, child: Center(child: ShimbirBird(size: h * 0.34))))
+              ..add(Positioned(bottom: h * 0.10, left: 0, right: 0, child: Center(child: LibaaxLion(size: h * 0.36, roaring: false))));
+            break;
+          case 'bb-warn':
+            children
+              ..add(Positioned(top: h * 0.10, right: w * 0.20, child: ShimbirBird(size: h * 0.24)))
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.06, child: LibaaxLion(size: h * 0.44, roaring: false)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.10, child: GeelCamel(size: h * 0.44)));
+            break;
+          case 'bb-hero':
+            children
+              ..add(acacia)
+              ..add(Positioned(bottom: h * 0.16, left: 0, right: 0, child: Center(child: ShimbirBird(size: h * 0.34))))
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.06, child: LibaaxLion(size: h * 0.4, roaring: false)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.06, child: GeelCamel(size: h * 0.4)));
+            break;
+
+          // ---- The Boy & the Lost Camel ----
+          case 'lc-lost':
+            children
+              ..add(acacia)
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.14, child: WiilWaalBoy(size: h * 0.56)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.14, child: VillageElder(size: h * 0.5)))
+              ..add(Positioned(top: h * 0.12, right: w * 0.36, child: Text('🐫❓', style: TextStyle(fontSize: h * 0.08))));
+            break;
+          case 'lc-ask':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.10, child: WiilWaalBoy(size: h * 0.56)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.12, child: VillageElder(size: h * 0.48)));
+            break;
+          case 'lc-clues':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: WiilWaalBoy(size: h * 0.6))))
+              ..add(Positioned(bottom: h * 0.14, right: w * 0.18, child: Text('👣', style: TextStyle(fontSize: h * 0.14))));
+            break;
+          case 'lc-find':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.08, child: WiilWaalBoy(size: h * 0.5)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.06, child: GeelCamel(size: h * 0.56)));
+            break;
+          case 'lc-amaze':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.06, child: WiilWaalBoy(size: h * 0.46)))
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.40, child: GeelCamel(size: h * 0.5)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.06, child: VillageElder(size: h * 0.44)));
+            break;
+
+          // ---- The King & the Wise Man ----
+          case 'wm-king':
+            children.add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: KingChar(size: h * 0.66))));
+            break;
+          case 'wm-fail':
+            children
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.10, child: KingChar(size: h * 0.56)))
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.10, child: VillageElder(size: h * 0.46)))
+              ..add(Positioned(top: h * 0.12, left: w * 0.40, child: Text('❓', style: TextStyle(fontSize: h * 0.12))));
+            break;
+          case 'wm-wise':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.10, child: VillageElder(size: h * 0.54)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.10, child: KingChar(size: h * 0.54)));
+            break;
+          case 'wm-solve':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.10, child: VillageElder(size: h * 0.54)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.10, child: KingChar(size: h * 0.5)))
+              ..add(Positioned(top: h * 0.10, left: w * 0.30, child: Text('💡', style: TextStyle(fontSize: h * 0.12))));
+            break;
+          case 'wm-honor':
+            children
+              ..add(acacia)
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.10, child: KingChar(size: h * 0.56)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.10, child: VillageElder(size: h * 0.5)));
             break;
 
           default:

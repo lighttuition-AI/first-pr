@@ -73,9 +73,9 @@ void main() {
     expect(find.byType(IconTile), findsNWidgets(kGames.length));
   });
 
-  test('voiceover registry: 57 groups, every line id unique', () {
+  test('voiceover registry: 61 groups, every line id unique', () {
     final groups = buildVoRegistry();
-    expect(groups.length, 57); // 44 games + 5 flow + Story music + 6 stories + rewards
+    expect(groups.length, 61); // 44 games + 5 flow + Story music + 10 stories + rewards
     // 45 original + Splash (1 bg music + 3 names) + alphabet group (1 instruction
     // + 28 letters) + trace + order + sounds instructions + flip group (1
     // instruction + its OWN 28 letters) + 2 produce instructions + 10 Flip &
@@ -83,9 +83,9 @@ void main() {
     // sort 5 + count 10 + pattern 10). (The 84 harakat sounds live in their own
     // Studio section, not the flat registry.)
     final total = groups.fold<int>(0, (sum, g) => sum + g.lines.length);
-    // + 1 Story-music line + 33 Somali story-narration lines (one per scene
-    // across the 6 ready stories: 6+6+5+5+5+6).
-    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 1 + (1 + kArabicLetters.length) + 2 + 10 + 35 + 1 + 33);
+    // + 1 Story-music line + 53 Somali story-narration lines (one per scene
+    // across the 10 ready stories: 6+6+5+5+5+6+5+5+5+5).
+    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 1 + (1 + kArabicLetters.length) + 2 + 10 + 35 + 1 + 53);
     final ids = groups.expand((g) => g.lines.map((l) => l.id)).toList();
     expect(ids.toSet().length, ids.length);
     // the splash names are recordable
@@ -206,13 +206,13 @@ void main() {
     expect(find.text(kHarakatLetters[1].forms[2].glyph), findsOneWidget); // بُ
   });
 
-  test('image registry: 47 groups, unique slots (one upload syncs everywhere)', () {
+  test('image registry: 51 groups, unique slots (one upload syncs everywhere)', () {
     final groups = buildImgRegistry();
-    expect(groups.length, 47); // + 6 ready-story picture groups
+    expect(groups.length, 51); // + 10 ready-story picture groups
     // Shared emoji appear in multiple game groups but share ONE slot id, so one
     // upload applies everywhere.
     final uniqueIds = groups.expand((g) => g.items.map((s) => s.id)).toSet();
-    expect(uniqueIds.length, 147 + 33); // + 33 per-scene story picture slots
+    expect(uniqueIds.length, 147 + 53); // + 53 per-scene story picture slots
   });
 
   test('planets: 9 total; 17 reward-bearing games span all 9 planets', () {
@@ -849,8 +849,11 @@ void main() {
     // Storytelling island exists as the 7th world.
     expect(kWorlds.any((w) => w.id == 'story'), isTrue);
     final ready = kStories.where((s) => s.ready).toList();
-    expect(ready.length, 6); // Fox&Lion, Lion&Mouse, Proud Camel, Fox&Hyena, Wiil Waal, Dhegdheer
-    expect(ready.map((s) => s.id).toSet(), {'fox-lion', 'lion-mouse', 'proud-camel', 'fox-hyena', 'wiil-waal', 'dhegdheer'});
+    expect(ready.length, 10); // the whole library is built
+    expect(ready.map((s) => s.id).toSet(), {
+      'fox-lion', 'lion-mouse', 'proud-camel', 'fox-hyena', 'wiil-waal',
+      'dhegdheer', 'goat-hyena', 'brave-bird', 'lost-camel', 'wise-man',
+    });
 
     final voIds = <String>[];
     final picIds = <String>[];
@@ -876,8 +879,8 @@ void main() {
     expect(picIds.toSet().length, picIds.length);
     // Wiil Waal + Dhegdheer (the requested art-direction tales) are built.
     expect(storyById('wiil-waal').ready && storyById('dhegdheer').ready, isTrue);
-    // The remaining folktales are scaffolded "coming soon".
-    expect(kStories.where((s) => !s.ready).length, 4);
+    // The whole library of 10 folktales is now built — none left "coming soon".
+    expect(kStories.where((s) => !s.ready).length, 0);
 
     // Background music is an uploadable, harp-backed Studio line.
     expect(kStoryMusic.id, 'story-music');

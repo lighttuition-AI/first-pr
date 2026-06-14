@@ -293,13 +293,133 @@ const _kDhegdheer = Story(
   moral: 'Dhegayso waayeelkaaga, fikirna ka hor intaadan wax samayn.',
 );
 
-// The remaining recognisable folktales — scaffolded; built out next.
-const _kComingSoon = [
-  Story(id: 'goat-hyena', title: 'Ari iyo Waraabe', emoji: '🐐', ageRange: '3-5', blurb: 'Ari caqli badan ayaa ka baxsata Waraabe gaajaysan.'),
-  Story(id: 'brave-bird', title: 'Shimbirta Yar ee Geesiga Ah', emoji: '🐦', ageRange: '3-5', blurb: 'Shimbir yar ayaa ka geesinimo badan xayawaanka waaweyn.'),
-  Story(id: 'lost-camel', title: 'Wiilkii iyo Geelkii Lumay', emoji: '🔎', ageRange: '9-12', blurb: 'Wiil ayaa calaamado ku raadiya geel lumay.'),
-  Story(id: 'wise-man', title: 'Boqorkii iyo Ninkii Xikmadda Badnaa', emoji: '👑', ageRange: '9-12', blurb: 'Nin xikmad badan ayaa xalliya halxidhaalaha boqorka.'),
-];
+// ============================================================
+// 7 — Ari iyo Waraabe (The Goat & the Hyena)
+// ============================================================
+const _kGoatHyena = Story(
+  id: 'goat-hyena',
+  title: 'Ari iyo Waraabe',
+  emoji: '🐐',
+  ageRange: '3-5',
+  blurb: 'Ari caqli badan oo deggan ayaa ka baxsata Waraabe gaajaysan.',
+  ready: true,
+  scenes: [
+    StoryScene(id: 's1', art: 'gh-graze', picture: '🐐🌿', narration: 'Ari oo nabad ah ayaa daaqaysay buurta agteeda. Maalin qurux badan ayay ahayd.', bgTop: Color(0xFFCDEBA6), bgBottom: Color(0xFFEAD08A)),
+    StoryScene(id: 's2', art: 'gh-meet', picture: '🐐🐺', speaker: Speaker.right, line: 'Maanta waan ku cunayaa, Ari!', narration: 'Waraabe oo gaajaysan ayaa soo baxay oo jidka ku xidhay Ari.', bgTop: Color(0xFFEAD9B0), bgBottom: Color(0xFFD9B978)),
+    StoryScene(id: 's3', art: 'gh-trick', picture: '🐐🦁', speaker: Speaker.left, line: 'Sug! Libaax weyn ayaa gadaashaada ka soo socda!', narration: 'Ari ma uu argagixin. Si deggan ayuu u yidhi, "Eeg gadaashaada — libaax weyn!"', bgTop: Color(0xFFEAD08A), bgBottom: Color(0xFFD9B978)),
+    StoryScene(id: 's4', art: 'gh-flee', picture: '🐺💨', narration: 'Waraabe wuu baqay! Si dhakhso ah ayuu u cararay, isagoon dib u eegin.', bgTop: Color(0xFFEAD9B0), bgBottom: Color(0xFFD9B978)),
+    StoryScene(id: 's5', art: 'gh-safe', picture: '🐐😌', narration: 'Ari wuu nabad galay. Degganaan iyo caqli ayuu ku badbaaday, ee maaha xoog.', bgTop: Color(0xFFBFE8FF), bgBottom: Color(0xFFCDEBA6)),
+  ],
+  questions: [
+    StoryQuestion('q1', 'Sidee Ari uga baxsatay Waraabe?', [
+      StoryOption('🧠', 'Caqli iyo degganaan', correct: true),
+      StoryOption('💪', 'Xoog badan'),
+      StoryOption('🏃', 'Orod kaliya'),
+    ]),
+    StoryQuestion('q2', 'Waa maxay casharka?', [
+      StoryOption('😌', 'Markaad cabsato, degganow oo fikir', correct: true),
+      StoryOption('😱', 'Had iyo jeer baqo'),
+      StoryOption('😡', 'Dagaal'),
+    ]),
+  ],
+  moral: 'Markaad cabsato, degganow oo fikir — caqligaa ku badbaadinaya.',
+);
+
+// ============================================================
+// 8 — Shimbirta Yar ee Geesiga Ah (The Brave Little Bird)
+// ============================================================
+const _kBraveBird = Story(
+  id: 'brave-bird',
+  title: 'Shimbirta Yar ee Geesiga Ah',
+  emoji: '🐦',
+  ageRange: '3-5',
+  blurb: 'Shimbir yar ayaa ka geesinimo badan xayawaanka waaweyn.',
+  ready: true,
+  scenes: [
+    StoryScene(id: 's1', art: 'bb-intro', picture: '🐦🦁', narration: 'Xayawaanka waaweyn dhexdooda waxaa joogtay shimbir aad u yar.', bgTop: Color(0xFFBFE3FF), bgBottom: Color(0xFFD9EFB8)),
+    StoryScene(id: 's2', art: 'bb-danger', picture: '🔥😱', narration: 'Maalin maalmaha ka mid ah, dab ayaa ka kacay meel u dhow. Xayawaanka waaweyn way baqeen oo way taagnaayeen.', bgTop: Color(0xFFFFD0A3), bgBottom: Color(0xFFE89B5A)),
+    StoryScene(id: 's3', art: 'bb-fly', picture: '🐦⬆️', speaker: Speaker.right, line: 'Aniga ayaa caawin kara!', narration: 'Shimbirta yar ayaa kor u duushay si ay u aragto jid nabadgalyo ah.', bgTop: Color(0xFFBFE3FF), bgBottom: Color(0xFFFFD0A3)),
+    StoryScene(id: 's4', art: 'bb-warn', picture: '🐦➡️', narration: 'Way ku celcelisay, "I raaca!" Xayawaankii oo dhan ayay meel nabad ah u hogaamisay.', bgTop: Color(0xFFBFE3FF), bgBottom: Color(0xFFD9EFB8)),
+    StoryScene(id: 's5', art: 'bb-hero', picture: '🐦🎉', narration: 'Dhammaan way u mahadceliyeen shimbirta yar ee geesiga ah. Geesinimadu kuma xidhna weynaanta.', bgTop: Color(0xFFBFE8FF), bgBottom: Color(0xFFCDEBA6)),
+  ],
+  questions: [
+    StoryQuestion('q1', 'Yaa badbaadiyey xayawaanka?', [
+      StoryOption('🐦', 'Shimbirta yar', correct: true),
+      StoryOption('🦁', 'Libaax'),
+      StoryOption('🐫', 'Geel'),
+    ]),
+    StoryQuestion('q2', 'Waa maxay casharka?', [
+      StoryOption('💛', 'Geesinimadu kuma xidhna weynaanta', correct: true),
+      StoryOption('💪', 'Waaweynaha kaliya ayaa muhiim ah'),
+      StoryOption('🙈', 'Cidna ha caawin'),
+    ]),
+  ],
+  moral: 'Geesinimadu kuma xidhna weynaanta — xitaa kan ugu yari wax weyn buu qaban karaa.',
+);
+
+// ============================================================
+// 9 — Wiilkii iyo Geelkii Lumay (The Boy & the Lost Camel)
+// ============================================================
+const _kLostCamel = Story(
+  id: 'lost-camel',
+  title: 'Wiilkii iyo Geelkii Lumay',
+  emoji: '🔎',
+  ageRange: '9-12',
+  blurb: 'Wiil caqli badan ayaa calaamado ku raadiya geel lumay.',
+  ready: true,
+  scenes: [
+    StoryScene(id: 's1', art: 'lc-lost', picture: '🐫❓', narration: 'Reer ayaa ogaaday in geelkoodii lumay. Aad bay u welwelsanaayeen.', bgTop: Color(0xFFFFE9C7), bgBottom: Color(0xFFEAD08A)),
+    StoryScene(id: 's2', art: 'lc-ask', picture: '🤓👣', speaker: Speaker.left, line: 'Waan idiin heli karaa — calaamadaha ayaan raacayaa.', narration: 'Wiilka caqliga leh ayaa yidhi, "Waan heli karaa, inkastoon weligay arkin."', bgTop: Color(0xFFD9EFB8), bgBottom: Color(0xFFEAD08A)),
+    StoryScene(id: 's3', art: 'lc-clues', picture: '👣🔎', narration: 'Wiilku wuxuu eegay raadadka cagaha, caleemaha jaban, iyo calaamadaha kale. Si taxadar leh ayuu u fiiriyey.', bgTop: Color(0xFFCDEBA6), bgBottom: Color(0xFFEAD08A)),
+    StoryScene(id: 's4', art: 'lc-find', picture: '🐫✅', narration: 'Calaamadihii ayuu raacay ilaa uu geelkii ka helay meel buur dhinaceed ah!', bgTop: Color(0xFFFFE0A3), bgBottom: Color(0xFFEAB45E)),
+    StoryScene(id: 's5', art: 'lc-amaze', picture: '🐫👏', narration: 'Dadkii way wada yaabeen. Fiiro iyo fakar ayuu wax ku xalliyey, ee maaha nasiib.', bgTop: Color(0xFFBFE8FF), bgBottom: Color(0xFFCDEBA6)),
+  ],
+  questions: [
+    StoryQuestion('q1', 'Sidee wiilku u helay geelkii?', [
+      StoryOption('👣', 'Calaamadaha ayuu raacay', correct: true),
+      StoryOption('🍀', 'Nasiib'),
+      StoryOption('😴', 'Hurdo'),
+    ]),
+    StoryQuestion('q2', 'Waa maxay casharka?', [
+      StoryOption('🔎', 'Fiiro iyo fakar', correct: true),
+      StoryOption('💪', 'Xoog'),
+      StoryOption('🤷', 'Iska daa'),
+    ]),
+  ],
+  moral: 'Fiiro wanaagsan iyo fakar ayaa wax kasta xalliya.',
+);
+
+// ============================================================
+// 10 — Boqorkii iyo Ninkii Xikmadda Badnaa (The King & the Wise Man)
+// ============================================================
+const _kWiseMan = Story(
+  id: 'wise-man',
+  title: 'Boqorkii iyo Ninkii Xikmadda Badnaa',
+  emoji: '👑',
+  ageRange: '9-12',
+  blurb: 'Nin xikmad badan ayaa xalliya halxidhaalaha boqorka.',
+  ready: true,
+  scenes: [
+    StoryScene(id: 's1', art: 'wm-king', picture: '👑❓', speaker: Speaker.left, line: 'Yaa xallin kara halxidhaalahan adag?', narration: 'Boqor ayaa weyddiiyey su\'aal aad u adag oo halxidhaale ah.', bgTop: Color(0xFFE7D8FF), bgBottom: Color(0xFFC9B0F0)),
+    StoryScene(id: 's2', art: 'wm-fail', picture: '🤷❓', narration: 'Saraakiisha boqorka midkoodna ma uu garan jawaabta. Way wada wareereen.', bgTop: Color(0xFFE7D8FF), bgBottom: Color(0xFFD9C0E8)),
+    StoryScene(id: 's3', art: 'wm-wise', picture: '🧓', speaker: Speaker.left, line: 'Boqorow, anigu waan isku dayi karaa.', narration: 'Nin hoose oo xikmad badan ayaa soo hor baxay si deggan.', bgTop: Color(0xFFD9EFB8), bgBottom: Color(0xFFE7D8FF)),
+    StoryScene(id: 's4', art: 'wm-solve', picture: '🧓💡', narration: 'Ninkii xikmadda lahaa, isagoo samir iyo caqli isticmaalaya, ayuu halxidhaalihii xalliyey.', bgTop: Color(0xFFCDEBA6), bgBottom: Color(0xFFD9EFB8)),
+    StoryScene(id: 's5', art: 'wm-honor', picture: '👑🤝', speaker: Speaker.right, line: 'Xikmaddaadu waa qiimo badan tahay, ninyahow.', narration: 'Boqorku wuu ammaanay ninkii xikmadda lahaa. Way barteen in xikmaddu ka qiimo badan tahay maalka.', bgTop: Color(0xFFBFE8FF), bgBottom: Color(0xFFCDEBA6)),
+  ],
+  questions: [
+    StoryQuestion('q1', 'Yaa xalliyey halxidhaalihii?', [
+      StoryOption('🧓', 'Ninka xikmadda leh', correct: true),
+      StoryOption('👑', 'Boqorka'),
+      StoryOption('💂', 'Saraakiisha'),
+    ]),
+    StoryQuestion('q2', 'Waa maxay casharka?', [
+      StoryOption('🧠', 'Xikmaddu maalka way ka qiimo badan tahay', correct: true),
+      StoryOption('💰', 'Maalka kaliya ayaa muhiim ah'),
+      StoryOption('💪', 'Xoogga ayaa wax xalliya'),
+    ]),
+  ],
+  moral: 'Xikmaddu waxay ka qiimo badan tahay xoogga iyo maalka.',
+);
 
 final List<Story> kStories = [
   _kFoxLion,
@@ -308,5 +428,8 @@ final List<Story> kStories = [
   _kFoxHyena,
   _kWiilWaal,
   _kDhegdheer,
-  ..._kComingSoon,
+  _kGoatHyena,
+  _kBraveBird,
+  _kLostCamel,
+  _kWiseMan,
 ];
