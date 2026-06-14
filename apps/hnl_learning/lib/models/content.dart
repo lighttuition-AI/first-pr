@@ -307,6 +307,91 @@ final List<Game> kGames = [
     Round(id: 'sc1', factVo: 'Did you know? The Sun is a giant star, and it gives us light and warmth every day!', fact: 'The Sun is a giant star! ☀️', factEmoji: '☀️', qVo: 'Now, which one gives us light in the daytime? Tap it!', prompt: 'Which gives us daytime light?', bg: Color(0xFFFFF7E8), options: [PickOption('☀️', correct: true), PickOption('🌙'), PickOption('⭐')]),
     Round(id: 'sc2', factVo: 'Bees are tiny helpers! They visit flowers and help new plants grow.', fact: 'Bees help flowers grow! 🐝', factEmoji: '🐝', qVo: 'Which little helper visits flowers? Tap it!', prompt: 'Who visits flowers?', bg: Color(0xFFEFF6EE), options: [PickOption('🐝', correct: true), PickOption('🐙'), PickOption('🦖')]),
   ]),
+  // ---- Logic Lab · 5 more "Which one?" tap-pick games --------------------
+  // Explore-only (mission:false), no planet reward (collecting was removed);
+  // they chain in the world play-through. Reuse the WhichOne icon.
+  Game('pick-odd', GameType.pick, 'logic', 'logic', 'Odd One Out', '', [
+    Round(id: 'pk-odd1', vo: "Three are the same and one is different. Tap the one that doesn't belong!", prompt: 'Tap the odd one out', bg: Color(0xFFEFF6EE), options: [PickOption('🐶'), PickOption('🐶'), PickOption('🚗', correct: true), PickOption('🐶')]),
+    Round(id: 'pk-odd2', vo: 'One of these is not a fruit. Tap the odd one out!', prompt: 'Tap the odd one out', bg: Color(0xFFFFF3EC), options: [PickOption('🍎'), PickOption('🍌'), PickOption('🍓'), PickOption('⚽', correct: true)]),
+  ], mission: false),
+  Game('pick-size', GameType.pick, 'logic', 'logic', 'Bigger or Smaller?', '', [
+    Round(id: 'pk-size1', vo: 'Which ball is the BIGGEST? Tap it!', prompt: 'Tap the biggest', bg: Color(0xFFEAF4FB), options: [PickOption('⚽', scale: 1.9, correct: true), PickOption('⚽'), PickOption('⚽', scale: 0.65)]),
+    Round(id: 'pk-size2', vo: 'Now tap the SMALLEST star!', prompt: 'Tap the smallest', bg: Color(0xFFEEF1FF), options: [PickOption('⭐', scale: 1.8), PickOption('⭐'), PickOption('⭐', scale: 0.6, correct: true)]),
+  ], mission: false),
+  Game('pick-eat', GameType.pick, 'logic', 'logic', 'Can You Eat It?', '', [
+    Round(id: 'pk-eat1', vo: 'One of these is yummy to eat. Tap the food!', prompt: 'Which can you eat?', bg: Color(0xFFFFF7E8), options: [PickOption('🍎', correct: true), PickOption('🚗'), PickOption('👟')]),
+    Round(id: 'pk-eat2', vo: 'Tap the one you can drink!', prompt: 'Which is a drink?', bg: Color(0xFFEFF6EE), options: [PickOption('🧃', correct: true), PickOption('🪑'), PickOption('🎩')]),
+  ], mission: false),
+  Game('pick-home', GameType.pick, 'logic', 'logic', 'Where I Live', '', [
+    Round(id: 'pk-home1', vo: 'Which animal lives in the WATER? Tap it!', prompt: 'Who lives in water?', bg: Color(0xFFE7F4F8), options: [PickOption('🦁'), PickOption('🐟', correct: true), PickOption('🐦')]),
+    Round(id: 'pk-home2', vo: 'Which one can FLY in the sky? Tap it!', prompt: 'Who can fly?', bg: Color(0xFFEAF4FB), options: [PickOption('🐠'), PickOption('🦜', correct: true), PickOption('🐢')]),
+  ], mission: false),
+  Game('pick-match', GameType.pick, 'logic', 'logic', 'Spot It!', '', [
+    Round(id: 'pk-match1', vo: 'Tap the one that is ROUND like a ball!', prompt: 'Which is round?', bg: Color(0xFFFFEFF4), options: [PickOption('🍊', correct: true), PickOption('📕'), PickOption('🔺')]),
+    Round(id: 'pk-match2', vo: 'Tap the animal that says MOO!', prompt: 'Who says moo?', bg: Color(0xFFF0ECFB), options: [PickOption('🐄', correct: true), PickOption('🐱'), PickOption('🐸')]),
+  ], mission: false),
+
+  // ---- Logic Lab · 5 more "Sort it out" drag-to-group games --------------
+  Game('sort-landwater', GameType.sort, 'logic', 'sorting', 'Land or Water?', '', [
+    Round(id: 'so-lw', vo: 'Some animals live on land and some live in water. Drag each one to its home!', bg: Color(0xFFE7F4F8), groups: [SortGroup('land', '🏝️', 'Land'), SortGroup('water', '🌊', 'Water')], items: [SortItem('🦁', 'land'), SortItem('🐙', 'water'), SortItem('🐘', 'land'), SortItem('🐠', 'water')]),
+  ], mission: false),
+  Game('sort-fruitveg', GameType.sort, 'logic', 'sorting', 'Fruit or Veggie?', '', [
+    Round(id: 'so-fv', vo: 'Sort the food! Drag the fruits and the vegetables into their baskets.', bg: Color(0xFFEFF6E6), groups: [SortGroup('fruit', '🍎', 'Fruit'), SortGroup('veg', '🥕', 'Veggie')], items: [SortItem('🍓', 'fruit'), SortItem('🥦', 'veg'), SortItem('🍌', 'fruit'), SortItem('🌽', 'veg')]),
+  ], mission: false),
+  Game('sort-hotcold', GameType.sort, 'logic', 'sorting', 'Hot or Cold?', '', [
+    Round(id: 'so-hc', vo: 'Some things are hot and some are cold. Drag each one to the right side!', bg: Color(0xFFFFF1E6), groups: [SortGroup('hot', '☀️', 'Hot'), SortGroup('cold', '❄️', 'Cold')], items: [SortItem('🔥', 'hot'), SortItem('🧊', 'cold'), SortItem('🌋', 'hot'), SortItem('⛄', 'cold')]),
+  ], mission: false),
+  Game('sort-daynight', GameType.sort, 'logic', 'sorting', 'Day or Night?', '', [
+    Round(id: 'so-dn', vo: 'Which things come out in the day, and which at night? Drag them!', bg: Color(0xFFEDEFFF), groups: [SortGroup('day', '☀️', 'Day'), SortGroup('night', '🌙', 'Night')], items: [SortItem('🌈', 'day'), SortItem('⭐', 'night'), SortItem('🌻', 'day'), SortItem('🦉', 'night')]),
+  ], mission: false),
+  Game('sort-bigsmall', GameType.sort, 'logic', 'sorting', 'Big or Small?', '', [
+    Round(id: 'so-bs', vo: 'Sort the big animals and the small animals into their groups!', bg: Color(0xFFF1ECFB), groups: [SortGroup('big', '🐘', 'Big'), SortGroup('small', '🐭', 'Small')], items: [SortItem('🐳', 'big'), SortItem('🐜', 'small'), SortItem('🦒', 'big'), SortItem('🐝', 'small')]),
+  ], mission: false),
+
+  // ---- Number Galaxy · 5 more "Count & drop" games -----------------------
+  Game('count-fish', GameType.count, 'galaxy', 'counting', 'Count the Fish', '', [
+    Round(id: 'cn-fish1', vo: 'Drop exactly FOUR fish into the bucket. Count them: one, two, three, four!', target: 4, item: '🐟', basket: '🪣', pool: 6, bg: Color(0xFFE7F4F8)),
+    Round(id: 'cn-fish2', vo: 'Now drop just THREE shells into the bucket!', target: 3, item: '🐚', basket: '🪣', pool: 6, bg: Color(0xFFEAF4FB)),
+  ], mission: false),
+  Game('count-stars', GameType.count, 'galaxy', 'counting', 'Count the Stars', '', [
+    Round(id: 'cn-star1', vo: 'Drop SIX stars into the jar. Count them out loud!', target: 6, item: '⭐', basket: '🫙', pool: 8, bg: Color(0xFFEEF1FF)),
+    Round(id: 'cn-star2', vo: 'Now just FOUR moons into the jar!', target: 4, item: '🌙', basket: '🫙', pool: 6, bg: Color(0xFFEDEFFF)),
+  ], mission: false),
+  Game('count-treats', GameType.count, 'galaxy', 'counting', 'Count the Treats', '', [
+    Round(id: 'cn-treat1', vo: 'Drop FIVE cookies into the jar. Yum!', target: 5, item: '🍪', basket: '🫙', pool: 7, bg: Color(0xFFFBF3E7)),
+    Round(id: 'cn-treat2', vo: 'Now drop just TWO lollipops in!', target: 2, item: '🍭', basket: '🫙', pool: 5, bg: Color(0xFFFFEFF4)),
+  ], mission: false),
+  Game('count-flowers', GameType.count, 'galaxy', 'counting', 'Count the Flowers', '', [
+    Round(id: 'cn-flow1', vo: 'Put FIVE flowers in the vase. Count them!', target: 5, item: '🌸', basket: '🏺', pool: 7, bg: Color(0xFFFFEFF4)),
+    Round(id: 'cn-flow2', vo: 'Now just ONE sunflower in the vase!', target: 1, item: '🌻', basket: '🏺', pool: 4, bg: Color(0xFFFFF7E8)),
+  ], mission: false),
+  Game('count-fruit', GameType.count, 'galaxy', 'counting', 'Count the Fruit', '', [
+    Round(id: 'cn-fruit1', vo: 'Drop THREE apples into the basket!', target: 3, item: '🍎', basket: '🧺', pool: 5, bg: Color(0xFFFFF3EC)),
+    Round(id: 'cn-fruit2', vo: 'Now drop SIX strawberries into the basket!', target: 6, item: '🍓', basket: '🧺', pool: 8, bg: Color(0xFFFFEFF4)),
+  ], mission: false),
+
+  // ---- Number Galaxy · 5 more "Finish the pattern" games -----------------
+  Game('pattern-colour', GameType.pattern, 'galaxy', 'shapes', 'Colour Pattern', '', [
+    Round(id: 'pt-col1', vo: 'Green, orange, green, orange… what comes next? Drag it in!', sequence: ['🟢', '🟠', '🟢', '🟠', '?'], answer: '🟢', choices: ['🟢', '🟠', '🔵'], bg: Color(0xFFEFF6EE)),
+    Round(id: 'pt-col2', vo: 'Red, blue, red, blue… finish the pattern!', sequence: ['🔴', '🔵', '🔴', '🔵', '?'], answer: '🔴', choices: ['🔴', '🔵', '🟡'], bg: Color(0xFFEAF4FB)),
+  ], mission: false),
+  Game('pattern-sky', GameType.pattern, 'galaxy', 'shapes', 'Sky Pattern', '', [
+    Round(id: 'pt-sky1', vo: 'Star, moon, star, moon… what comes next?', sequence: ['⭐', '🌙', '⭐', '🌙', '?'], answer: '⭐', choices: ['⭐', '🌙', '☀️'], bg: Color(0xFFEDEFFF)),
+    Round(id: 'pt-sky2', vo: 'Sun, cloud, sun, cloud… finish it!', sequence: ['☀️', '☁️', '☀️', '☁️', '?'], answer: '☀️', choices: ['☀️', '☁️', '🌈'], bg: Color(0xFFEAF4FB)),
+  ], mission: false),
+  Game('pattern-shape', GameType.pattern, 'galaxy', 'shapes', 'Shape Pattern', '', [
+    Round(id: 'pt-shp1', vo: 'Triangle, circle, triangle, circle… what is next?', sequence: ['🔺', '🟢', '🔺', '🟢', '?'], answer: '🔺', choices: ['🔺', '🟢', '🟦'], bg: Color(0xFFEFF6EE)),
+    Round(id: 'pt-shp2', vo: 'Square, heart, square, heart… finish the row!', sequence: ['🟦', '💜', '🟦', '💜', '?'], answer: '🟦', choices: ['🟦', '💜', '🟥'], bg: Color(0xFFF1ECFB)),
+  ], mission: false),
+  Game('pattern-fruit', GameType.pattern, 'galaxy', 'shapes', 'Fruit Pattern', '', [
+    Round(id: 'pt-fr1', vo: 'Apple, banana, apple, banana… what comes next?', sequence: ['🍎', '🍌', '🍎', '🍌', '?'], answer: '🍎', choices: ['🍎', '🍌', '🍇'], bg: Color(0xFFFFF3EC)),
+    Round(id: 'pt-fr2', vo: 'Strawberry, orange, strawberry, orange… finish it!', sequence: ['🍓', '🍊', '🍓', '🍊', '?'], answer: '🍓', choices: ['🍓', '🍊', '🍉'], bg: Color(0xFFFFEFF4)),
+  ], mission: false),
+  Game('pattern-twoone', GameType.pattern, 'galaxy', 'shapes', 'Two & One', '', [
+    Round(id: 'pt-to1', vo: 'Blue, blue, yellow, blue, blue… what comes next?', sequence: ['🔵', '🔵', '🟡', '🔵', '🔵', '?'], answer: '🟡', choices: ['🟡', '🔵', '🔴'], bg: Color(0xFFEAF4FB)),
+    Round(id: 'pt-to2', vo: 'Heart, heart, star, heart, heart… finish the pattern!', sequence: ['💜', '💜', '⭐', '💜', '💜', '?'], answer: '⭐', choices: ['⭐', '💜', '💛'], bg: Color(0xFFF1ECFB)),
+  ], mission: false),
+
   // 8 — ARABIC WORLD · game 1: the alphabet board (tap a letter to hear it).
   // Explore-only (no win condition) so it never joins a Daily Mission.
   Game('arabic-alphabet', GameType.alphabet, 'arabic', 'letters', 'Arabic Letters', '', [
