@@ -28,12 +28,23 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
   int _q = 0;
   _Phase _phase = _Phase.story;
   String? _wrong; // last wrong option id (for a gentle flash)
+  late final VoService _vo;
 
   @override
   void initState() {
     super.initState();
+    _vo = context.read<VoService>();
     story = storyById(context.read<AppState>().currentStory ?? kStories.first.id);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _playNarration());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _playNarration();
+      _vo.startStoryMusic(); // gentle looping bed (off if the grown-up muted it)
+    });
+  }
+
+  @override
+  void dispose() {
+    _vo.stopStoryMusic();
+    super.dispose();
   }
 
   void _playNarration() {
@@ -121,6 +132,8 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
               child: Text(story.titleSo, style: AppText.display(size: 26, weight: FontWeight.w800)),
             ),
           ),
+          // Background-music on/off (a grown-up can mute the bed; choice sticks).
+          const Positioned(top: 24, right: 24, child: _MusicButton()),
           Positioned.fill(
             top: 84,
             child: switch (_phase) {
@@ -287,6 +300,28 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
 }
 
 // ---- small pieces ----
+class _MusicButton extends StatelessWidget {
+  const _MusicButton();
+  @override
+  Widget build(BuildContext context) {
+    final vo = context.watch<VoService>();
+    final on = vo.storyMusicOn;
+    return Tooltip(
+      message: on ? 'Music on — tap to mute' : 'Music off — tap to play',
+      child: Pressable(
+        onTap: () => vo.setStoryMusicOn(!on),
+        child: Container(
+          width: 56,
+          height: 56,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: C.card, shape: BoxShape.circle, boxShadow: Sh.sm, border: activeSkin.cardBorder),
+          child: Text(on ? '🎵' : '🔇', style: const TextStyle(fontSize: 26)),
+        ),
+      ),
+    );
+  }
+}
+
 class _ListenChip extends StatelessWidget {
   final String flag, label;
   final VoidCallback onTap;

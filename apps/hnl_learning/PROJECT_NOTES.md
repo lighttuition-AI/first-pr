@@ -99,14 +99,22 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   real Somali — registered via the new "📖 …" VO group), an optional character
   speech bubble, scene dots + Back/Next; at the end, interactive questions then a
   **moral screen**. Auto-plays Somali narration if a recording exists, else
-  English. **Story 1 fully built: `fox-lion` (Dawaco iyo Libaax)** — 6 scenes, 2
-  questions, moral. Cast so far: **LibaaxLion** (golden mane + BIG teeth when
-  roaring, per the brief) and **DawacoFox** (bright orange fur + a big bushy tail
-  that sways). The other 9 recognisable folktales (Dhegdheer w/ one giant ear,
-  Wiil Waal w/ glasses+book, etc.) are scaffolded `ready:false` ("coming soon") —
-  each new story is then mostly content + a couple of new character painters.
+  English. **3 stories fully built (1.7.0+14):** `fox-lion` (Dawaco iyo Libaax),
+  `lion-mouse` (Libaax iyo Jiir, ages 3-5), `proud-camel` (Geelkii Faanka Badnaa).
+  Cast so far: **LibaaxLion** (golden mane + BIG teeth when roaring), **DawacoFox**
+  (orange fur + big bushy tail), **JiirMouse** (grey, big pink-lined ears),
+  **GeelCamel** (one hump + a dark outline so the tan body pops on sandy/mud bg).
+  The other 6 folktales (Dhegdheer w/ one giant ear, Wiil Waal w/ glasses+book,
+  etc.) are scaffolded `ready:false` ("coming soon") — each new story is then
+  mostly content + a couple of new character painters.
   `AppState.openStories()/startStory(id)`, `currentStory`, screens `stories` +
   `story` (both in `kTransientScreens`); the Settings gear moves left on `story`.
+- **Story background music (1.7.0+14):** a gentle looping bed under the stories,
+  reusing the splash harp (`audio/harp.wav`) as the default. A separate looping
+  `_bgm` player in `VoService` (`startStoryMusic`/`stopStoryMusic`), persisted
+  on/off (`storyMusicOn`, prefs `story-music-on`) toggled by the **🎵/🔇 button**
+  in the story player (top-right). Upload-your-own via the new `kStoryMusic`
+  ('story-music') Studio line (`storyMusicSource()` → uploaded clip or harp).
 - **Launch splash** (`widgets/splash.dart`): the three Somali sisters, each in a
   round badge with a **colourful progress ring** that fills (sparkles at the
   leading edge, a glow when complete) while her name is announced — Nimoo →
@@ -288,7 +296,7 @@ Locked-in identity (all permanent / must match App Store Connect):
   `DEVELOPMENT_TEAM` on the 3 Runner configs + automatic signing. ⚠️ Gotcha: the cert
   name shows "Khadar Ainashe (BLGU4D968K)" — `BLGU4D968K` is a CERT id, **not** the team;
   the team is `4696KN59VV` (confirmed by the issued provisioning profile + Xcode plist).
-- **Display name** `HNL Learning`; **version `1.6.0+13`** (1.0.0+1 was the first
+- **Display name** `HNL Learning`; **version `1.7.0+14`** (1.0.0+1 was the first
   TestFlight build; 1.1.0 added Flip the Letters + Letter Sounds; +3 moved the harakat
   Studio section; 1.3.1+8 locked **all** inline recording behind the 1-2-3-4 grown-up
   gate + gave the game shell a back arrow instead of an "X"; 1.4.0+9 added **10 themed

@@ -33,6 +33,10 @@ class VoService extends ChangeNotifier {
   final SharedPreferences _prefs;
   final FlutterTts _tts = FlutterTts();
   final AudioPlayer _player = AudioPlayer();
+  // A separate looping player for the Story Time background music, so it plays
+  // softly UNDER the narration instead of fighting it.
+  final AudioPlayer _bgm = AudioPlayer();
+  bool _storyMusicOn = true;
 
   /// line id -> recorded clip reference. For local recordings we store only
   /// the *filename* (e.g. `vo_<id>.m4a`), resolved against the current app
@@ -82,6 +86,8 @@ class VoService extends ChangeNotifier {
         _docsDir = (await getApplicationDocumentsDirectory()).path;
       } catch (_) {/* no docs dir on this platform */}
     }
+
+    _storyMusicOn = _prefs.getBool('story-music-on') ?? true;
 
     final raw = _prefs.getString(_voPathsKey);
     if (raw != null) {
@@ -230,6 +236,53 @@ class VoService extends ChangeNotifier {
       if (src != null) return src;
     }
     return AssetSource('audio/harp.wav');
+  }
+
+  // ---- Story Time background music ----
+  /// Whether the gentle music bed plays during stories (a grown-up can switch
+  /// it off; the choice is remembered).
+  bool get storyMusicOn => _storyMusicOn;
+
+  /// Whether a grown-up has uploaded their own story music.
+  bool get hasStoryMusic => _recordings.containsKey('story-music');
+
+  /// The looping story bed: the uploaded clip (Studio → Story background music)
+  /// if set & resolvable, else the same gentle harp the splash uses.
+  Source storyMusicSource() {
+    final clip = _recordings['story-music'];
+    if (clip != null) {
+      final src = _resolveSource(clip);
+      if (src != null) return src;
+    }
+    return AssetSource('audio/harp.wav');
+  }
+
+  /// Start the looping story music (no-op if switched off).
+  Future<void> startStoryMusic() async {
+    if (!_storyMusicOn) return;
+    try {
+      await _bgm.setReleaseMode(ReleaseMode.loop);
+      await _bgm.setVolume(0.24); // soft, well under the narration
+      await _bgm.play(storyMusicSource());
+    } catch (_) {/* audio unavailable here */}
+  }
+
+  Future<void> stopStoryMusic() async {
+    try {
+      await _bgm.stop();
+    } catch (_) {}
+  }
+
+  /// Toggle/persist the music bed and start or stop it immediately.
+  Future<void> setStoryMusicOn(bool on) async {
+    _storyMusicOn = on;
+    await _prefs.setBool('story-music-on', on);
+    if (on) {
+      await startStoryMusic();
+    } else {
+      await stopStoryMusic();
+    }
+    notifyListeners();
   }
 
   // ---- upload an existing audio file as the clip for [id] ----

@@ -305,6 +305,224 @@ class _PitPainter extends CustomPainter {
 }
 
 // ------------------------------------------------------------
+// Jiir the mouse — tiny, grey, big round pink-lined ears.
+// ------------------------------------------------------------
+class JiirMouse extends StatefulWidget {
+  final double size;
+  const JiirMouse({super.key, this.size = 110});
+  @override
+  State<JiirMouse> createState() => _JiirMouseState();
+}
+
+class _JiirMouseState extends State<JiirMouse> with SingleTickerProviderStateMixin {
+  late final AnimationController _c =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 1500))..repeat(reverse: true);
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: AnimatedBuilder(animation: _c, builder: (_, _) => CustomPaint(painter: _MousePainter(_c.value))),
+      );
+}
+
+class _MousePainter extends CustomPainter {
+  final double t;
+  _MousePainter(this.t);
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    canvas.translate(0, math.sin(t * math.pi * 2) * h * 0.02);
+    double x(double f) => f * w;
+    double y(double f) => f * h;
+
+    const grey = Color(0xFFB7BEC8);
+    const greyDk = Color(0xFF99A1AD);
+    const belly = Color(0xFFE9EDF1);
+    const pink = Color(0xFFF6A8BE);
+    const dark = Color(0xFF33302E);
+
+    // tail
+    final tail = Paint()
+      ..color = pink
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.035
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(
+      Path()
+        ..moveTo(x(0.62), y(0.80))
+        ..quadraticBezierTo(x(0.92), y(0.78), x(0.86), y(0.55)),
+      tail,
+    );
+    // body
+    canvas.drawOval(Rect.fromCenter(center: Offset(x(0.46), y(0.72)), width: w * 0.56, height: h * 0.46), Paint()..color = grey);
+    canvas.drawOval(Rect.fromCenter(center: Offset(x(0.46), y(0.80)), width: w * 0.30, height: h * 0.26), Paint()..color = belly);
+    // ears (big round)
+    for (final ex in [-1, 1]) {
+      final e = Offset(x(0.46) + ex * w * 0.20, y(0.34));
+      canvas.drawCircle(e, w * 0.16, Paint()..color = grey);
+      canvas.drawCircle(e, w * 0.09, Paint()..color = pink);
+    }
+    // head
+    final hc = Offset(x(0.46), y(0.48));
+    canvas.drawCircle(hc, w * 0.21, Paint()..color = grey);
+    // eyes
+    for (final ex in [-1, 1]) {
+      final e = Offset(hc.dx + ex * w * 0.08, hc.dy - h * 0.01);
+      canvas.drawCircle(e, w * 0.035, Paint()..color = dark);
+      canvas.drawCircle(e.translate(w * 0.012, -h * 0.012), w * 0.012, Paint()..color = Colors.white);
+    }
+    // nose
+    canvas.drawCircle(Offset(hc.dx, hc.dy + h * 0.10), w * 0.028, Paint()..color = pink);
+    // whiskers
+    final wh = Paint()
+      ..color = greyDk
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.01
+      ..strokeCap = StrokeCap.round;
+    for (final ex in [-1, 1]) {
+      for (final dy in [-0.01, 0.03]) {
+        canvas.drawLine(Offset(hc.dx + ex * w * 0.04, hc.dy + h * 0.10), Offset(hc.dx + ex * w * 0.24, hc.dy + h * (0.10 + dy)), wh);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MousePainter old) => old.t != t;
+}
+
+// ------------------------------------------------------------
+// Geel the camel — tan, one hump, long neck, goofy proud face.
+// ------------------------------------------------------------
+class GeelCamel extends StatefulWidget {
+  final double size;
+  const GeelCamel({super.key, this.size = 220});
+  @override
+  State<GeelCamel> createState() => _GeelCamelState();
+}
+
+class _GeelCamelState extends State<GeelCamel> with SingleTickerProviderStateMixin {
+  late final AnimationController _c =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 2600))..repeat(reverse: true);
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: AnimatedBuilder(animation: _c, builder: (_, _) => CustomPaint(painter: _CamelPainter(_c.value))),
+      );
+}
+
+class _CamelPainter extends CustomPainter {
+  final double t;
+  _CamelPainter(this.t);
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    canvas.translate(0, math.sin(t * math.pi * 2) * h * 0.01);
+    double x(double f) => f * w;
+    double y(double f) => f * h;
+
+    const tan = Color(0xFFD9A862);
+    const tanDk = Color(0xFFBE8B42);
+    const dark = Color(0xFF3A2C1C);
+
+    final body = Paint()..color = tan;
+    // A dark outline so the tan camel pops on sandy/mud backgrounds. Each shape
+    // is filled then stroked back-to-front, so later shapes hide inner lines.
+    final outline = Paint()
+      ..color = const Color(0xFF7A5226)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.022
+      ..strokeJoin = StrokeJoin.round;
+    // legs
+    for (final lx in [0.30, 0.44, 0.60, 0.74]) {
+      final r = RRect.fromRectAndRadius(Rect.fromLTWH(x(lx), y(0.66), w * 0.07, h * 0.30), Radius.circular(w * 0.03));
+      canvas.drawRRect(r, Paint()..color = tanDk);
+      canvas.drawRRect(r, outline);
+    }
+    // body
+    final bodyR = Rect.fromCenter(center: Offset(x(0.52), y(0.62)), width: w * 0.58, height: h * 0.34);
+    canvas.drawOval(bodyR, body);
+    canvas.drawOval(bodyR, outline);
+    // hump
+    final humpR = Rect.fromCenter(center: Offset(x(0.50), y(0.44)), width: w * 0.34, height: h * 0.26);
+    canvas.drawOval(humpR, body);
+    canvas.drawOval(humpR, outline);
+    // neck
+    final neck = Path()
+      ..moveTo(x(0.66), y(0.58))
+      ..quadraticBezierTo(x(0.74), y(0.40), x(0.74), y(0.28))
+      ..lineTo(x(0.86), y(0.28))
+      ..quadraticBezierTo(x(0.86), y(0.46), x(0.78), y(0.62))
+      ..close();
+    canvas.drawPath(neck, body);
+    canvas.drawPath(neck, outline);
+    // head
+    final hc = Offset(x(0.83), y(0.24));
+    final headR = Rect.fromCenter(center: hc, width: w * 0.22, height: h * 0.18);
+    canvas.drawOval(headR, body);
+    canvas.drawOval(headR, outline);
+    // snout
+    canvas.drawOval(Rect.fromCenter(center: Offset(hc.dx + w * 0.07, hc.dy + h * 0.04), width: w * 0.14, height: h * 0.11), Paint()..color = tanDk);
+    // ear
+    canvas.drawOval(Rect.fromCenter(center: Offset(hc.dx - w * 0.07, hc.dy - h * 0.07), width: w * 0.06, height: h * 0.05), body);
+    // eye + long lashes (proud)
+    final eye = Offset(hc.dx - w * 0.01, hc.dy - h * 0.02);
+    canvas.drawCircle(eye, w * 0.028, Paint()..color = dark);
+    final lash = Paint()
+      ..color = dark
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.01
+      ..strokeCap = StrokeCap.round;
+    for (final a in [-0.5, 0.0, 0.5]) {
+      canvas.drawLine(eye.translate(0, -w * 0.03), eye.translate(math.sin(a) * w * 0.05, -w * 0.03 - math.cos(a) * w * 0.04), lash);
+    }
+    // nostril + smile
+    canvas.drawCircle(Offset(hc.dx + w * 0.10, hc.dy + h * 0.03), w * 0.012, Paint()..color = dark);
+    canvas.drawPath(
+      Path()
+        ..moveTo(hc.dx + w * 0.02, hc.dy + h * 0.075)
+        ..quadraticBezierTo(hc.dx + w * 0.08, hc.dy + h * 0.10, hc.dx + w * 0.12, hc.dy + h * 0.06),
+      lash..strokeWidth = w * 0.012,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _CamelPainter old) => old.t != t;
+}
+
+// A hunter's rope net (crisscross) — drawn over a trapped animal.
+class _NetPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size s) {
+    final p = Paint()
+      ..color = const Color(0xFF8A5A2B)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = s.width * 0.012
+      ..strokeCap = StrokeCap.round;
+    final step = s.width / 6;
+    for (var i = -6; i < 12; i++) {
+      canvas.drawLine(Offset(i * step, 0), Offset(i * step + s.height, s.height), p);
+      canvas.drawLine(Offset(i * step, s.height), Offset(i * step + s.height, 0), p);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+// ------------------------------------------------------------
 // Scene composition — picks characters/props by [art] id.
 // ------------------------------------------------------------
 class StorySceneArt extends StatelessWidget {
@@ -413,6 +631,94 @@ class StorySceneArt extends StatelessWidget {
               ..add(Positioned(bottom: h * 0.12, left: w * 0.10, child: DawacoFox(size: h * 0.6)))
               ..add(Positioned(bottom: h * 0.12, right: w * 0.06, child: LibaaxLion(size: h * 0.66, roaring: false)));
             break;
+
+          // ---- Lion & Mouse ----
+          case 'lm-sleep':
+            children
+              ..add(acacia)
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.14, child: LibaaxLion(size: h * 0.6, roaring: false)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.16, child: JiirMouse(size: h * 0.22)));
+            break;
+          case 'lm-catch':
+            children
+              ..add(Positioned(bottom: h * 0.1, left: w * 0.08, child: LibaaxLion(size: h * 0.66)))
+              ..add(Positioned(bottom: h * 0.14, right: w * 0.22, child: JiirMouse(size: h * 0.20)));
+            break;
+          case 'lm-free':
+            children
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.12, child: LibaaxLion(size: h * 0.5, roaring: false)))
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.18, child: JiirMouse(size: h * 0.30)));
+            break;
+          case 'lm-net':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: LibaaxLion(size: h * 0.6, roaring: false))))
+              ..add(Positioned(
+                bottom: h * 0.10,
+                left: w * 0.28,
+                right: w * 0.28,
+                top: h * 0.10,
+                child: CustomPaint(painter: _NetPainter()),
+              ));
+            break;
+          case 'lm-rescue':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.10, child: LibaaxLion(size: h * 0.56, roaring: false)))
+              ..add(Positioned(
+                bottom: h * 0.12,
+                left: w * 0.06,
+                right: w * 0.30,
+                top: h * 0.14,
+                child: CustomPaint(painter: _NetPainter()),
+              ))
+              ..add(Positioned(bottom: h * 0.40, right: w * 0.24, child: JiirMouse(size: h * 0.20)));
+            break;
+          case 'lm-friends':
+            children
+              ..add(acacia)
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.16, child: LibaaxLion(size: h * 0.6, roaring: false)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.18, child: JiirMouse(size: h * 0.28)));
+            break;
+
+          // ---- Proud Camel ----
+          case 'pc-proud':
+            children
+              ..add(acacia)
+              ..add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: GeelCamel(size: h * 0.72))));
+            break;
+          case 'pc-boast':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.06, child: GeelCamel(size: h * 0.64)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.10, child: DawacoFox(size: h * 0.4)));
+            break;
+          case 'pc-stuck':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: GeelCamel(size: h * 0.66))))
+              // a patch of mud the camel is stuck in
+              ..add(Positioned(
+                bottom: h * 0.08,
+                left: w * 0.28,
+                right: w * 0.18,
+                child: Container(height: h * 0.16, decoration: BoxDecoration(color: const Color(0xFF6E4A24), borderRadius: BorderRadius.circular(80))),
+              ));
+            break;
+          case 'pc-help':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.04, child: GeelCamel(size: h * 0.6)))
+              ..add(Positioned(
+                bottom: h * 0.08,
+                left: w * 0.20,
+                right: w * 0.30,
+                child: Container(height: h * 0.14, decoration: BoxDecoration(color: const Color(0xFF6E4A24), borderRadius: BorderRadius.circular(80))),
+              ))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.08, child: DawacoFox(size: h * 0.44)));
+            break;
+          case 'pc-humble':
+            children
+              ..add(acacia)
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.06, child: GeelCamel(size: h * 0.6)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.12, child: DawacoFox(size: h * 0.46)));
+            break;
+
           default:
             children.add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: LibaaxLion(size: h * 0.6))));
         }
