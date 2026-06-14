@@ -21,6 +21,10 @@ class Produce {
   const Produce(this.id, this.en, this.so, this.emoji);
 }
 
+/// Bundled real picture for a produce item (shown unless a grown-up uploads
+/// their own); Img falls back to the emoji if this asset isn't present.
+String produceAsset(String id) => 'assets/produce/$id.png';
+
 /// The most kid-famous fruits (clear, distinct emoji each).
 const List<Produce> kFruits = [
   Produce('fruit-apple', 'Apple', 'Tufaax', '🍎'),
