@@ -92,6 +92,10 @@ String storyVoId(String storyId, String sceneId) => 'st-$storyId-$sceneId';
 /// Stable image-slot id for a scene's still picture (uploadable in the Studio).
 String storyPicId(String storyId, String sceneId) => 'storypic-$storyId-$sceneId';
 
+/// Bundled illustration asset for a scene (the real picture shipped with the
+/// app). Shown unless a grown-up has uploaded their own in the Picture Studio.
+String storyAsset(String storyId, String sceneId) => 'assets/stories/$storyId/$sceneId.png';
+
 Story storyById(String id) => kStories.firstWhere((s) => s.id == id);
 
 // ============================================================

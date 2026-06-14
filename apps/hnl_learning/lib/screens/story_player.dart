@@ -90,7 +90,7 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
     }
   }
 
-  void _enlarge(String pic, String picId) {
+  void _enlarge(String pic, String picId, String asset) {
     showDialog<void>(
       context: context,
       barrierColor: C.inkA(.6),
@@ -98,11 +98,11 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
         onTap: () => Navigator.of(context).pop(),
         child: Center(
           child: Container(
-            width: 560,
-            height: 560,
-            alignment: Alignment.center,
+            width: 640,
+            height: 640,
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.xl), boxShadow: Sh.lg),
-            child: Img(pic, id: picId, size: 320),
+            child: Img(pic, id: picId, asset: asset, fill: true, radius: R.lg),
           ),
         ),
       ),
@@ -167,9 +167,9 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
                 Expanded(
                   flex: 2,
                   child: Pressable(
-                    onTap: () => _enlarge(s.picture, picId),
+                    onTap: () => _enlarge(s.picture, picId, storyAsset(story.id, s.id)),
                     child: Container(
-                      padding: const EdgeInsets.all(14),
+                      padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: C.card,
                         borderRadius: BorderRadius.circular(R.lg),
@@ -178,7 +178,10 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
                       ),
                       child: Column(
                         children: [
-                          Expanded(child: Center(child: Img(s.picture, id: picId, size: 100))),
+                          Expanded(
+                            child: Img(s.picture, id: picId, asset: storyAsset(story.id, s.id), fill: true, radius: R.md),
+                          ),
+                          const SizedBox(height: 8),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
