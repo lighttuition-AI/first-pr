@@ -14,6 +14,7 @@ class Img extends StatelessWidget {
   final double size; // emoji font-size / square box size
   final bool fill; // fill the parent box (cover)
   final double? radius;
+  final String? asset; // bundled asset image, used when no upload exists
 
   const Img(
     this.token, {
@@ -23,6 +24,7 @@ class Img extends StatelessWidget {
     this.size = 40,
     this.fill = false,
     this.radius,
+    this.asset,
   });
 
   @override
@@ -32,17 +34,25 @@ class Img extends StatelessWidget {
     final bytes = svc.bytesFor(slotId);
     final glyph = display ?? token;
 
+    // Priority: a grown-up's uploaded image → a bundled asset → the emoji.
+    Widget? picture;
     if (bytes != null) {
-      final image = Image.memory(bytes, fit: BoxFit.cover, gaplessPlayback: true);
+      picture = Image.memory(bytes, fit: BoxFit.cover, gaplessPlayback: true);
+    } else if (asset != null) {
+      // errorBuilder → fall back to the emoji glyph if the asset is missing.
+      picture = Image.asset(asset!, fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => Center(child: Text(glyph, style: TextStyle(fontSize: size, color: C.ink))));
+    }
+    if (picture != null) {
       if (fill) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(radius ?? R.md),
-          child: SizedBox.expand(child: image),
+          child: SizedBox.expand(child: picture),
         );
       }
       return ClipRRect(
         borderRadius: BorderRadius.circular(radius ?? size * 0.2),
-        child: SizedBox(width: size, height: size, child: image),
+        child: SizedBox(width: size, height: size, child: picture),
       );
     }
 

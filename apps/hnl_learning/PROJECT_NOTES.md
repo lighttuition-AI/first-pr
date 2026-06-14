@@ -97,7 +97,7 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   `q` are all single Somali strings (the old `*En`/`*So` split + the English
   listen button were removed on user request: "I only want Somali"). Each scene =
   an original animated scene (`widgets/story_art.dart`, hand-drawn CustomPaint) +
-  a **still picture panel** beside it (`storyPicId` Img slot, default an emoji
+  a **still picture panel** beside it (`storyPicId` Img slot, default now the **real bundled illustration** in `assets/stories/<story>/sN.png` (the grown-up generated them in ChatGPT; sliced from one grid), else an emoji
   depiction, **tap → enlarge**, and **uploadable in the Picture Studio** so a
   grown-up can drop in their own detailed illustration per scene — registered in
   `buildImgRegistry`) + a **Somali narration** (one "Dhegayso" button, recordable
@@ -300,7 +300,7 @@ Locked-in identity (all permanent / must match App Store Connect):
   `DEVELOPMENT_TEAM` on the 3 Runner configs + automatic signing. ⚠️ Gotcha: the cert
   name shows "Khadar Ainashe (BLGU4D968K)" — `BLGU4D968K` is a CERT id, **not** the team;
   the team is `4696KN59VV` (confirmed by the issued provisioning profile + Xcode plist).
-- **Display name** `HNL Learning`; **version `1.8.0+15`** (1.0.0+1 was the first
+- **Display name** `HNL Learning`; **version `1.8.1+16`** (1.0.0+1 was the first
   TestFlight build; 1.1.0 added Flip the Letters + Letter Sounds; +3 moved the harakat
   Studio section; 1.3.1+8 locked **all** inline recording behind the 1-2-3-4 grown-up
   gate + gave the game shell a back arrow instead of an "X"; 1.4.0+9 added **10 themed
