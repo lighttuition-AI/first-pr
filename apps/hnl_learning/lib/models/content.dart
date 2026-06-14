@@ -671,14 +671,12 @@ List<VoGroup> buildVoRegistry() {
   // Story Library — the background-music bed (upload your own), then each ready
   // story's narration (Somali + English per scene) — recordable, so a grown-up
   // can voice the tales in their own Somali.
-  groups.add(VoGroup('📖 Story Time · music', [kStoryMusic]));
+  groups.add(VoGroup('📖 Sheekooyin · muusik', [kStoryMusic]));
   for (final st in kStories.where((s) => s.ready)) {
-    final lines = <VoLineData>[];
-    for (final sc in st.scenes) {
-      lines.add(VoLineData(storyVoId(st.id, sc.id, 'so'), sc.narrationSo, '${st.titleSo} · Soomaali'));
-      lines.add(VoLineData(storyVoId(st.id, sc.id, 'en'), sc.narrationEn, '${st.titleEn} · English'));
-    }
-    groups.add(VoGroup('📖 ${st.titleSo}', lines));
+    final lines = <VoLineData>[
+      for (final sc in st.scenes) VoLineData(storyVoId(st.id, sc.id), sc.narration, st.title, lang: 'so-SO'),
+    ];
+    groups.add(VoGroup('📖 ${st.title}', lines));
   }
   groups.add(VoGroup('Planet rewards', kRewardVo.values.toList()));
   return groups;

@@ -87,7 +87,7 @@ class VoService extends ChangeNotifier {
       } catch (_) {/* no docs dir on this platform */}
     }
 
-    _storyMusicOn = _prefs.getBool('story-music-on') ?? true;
+    _storyMusicOn = _prefs.getBool('story-music-on') ?? false; // off by default
 
     final raw = _prefs.getString(_voPathsKey);
     if (raw != null) {

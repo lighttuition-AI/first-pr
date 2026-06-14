@@ -14,6 +14,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/content.dart';
+import '../models/story.dart';
 
 const _imgStoreKey = 'hnl-img-store';
 
@@ -173,6 +174,14 @@ List<ImgGroup> buildImgRegistry() {
         if (tok.isNotEmpty) ImgSlot(imgTokenId(tok), SlotKind.emoji, tok, g.title),
     ]);
     if (items.isNotEmpty) groups.add(ImgGroup(g.title, items));
+  }
+
+  // Story Time — each ready story's per-scene "picture" is an uploadable slot,
+  // so a grown-up can drop in their own detailed illustration per scene.
+  for (final st in kStories.where((s) => s.ready)) {
+    groups.add(ImgGroup('📖 ${st.title}', [
+      for (final sc in st.scenes) ImgSlot(storyPicId(st.id, sc.id), SlotKind.emoji, sc.picture, st.title),
+    ]));
   }
   return groups;
 }
