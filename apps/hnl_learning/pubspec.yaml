@@ -1,7 +1,7 @@
 name: hnl_learning
 description: "HNL Learning — an audio-first, touch-first educational app for kids ages 2–8."
 publish_to: 'none'
-version: 1.9.2+19
+version: 1.9.3+20
 
 environment:
   sdk: ^3.12.1
@@ -55,3 +55,4 @@ flutter:
     - assets/stories/lost-camel/
     - assets/stories/wise-man/
     - assets/produce/
+    - assets/animals/
