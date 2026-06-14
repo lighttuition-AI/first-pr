@@ -25,6 +25,10 @@ class Animal {
   final String emoji; // friendly default picture
   const Animal(this.id, this.en, this.so, this.emoji);
 
+  /// Bundled real picture (shown unless a grown-up uploads their own); Img
+  /// falls back to the emoji if this asset isn't bundled yet.
+  String get asset => 'assets/animals/$id.png';
+
   /// A clear, kid-friendly sound for this animal — spoken in the warm app
   /// voice ("what does the animal say?", ideal for ages 2–8), or overridden by
   /// a real recorded sound (VO id `animal-ID-sound`). Keyed by the emoji so

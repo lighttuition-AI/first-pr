@@ -172,7 +172,7 @@ class _AnimalQuizScreenState extends State<AnimalQuizScreen> {
                       border: activeSkin.cardBorder,
                     ),
                     alignment: Alignment.center,
-                    child: Img(animal.emoji, id: 'animal-${animal.id}', size: 180, fill: true, radius: R.xl),
+                    child: Img(animal.emoji, id: 'animal-${animal.id}', asset: animal.asset, size: 180, fill: true, radius: R.xl),
                   ),
                   const SizedBox(height: 14),
                   Text(animal.en, style: AppText.display(size: 40, weight: FontWeight.w800)),
