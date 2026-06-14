@@ -33,9 +33,7 @@ class StoryLibraryScreen extends StatelessWidget {
               children: [
                 IconCircle(Icons.arrow_back_rounded, onTap: () => app.go('home')),
                 const SizedBox(width: 16),
-                Text('📖  Story Time', style: AppText.display(size: 30, weight: FontWeight.w800)),
-                const SizedBox(width: 12),
-                Text('Sheekooyin', style: AppText.body(size: 22, weight: FontWeight.w700, color: C.muted)),
+                Text('📖  Sheekooyin', style: AppText.display(size: 30, weight: FontWeight.w800)),
               ],
             ),
           ),
@@ -97,25 +95,21 @@ class _StoryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(story.titleSo, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.display(size: 24, weight: FontWeight.w800)),
-                    Text(story.titleEn, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.body(size: 18, weight: FontWeight.w700, color: C.muted)),
+                    Text(story.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.display(size: 23, weight: FontWeight.w800)),
+                    Text(story.blurb, maxLines: 2, overflow: TextOverflow.ellipsis, style: AppText.body(size: 15, weight: FontWeight.w700, color: C.muted)),
                     const SizedBox(height: 6),
                     if (ready)
-                      Row(children: [
-                        Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(color: app.pal.brandSoft, shape: BoxShape.circle),
-                          child: Icon(Icons.play_arrow_rounded, color: app.pal.brand, size: 20),
-                        ),
-                        const SizedBox(width: 8),
-                        Text('Ages ${story.ageRange}', style: AppText.body(size: 16, weight: FontWeight.w700, color: C.inkSoft)),
-                      ])
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(color: app.pal.brandSoft, shape: BoxShape.circle),
+                        child: Icon(Icons.play_arrow_rounded, color: app.pal.brand, size: 22),
+                      )
                     else
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(color: C.line, borderRadius: BorderRadius.circular(R.pill)),
-                        child: Text('Coming soon', style: AppText.body(size: 15, weight: FontWeight.w800, color: C.inkSoft)),
+                        child: Text('Dhowaan', style: AppText.body(size: 15, weight: FontWeight.w800, color: C.inkSoft)),
                       ),
                   ],
                 ),

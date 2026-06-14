@@ -1,7 +1,9 @@
-// Story player — reads a Somali folktale scene by scene, then asks a couple of
-// questions and shows the moral. Each scene has an original animated scene
-// (StorySceneArt), bilingual narration (English + Somali — tap to hear,
-// recordable in the Voiceover Studio) and an optional character speech bubble.
+// Story player (Somali only) — reads a folktale scene by scene, then asks a
+// couple of questions and shows the moral. Each scene has an original animated
+// scene (StorySceneArt) PLUS a still picture panel the parent can tap to
+// enlarge (and replace in the Picture Studio), a Somali narration (tap to hear,
+// recordable) and an optional character speech bubble. Background music is OFF
+// by default — the 🎵 button turns it on.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -24,11 +26,11 @@ enum _Phase { story, questions, moral }
 
 class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
   late final Story story;
+  late final VoService _vo;
   int _scene = 0;
   int _q = 0;
   _Phase _phase = _Phase.story;
-  String? _wrong; // last wrong option id (for a gentle flash)
-  late final VoService _vo;
+  String? _wrong;
 
   @override
   void initState() {
@@ -36,8 +38,8 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
     _vo = context.read<VoService>();
     story = storyById(context.read<AppState>().currentStory ?? kStories.first.id);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _playNarration();
-      _vo.startStoryMusic(); // gentle looping bed (off if the grown-up muted it)
+      _say();
+      _vo.startStoryMusic(); // off unless the grown-up turned it on
     });
   }
 
@@ -47,34 +49,16 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
     super.dispose();
   }
 
-  void _playNarration() {
+  void _say() {
     if (!mounted) return;
-    final vo = context.read<VoService>();
     final s = story.scenes[_scene];
-    // Auto-play Somali if a grown-up has recorded it; otherwise English so the
-    // child can always follow along.
-    final soId = storyVoId(story.id, s.id, 'so');
-    if (vo.has(soId)) {
-      vo.play(soId, s.narrationSo, lang: 'so-SO');
-    } else {
-      vo.play(storyVoId(story.id, s.id, 'en'), s.narrationEn, lang: 'en-US');
-    }
-  }
-
-  void _say(String lang) {
-    final vo = context.read<VoService>();
-    final s = story.scenes[_scene];
-    if (lang == 'so') {
-      vo.play(storyVoId(story.id, s.id, 'so'), s.narrationSo, lang: 'so-SO');
-    } else {
-      vo.play(storyVoId(story.id, s.id, 'en'), s.narrationEn, lang: 'en-US');
-    }
+    _vo.play(storyVoId(story.id, s.id), s.narration, lang: 'so-SO');
   }
 
   void _next() {
     if (_scene < story.scenes.length - 1) {
       setState(() => _scene++);
-      _playNarration();
+      _say();
     } else {
       setState(() => _phase = story.questions.isEmpty ? _Phase.moral : _Phase.questions);
     }
@@ -83,7 +67,7 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
   void _prev() {
     if (_scene > 0) {
       setState(() => _scene--);
-      _playNarration();
+      _say();
     }
   }
 
@@ -102,8 +86,27 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
         });
       });
     } else {
-      setState(() => _wrong = '${q.id}-${o.labelEn}');
+      setState(() => _wrong = '${q.id}-${o.label}');
     }
+  }
+
+  void _enlarge(String pic, String picId) {
+    showDialog<void>(
+      context: context,
+      barrierColor: C.inkA(.6),
+      builder: (_) => GestureDetector(
+        onTap: () => Navigator.of(context).pop(),
+        child: Center(
+          child: Container(
+            width: 560,
+            height: 560,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.xl), boxShadow: Sh.lg),
+            child: Img(pic, id: picId, size: 320),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -114,25 +117,11 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
         : const [Color(0xFFFFF0D6), Color(0xFFFCDFB0)];
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: bg),
-      ),
+      decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: bg)),
       child: Stack(
         children: [
-          Positioned(
-            top: 24,
-            left: 24,
-            child: IconCircle(Icons.arrow_back_rounded, size: 64, onTap: () => app.go('stories')),
-          ),
-          Positioned(
-            top: 30,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Text(story.titleSo, style: AppText.display(size: 26, weight: FontWeight.w800)),
-            ),
-          ),
-          // Background-music on/off (a grown-up can mute the bed; choice sticks).
+          Positioned(top: 24, left: 24, child: IconCircle(Icons.arrow_back_rounded, size: 64, onTap: () => app.go('stories'))),
+          Positioned(top: 30, left: 0, right: 0, child: Center(child: Text(story.title, style: AppText.display(size: 26, weight: FontWeight.w800)))),
           const Positioned(top: 24, right: 24, child: _MusicButton()),
           Positioned.fill(
             top: 84,
@@ -147,71 +136,89 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
     );
   }
 
-  // ---- Scene ----
   Widget _sceneView(AppState app) {
     final s = story.scenes[_scene];
     final last = _scene == story.scenes.length - 1;
+    final picId = storyPicId(story.id, s.id);
     return Column(
       children: [
-        // Scene art with optional speech bubble
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Stack(
+            padding: const EdgeInsets.symmetric(horizontal: 30),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Positioned.fill(child: StorySceneArt(art: s.art)),
-                if (s.speaker != Speaker.narrator && s.lineSo != null)
-                  Align(
-                    alignment: s.speaker == Speaker.fox ? Alignment.topLeft : Alignment.topRight,
-                    child: _Bubble(so: s.lineSo!, en: s.lineEn ?? ''),
+                // The animation (continues), with the speech bubble.
+                Expanded(
+                  flex: 5,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(child: StorySceneArt(art: s.art)),
+                      if (s.speaker != Speaker.narrator && s.line != null)
+                        Align(
+                          alignment: s.speaker == Speaker.left ? Alignment.topLeft : Alignment.topRight,
+                          child: _Bubble(text: s.line!),
+                        ),
+                    ],
                   ),
+                ),
+                const SizedBox(width: 14),
+                // The still picture (tap to enlarge; editable in Picture Studio).
+                Expanded(
+                  flex: 2,
+                  child: Pressable(
+                    onTap: () => _enlarge(s.picture, picId),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: C.card,
+                        borderRadius: BorderRadius.circular(R.lg),
+                        boxShadow: Sh.sm,
+                        border: Border.all(color: const Color(0xFFFFC76B), width: 3),
+                      ),
+                      child: Column(
+                        children: [
+                          Expanded(child: Center(child: Img(s.picture, id: picId, size: 100))),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.zoom_in_rounded, size: 20, color: C.muted),
+                              const SizedBox(width: 6),
+                              Text('Sawir', style: AppText.body(size: 18, weight: FontWeight.w800, color: C.muted)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
-        // Narration card
+        // Somali narration + a single Somali "listen" button.
         Container(
           margin: const EdgeInsets.fromLTRB(40, 8, 40, 8),
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-          decoration: BoxDecoration(
-            color: C.card.withValues(alpha: .94),
-            borderRadius: BorderRadius.circular(R.lg),
-            boxShadow: Sh.sm,
-          ),
+          decoration: BoxDecoration(color: C.card.withValues(alpha: .94), borderRadius: BorderRadius.circular(R.lg), boxShadow: Sh.sm),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(s.narrationSo, textAlign: TextAlign.center, style: AppText.display(size: 24, weight: FontWeight.w700)),
-              const SizedBox(height: 4),
-              Text(s.narrationEn, textAlign: TextAlign.center, style: AppText.body(size: 19, weight: FontWeight.w600, color: C.muted)),
+              Text(s.narration, textAlign: TextAlign.center, style: AppText.display(size: 24, weight: FontWeight.w700)),
               const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _ListenChip(flag: '🇸🇴', label: 'Soomaali', onTap: () => _say('so')),
-                  const SizedBox(width: 12),
-                  _ListenChip(flag: '🇬🇧', label: 'English', onTap: () => _say('en')),
-                ],
-              ),
+              _ListenChip(onTap: _say),
             ],
           ),
         ),
-        // Nav
         Padding(
           padding: const EdgeInsets.fromLTRB(40, 0, 40, 22),
           child: Row(
             children: [
-              if (_scene > 0)
-                KidButton(variant: BtnVariant.ghost, onTap: _prev, child: const Text('◀ Back'))
-              else
-                const SizedBox(width: 10),
+              if (_scene > 0) KidButton(variant: BtnVariant.ghost, onTap: _prev, child: const Text('◀ Dib')) else const SizedBox(width: 10),
               const Spacer(),
               _Dots(total: story.scenes.length, index: _scene, brand: app.pal.brand),
               const Spacer(),
-              KidButton(
-                onTap: _next,
-                child: Text(last ? 'Questions →' : 'Next →', style: AppText.display(size: 26, weight: FontWeight.w800, color: Colors.white)),
-              ),
+              KidButton(onTap: _next, child: Text(last ? 'Su\'aalo →' : 'Xiga →', style: AppText.display(size: 26, weight: FontWeight.w800, color: Colors.white))),
             ],
           ),
         ),
@@ -219,7 +226,6 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
     );
   }
 
-  // ---- Questions ----
   Widget _questionView(AppState app) {
     final q = story.questions[_q];
     return Padding(
@@ -227,23 +233,15 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
       child: Column(
         children: [
           const Spacer(),
-          Text('❓', style: const TextStyle(fontSize: 56)),
+          const Text('❓', style: TextStyle(fontSize: 56)),
           const SizedBox(height: 8),
-          Text(q.qSo, textAlign: TextAlign.center, style: AppText.display(size: 30, weight: FontWeight.w800)),
-          Text(q.qEn, textAlign: TextAlign.center, style: AppText.body(size: 22, weight: FontWeight.w700, color: C.muted)),
+          Text(q.q, textAlign: TextAlign.center, style: AppText.display(size: 30, weight: FontWeight.w800)),
           const SizedBox(height: 26),
           Wrap(
             spacing: 18,
             runSpacing: 18,
             alignment: WrapAlignment.center,
-            children: [
-              for (final o in q.options)
-                _OptionCard(
-                  option: o,
-                  flash: _wrong == '${q.id}-${o.labelEn}',
-                  onTap: () => _answer(q, o),
-                ),
-            ],
+            children: [for (final o in q.options) _OptionCard(option: o, flash: _wrong == '${q.id}-${o.label}', onTap: () => _answer(q, o))],
           ),
           const Spacer(),
           _Dots(total: story.questions.length, index: _q, brand: app.pal.brand),
@@ -252,28 +250,20 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
     );
   }
 
-  // ---- Moral ----
   Widget _moralView(AppState app) {
     return Center(
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 80),
         padding: const EdgeInsets.fromLTRB(50, 44, 50, 44),
-        decoration: BoxDecoration(
-          color: C.card,
-          borderRadius: BorderRadius.circular(R.xl),
-          boxShadow: Sh.lg,
-          border: activeSkin.cardBorder,
-        ),
+        decoration: BoxDecoration(color: C.card, borderRadius: BorderRadius.circular(R.xl), boxShadow: Sh.lg, border: activeSkin.cardBorder),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('🌟', style: TextStyle(fontSize: 64)),
             const SizedBox(height: 10),
-            Text('Casharka — The Lesson', style: AppText.kicker.copyWith(color: app.pal.brand, fontSize: 22)),
+            Text('Casharka', style: AppText.kicker.copyWith(color: app.pal.brand, fontSize: 22)),
             const SizedBox(height: 16),
-            Text(story.moralSo, textAlign: TextAlign.center, style: AppText.display(size: 30, weight: FontWeight.w800)),
-            const SizedBox(height: 8),
-            Text(story.moralEn, textAlign: TextAlign.center, style: AppText.lead.copyWith(fontSize: 24)),
+            Text(story.moral, textAlign: TextAlign.center, style: AppText.display(size: 30, weight: FontWeight.w800)),
             const SizedBox(height: 30),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -284,12 +274,12 @@ class _StoryPlayerScreenState extends State<StoryPlayerScreen> {
                     _scene = 0;
                     _q = 0;
                     _phase = _Phase.story;
-                    _playNarration();
+                    _say();
                   }),
-                  child: const Text('↺ Read again'),
+                  child: const Text('↺ Mar kale'),
                 ),
                 const SizedBox(width: 22),
-                KidButton(onTap: () => app.go('stories'), child: Text('More stories →', style: AppText.display(size: 24, weight: FontWeight.w800, color: Colors.white))),
+                KidButton(onTap: () => app.go('stories'), child: Text('Sheekooyin kale →', style: AppText.display(size: 24, weight: FontWeight.w800, color: Colors.white))),
               ],
             ),
           ],
@@ -307,7 +297,7 @@ class _MusicButton extends StatelessWidget {
     final vo = context.watch<VoService>();
     final on = vo.storyMusicOn;
     return Tooltip(
-      message: on ? 'Music on — tap to mute' : 'Music off — tap to play',
+      message: on ? 'Muusik shidan — taabo si aad u demiso' : 'Muusik damay — taabo si aad u shidato',
       child: Pressable(
         onTap: () => vo.setStoryMusicOn(!on),
         child: Container(
@@ -323,25 +313,20 @@ class _MusicButton extends StatelessWidget {
 }
 
 class _ListenChip extends StatelessWidget {
-  final String flag, label;
   final VoidCallback onTap;
-  const _ListenChip({required this.flag, required this.label, required this.onTap});
+  const _ListenChip({required this.onTap});
   @override
   Widget build(BuildContext context) {
+    final pal = context.read<AppState>().pal;
     return Pressable(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: context.read<AppState>().pal.brandSoft,
-          borderRadius: BorderRadius.circular(R.pill),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 11),
+        decoration: BoxDecoration(color: pal.brandSoft, borderRadius: BorderRadius.circular(R.pill)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Text(flag, style: const TextStyle(fontSize: 22)),
-          const SizedBox(width: 8),
-          Text(label, style: AppText.display(size: 20, weight: FontWeight.w800, color: context.read<AppState>().pal.brand)),
-          const SizedBox(width: 6),
-          Icon(Icons.volume_up_rounded, size: 22, color: context.read<AppState>().pal.brand),
+          Icon(Icons.volume_up_rounded, size: 24, color: pal.brand),
+          const SizedBox(width: 10),
+          Text('Dhegayso', style: AppText.display(size: 22, weight: FontWeight.w800, color: pal.brand)),
         ]),
       ),
     );
@@ -349,12 +334,12 @@ class _ListenChip extends StatelessWidget {
 }
 
 class _Bubble extends StatelessWidget {
-  final String so, en;
-  const _Bubble({required this.so, required this.en});
+  final String text;
+  const _Bubble({required this.text});
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 360),
+      constraints: const BoxConstraints(maxWidth: 320),
       margin: const EdgeInsets.all(8),
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
       decoration: BoxDecoration(
@@ -363,10 +348,7 @@ class _Bubble extends StatelessWidget {
         boxShadow: Sh.md,
         border: Border.all(color: const Color(0xFFFFC76B), width: 3),
       ),
-      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(so, style: AppText.display(size: 22, weight: FontWeight.w800, color: const Color(0xFF1F2A33))),
-        if (en.isNotEmpty) Text(en, style: AppText.body(size: 17, weight: FontWeight.w700, color: C.muted)),
-      ]),
+      child: Text(text, style: AppText.display(size: 22, weight: FontWeight.w800, color: const Color(0xFF1F2A33))),
     );
   }
 }
@@ -415,8 +397,7 @@ class _OptionCard extends StatelessWidget {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Img(option.emoji, size: 50),
           const SizedBox(height: 8),
-          Text(option.labelSo, textAlign: TextAlign.center, maxLines: 2, style: AppText.display(size: 20, weight: FontWeight.w800)),
-          Text(option.labelEn, textAlign: TextAlign.center, maxLines: 2, style: AppText.body(size: 15, weight: FontWeight.w700, color: C.muted)),
+          Text(option.label, textAlign: TextAlign.center, maxLines: 3, style: AppText.display(size: 20, weight: FontWeight.w800)),
         ]),
       ),
     );

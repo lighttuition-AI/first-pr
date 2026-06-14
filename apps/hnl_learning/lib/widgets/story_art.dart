@@ -502,6 +502,391 @@ class _CamelPainter extends CustomPainter {
   bool shouldRepaint(covariant _CamelPainter old) => old.t != t;
 }
 
+// ------------------------------------------------------------
+// Waraabe the hyena — sandy with brown spots, sloping back, toothy grin.
+// ------------------------------------------------------------
+class WaraabeHyena extends StatefulWidget {
+  final double size;
+  const WaraabeHyena({super.key, this.size = 220});
+  @override
+  State<WaraabeHyena> createState() => _WaraabeHyenaState();
+}
+
+class _WaraabeHyenaState extends State<WaraabeHyena> with SingleTickerProviderStateMixin {
+  late final AnimationController _c =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 2300))..repeat(reverse: true);
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: AnimatedBuilder(animation: _c, builder: (_, _) => CustomPaint(painter: _HyenaPainter(_c.value))),
+      );
+}
+
+class _HyenaPainter extends CustomPainter {
+  final double t;
+  _HyenaPainter(this.t);
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    canvas.translate(0, math.sin(t * math.pi * 2) * h * 0.012);
+    double x(double f) => f * w;
+    double y(double f) => f * h;
+
+    const fur = Color(0xFFC8B68A);
+    const furDk = Color(0xFFAE9A6E);
+    const spot = Color(0xFF7B6344);
+    const dark = Color(0xFF2E2820);
+
+    final body = Paint()..color = fur;
+    // legs
+    for (final lx in [0.34, 0.5, 0.62]) {
+      canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x(lx), y(0.70), w * 0.07, h * 0.26), Radius.circular(w * 0.03)), Paint()..color = furDk);
+    }
+    // sloping back (front higher) body
+    final bodyPath = Path()
+      ..moveTo(x(0.24), y(0.50))
+      ..quadraticBezierTo(x(0.5), y(0.36), x(0.78), y(0.62))
+      ..quadraticBezierTo(x(0.6), y(0.86), x(0.30), y(0.80))
+      ..quadraticBezierTo(x(0.18), y(0.66), x(0.24), y(0.50))
+      ..close();
+    canvas.drawPath(bodyPath, body);
+    // spots
+    for (final p in [Offset(0.42, 0.56), Offset(0.55, 0.64), Offset(0.5, 0.74), Offset(0.36, 0.66)]) {
+      canvas.drawCircle(Offset(x(p.dx), y(p.dy)), w * 0.03, Paint()..color = spot);
+    }
+    // shaggy mane
+    final mane = Paint()..color = furDk;
+    for (var i = 0; i < 5; i++) {
+      canvas.drawCircle(Offset(x(0.26 + i * 0.03), y(0.42 + i * 0.02)), w * 0.04, mane);
+    }
+    // head (front-left, up high)
+    final hc = Offset(x(0.24), y(0.40));
+    canvas.drawOval(Rect.fromCenter(center: hc, width: w * 0.26, height: h * 0.24), body);
+    // ears (big round)
+    for (final ex in [-1, 1]) {
+      canvas.drawCircle(hc.translate(ex * w * 0.08, -h * 0.13), w * 0.06, body);
+      canvas.drawCircle(hc.translate(ex * w * 0.08, -h * 0.13), w * 0.032, Paint()..color = furDk);
+    }
+    // dark snout
+    canvas.drawOval(Rect.fromCenter(center: hc.translate(-w * 0.08, h * 0.03), width: w * 0.14, height: h * 0.12), Paint()..color = spot);
+    canvas.drawCircle(hc.translate(-w * 0.15, h * 0.02), w * 0.02, Paint()..color = dark); // nose
+    // eyes
+    for (final ex in [0, 1]) {
+      final e = hc.translate(w * (0.0 + ex * 0.08), -h * 0.02);
+      canvas.drawCircle(e, w * 0.03, Paint()..color = Colors.white);
+      canvas.drawCircle(e, w * 0.016, Paint()..color = dark);
+    }
+    // toothy grin
+    canvas.drawPath(
+      Path()
+        ..moveTo(hc.dx - w * 0.14, hc.dy + h * 0.06)
+        ..lineTo(hc.dx + w * 0.02, hc.dy + h * 0.07)
+        ..lineTo(hc.dx - w * 0.06, hc.dy + h * 0.11)
+        ..close(),
+      Paint()..color = Colors.white,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _HyenaPainter old) => old.t != t;
+}
+
+// ------------------------------------------------------------
+// Wiil Waal — the clever boy: glasses + a book in his hands.
+// ------------------------------------------------------------
+class WiilWaalBoy extends StatefulWidget {
+  final double size;
+  const WiilWaalBoy({super.key, this.size = 200});
+  @override
+  State<WiilWaalBoy> createState() => _WiilWaalBoyState();
+}
+
+class _WiilWaalBoyState extends State<WiilWaalBoy> with SingleTickerProviderStateMixin {
+  late final AnimationController _c =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 2400))..repeat(reverse: true);
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: AnimatedBuilder(animation: _c, builder: (_, _) => CustomPaint(painter: _BoyPainter(_c.value))),
+      );
+}
+
+class _BoyPainter extends CustomPainter {
+  final double t;
+  _BoyPainter(this.t);
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    canvas.translate(0, math.sin(t * math.pi * 2) * h * 0.01);
+    double x(double f) => f * w;
+    double y(double f) => f * h;
+
+    const skin = Color(0xFF8A5A36);
+    const hair = Color(0xFF2A1C12);
+    const shirt = Color(0xFF3FA86B);
+    const dark = Color(0xFF221A12);
+
+    final cx = x(0.5);
+    // body / shirt
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(cx, y(0.74)), width: w * 0.42, height: h * 0.40), Radius.circular(w * 0.12)), Paint()..color = shirt);
+    // a book held in front
+    final bookR = Rect.fromCenter(center: Offset(cx, y(0.80)), width: w * 0.40, height: h * 0.20);
+    canvas.drawRRect(RRect.fromRectAndRadius(bookR, Radius.circular(w * 0.02)), Paint()..color = const Color(0xFFD24B3E));
+    canvas.drawRect(Rect.fromCenter(center: Offset(cx, y(0.80)), width: w * 0.02, height: h * 0.20), Paint()..color = const Color(0xFFFFF2DE));
+    canvas.drawLine(Offset(cx - w * 0.16, y(0.80)), Offset(cx - w * 0.04, y(0.80)), Paint()..color = const Color(0x55FFFFFF)..strokeWidth = w * 0.008);
+    // hands
+    for (final ex in [-1, 1]) {
+      canvas.drawCircle(Offset(cx + ex * w * 0.18, y(0.78)), w * 0.05, Paint()..color = skin);
+    }
+    // head
+    final hc = Offset(cx, y(0.40));
+    canvas.drawCircle(hc, w * 0.20, Paint()..color = skin);
+    // hair
+    canvas.drawPath(
+      Path()
+        ..moveTo(hc.dx - w * 0.21, hc.dy - h * 0.02)
+        ..quadraticBezierTo(hc.dx, hc.dy - h * 0.30, hc.dx + w * 0.21, hc.dy - h * 0.02)
+        ..quadraticBezierTo(hc.dx, hc.dy - h * 0.12, hc.dx - w * 0.21, hc.dy - h * 0.02)
+        ..close(),
+      Paint()..color = hair,
+    );
+    // ears
+    for (final ex in [-1, 1]) {
+      canvas.drawCircle(hc.translate(ex * w * 0.2, h * 0.02), w * 0.035, Paint()..color = skin);
+    }
+    // GLASSES (two round lenses + bridge)
+    final glass = Paint()
+      ..color = dark
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.014;
+    for (final ex in [-1, 1]) {
+      canvas.drawCircle(hc.translate(ex * w * 0.08, h * 0.0), w * 0.058, Paint()..color = const Color(0xCCFFFFFF));
+      canvas.drawCircle(hc.translate(ex * w * 0.08, h * 0.0), w * 0.058, glass);
+      canvas.drawCircle(hc.translate(ex * w * 0.08, h * 0.0), w * 0.02, Paint()..color = dark); // eye
+    }
+    canvas.drawLine(hc.translate(-w * 0.022, 0), hc.translate(w * 0.022, 0), glass);
+    // smile
+    canvas.drawPath(
+      Path()
+        ..moveTo(hc.dx - w * 0.05, hc.dy + h * 0.10)
+        ..quadraticBezierTo(hc.dx, hc.dy + h * 0.14, hc.dx + w * 0.05, hc.dy + h * 0.10),
+      Paint()
+        ..color = dark
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = w * 0.012
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _BoyPainter old) => old.t != t;
+}
+
+// ------------------------------------------------------------
+// Dhegdheer — the ogre woman with ONE enormous ear (goofy, not scary).
+// ------------------------------------------------------------
+class Dhegdheer extends StatefulWidget {
+  final double size;
+  const Dhegdheer({super.key, this.size = 240});
+  @override
+  State<Dhegdheer> createState() => _DhegdheerState();
+}
+
+class _DhegdheerState extends State<Dhegdheer> with SingleTickerProviderStateMixin {
+  late final AnimationController _c =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 2200))..repeat(reverse: true);
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: AnimatedBuilder(animation: _c, builder: (_, _) => CustomPaint(painter: _DhegPainter(_c.value))),
+      );
+}
+
+class _DhegPainter extends CustomPainter {
+  final double t;
+  _DhegPainter(this.t);
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    final earWiggle = math.sin(t * math.pi * 2) * 0.06;
+    double x(double f) => f * w;
+    double y(double f) => f * h;
+
+    const skin = Color(0xFF8FB36B); // greenish ogre
+    const skinDk = Color(0xFF6E9450);
+    const hair = Color(0xFF3A2540);
+    const dark = Color(0xFF241A12);
+
+    final body = Paint()..color = skin;
+    // robe / body
+    canvas.drawPath(
+      Path()
+        ..moveTo(x(0.32), y(0.55))
+        ..lineTo(x(0.68), y(0.55))
+        ..quadraticBezierTo(x(0.82), y(0.98), x(0.5), y(0.98))
+        ..quadraticBezierTo(x(0.18), y(0.98), x(0.32), y(0.55))
+        ..close(),
+      Paint()..color = const Color(0xFF7C5AA0),
+    );
+    final hc = Offset(x(0.5), y(0.40));
+    // head
+    canvas.drawCircle(hc, w * 0.21, body);
+    // ONE enormous ear (left), wiggling
+    canvas.save();
+    canvas.translate(hc.dx - w * 0.18, hc.dy - h * 0.02);
+    canvas.rotate(earWiggle);
+    canvas.drawOval(Rect.fromCenter(center: Offset(-w * 0.18, 0), width: w * 0.42, height: h * 0.46), body);
+    canvas.drawOval(Rect.fromCenter(center: Offset(-w * 0.18, 0), width: w * 0.26, height: h * 0.30), Paint()..color = skinDk);
+    canvas.restore();
+    // small normal ear (right)
+    canvas.drawCircle(hc.translate(w * 0.2, -h * 0.02), w * 0.05, body);
+    // wild hair tufts on top
+    final hp = Paint()..color = hair;
+    for (final hx in [-0.10, 0.0, 0.10]) {
+      canvas.drawCircle(hc.translate(w * hx, -h * 0.20), w * 0.06, hp);
+    }
+    // big eyes
+    for (final ex in [-1, 1]) {
+      final e = hc.translate(ex * w * 0.09, -h * 0.02);
+      canvas.drawCircle(e, w * 0.05, Paint()..color = Colors.white);
+      canvas.drawCircle(e, w * 0.025, Paint()..color = dark);
+    }
+    // big goofy grin with a couple of teeth
+    final mouth = Rect.fromCenter(center: hc.translate(0, h * 0.10), width: w * 0.20, height: h * 0.10);
+    canvas.drawArc(mouth, 0, math.pi, true, Paint()..color = const Color(0xFF7A2E2E));
+    for (final tx in [-0.05, 0.02]) {
+      canvas.drawRect(Rect.fromLTWH(hc.dx + w * tx, hc.dy + h * 0.085, w * 0.03, h * 0.035), Paint()..color = Colors.white);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DhegPainter old) => old.t != t;
+}
+
+// A simple small child (for Dhegdheer's children). Static.
+class StoryKid extends StatelessWidget {
+  final double size;
+  final bool girl;
+  const StoryKid({super.key, this.size = 120, this.girl = false});
+  @override
+  Widget build(BuildContext context) => SizedBox(width: size, height: size, child: CustomPaint(painter: _KidPainter(girl)));
+}
+
+class _KidPainter extends CustomPainter {
+  final bool girl;
+  _KidPainter(this.girl);
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    double x(double f) => f * w;
+    double y(double f) => f * h;
+    const skin = Color(0xFF9A6638);
+    const dark = Color(0xFF241A12);
+    final clothes = Paint()..color = girl ? const Color(0xFFE86B9A) : const Color(0xFF3F7FD6);
+    // body
+    canvas.drawPath(
+      Path()
+        ..moveTo(x(0.34), y(0.55))
+        ..lineTo(x(0.66), y(0.55))
+        ..lineTo(x(0.74), y(0.96))
+        ..lineTo(x(0.26), y(0.96))
+        ..close(),
+      clothes,
+    );
+    final hc = Offset(x(0.5), y(0.36));
+    canvas.drawCircle(hc, w * 0.20, Paint()..color = skin);
+    // hair
+    canvas.drawArc(Rect.fromCircle(center: hc, radius: w * 0.21), math.pi, math.pi, false, Paint()..color = dark..style = PaintingStyle.fill);
+    if (girl) {
+      for (final ex in [-1, 1]) {
+        canvas.drawCircle(hc.translate(ex * w * 0.20, -h * 0.02), w * 0.05, Paint()..color = dark);
+      }
+    }
+    // eyes + smile
+    for (final ex in [-1, 1]) {
+      canvas.drawCircle(hc.translate(ex * w * 0.07, h * 0.0), w * 0.025, Paint()..color = dark);
+    }
+    canvas.drawPath(
+      Path()
+        ..moveTo(hc.dx - w * 0.05, hc.dy + h * 0.08)
+        ..quadraticBezierTo(hc.dx, hc.dy + h * 0.12, hc.dx + w * 0.05, hc.dy + h * 0.08),
+      Paint()..color = dark..style = PaintingStyle.stroke..strokeWidth = w * 0.015..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+// A simple village elder (robed, bearded). Static.
+class VillageElder extends StatelessWidget {
+  final double size;
+  const VillageElder({super.key, this.size = 160});
+  @override
+  Widget build(BuildContext context) => SizedBox(width: size, height: size, child: CustomPaint(painter: _ElderPainter()));
+}
+
+class _ElderPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size s) {
+    final w = s.width, h = s.height;
+    double x(double f) => f * w;
+    double y(double f) => f * h;
+    const skin = Color(0xFF9A6E44);
+    const robe = Color(0xFFE9E2D0);
+    const dark = Color(0xFF2A2018);
+    // robe
+    canvas.drawPath(
+      Path()
+        ..moveTo(x(0.34), y(0.46))
+        ..lineTo(x(0.66), y(0.46))
+        ..lineTo(x(0.76), y(0.97))
+        ..lineTo(x(0.24), y(0.97))
+        ..close(),
+      Paint()..color = robe,
+    );
+    final hc = Offset(x(0.5), y(0.30));
+    canvas.drawCircle(hc, w * 0.17, Paint()..color = skin);
+    // turban/cap
+    canvas.drawArc(Rect.fromCircle(center: hc, radius: w * 0.18), math.pi, math.pi, false, Paint()..color = const Color(0xFFB9A77E));
+    // beard
+    canvas.drawPath(
+      Path()
+        ..moveTo(hc.dx - w * 0.14, hc.dy + h * 0.04)
+        ..quadraticBezierTo(hc.dx, hc.dy + h * 0.26, hc.dx + w * 0.14, hc.dy + h * 0.04)
+        ..close(),
+      Paint()..color = const Color(0xFFEDEDED),
+    );
+    for (final ex in [-1, 1]) {
+      canvas.drawCircle(hc.translate(ex * w * 0.06, 0), w * 0.018, Paint()..color = dark);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
 // A hunter's rope net (crisscross) — drawn over a trapped animal.
 class _NetPainter extends CustomPainter {
   @override
@@ -717,6 +1102,93 @@ class StorySceneArt extends StatelessWidget {
               ..add(acacia)
               ..add(Positioned(bottom: h * 0.12, left: w * 0.06, child: GeelCamel(size: h * 0.6)))
               ..add(Positioned(bottom: h * 0.12, right: w * 0.12, child: DawacoFox(size: h * 0.46)));
+            break;
+
+          // ---- Fox & Hyena ----
+          case 'fh-meet':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: WaraabeHyena(size: h * 0.64))))
+              ..add(Positioned(bottom: h * 0.16, right: w * 0.20, child: Text('🍖', style: TextStyle(fontSize: h * 0.12))));
+            break;
+          case 'fh-trick':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.06, child: DawacoFox(size: h * 0.52)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.06, child: WaraabeHyena(size: h * 0.56)));
+            break;
+          case 'fh-greed':
+            children.add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: Transform.rotate(angle: 0.12, child: WaraabeHyena(size: h * 0.6)))));
+            break;
+          case 'fh-gone':
+            children
+              ..add(acacia)
+              ..add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: DawacoFox(size: h * 0.6))))
+              ..add(Positioned(bottom: h * 0.18, right: w * 0.24, child: Text('🍖', style: TextStyle(fontSize: h * 0.10))));
+            break;
+          case 'fh-lesson':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.10, child: WaraabeHyena(size: h * 0.5)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.12, child: DawacoFox(size: h * 0.46)));
+            break;
+
+          // ---- Wiil Waal ----
+          case 'ww-intro':
+            children
+              ..add(acacia)
+              ..add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: WiilWaalBoy(size: h * 0.66))));
+            break;
+          case 'ww-problem':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.10, child: WiilWaalBoy(size: h * 0.54)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.10, child: VillageElder(size: h * 0.5)));
+            break;
+          case 'ww-think':
+            children.add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: WiilWaalBoy(size: h * 0.66))));
+            break;
+          case 'ww-solve':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: 0, right: 0, child: Center(child: WiilWaalBoy(size: h * 0.66))))
+              ..add(Positioned(top: h * 0.10, right: w * 0.22, child: Text('💡', style: TextStyle(fontSize: h * 0.12))));
+            break;
+          case 'ww-respect':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.34, right: w * 0.34, child: WiilWaalBoy(size: h * 0.6)))
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.04, child: VillageElder(size: h * 0.42)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.04, child: VillageElder(size: h * 0.42)));
+            break;
+
+          // ---- Dhegdheer ----
+          case 'dd-warn':
+            children
+              ..add(acacia)
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.10, child: const StoryKid(size: 110)))
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.30, child: const StoryKid(size: 110, girl: true)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.10, child: VillageElder(size: h * 0.5)));
+            break;
+          case 'dd-appear':
+            children.add(Positioned(bottom: h * 0.10, left: 0, right: 0, child: Center(child: Dhegdheer(size: h * 0.78))));
+            break;
+          case 'dd-listen':
+            children
+              ..add(Positioned(bottom: h * 0.10, right: w * 0.06, child: Dhegdheer(size: h * 0.6)))
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.08, child: const StoryKid(size: 96)))
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.26, child: const StoryKid(size: 96, girl: true)));
+            break;
+          case 'dd-plan':
+            children
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.22, child: const StoryKid(size: 130)))
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.22, child: const StoryKid(size: 130, girl: true)));
+            break;
+          case 'dd-escape':
+            children
+              ..add(Positioned(left: 0, right: 0, bottom: 0, child: Container(height: h * 0.18, color: const Color(0xFF5BB0D6))))
+              ..add(Positioned(bottom: h * 0.20, left: w * 0.16, child: Transform.rotate(angle: 0.1, child: const StoryKid(size: 110))))
+              ..add(Positioned(bottom: h * 0.20, left: w * 0.34, child: Transform.rotate(angle: 0.1, child: const StoryKid(size: 110, girl: true))));
+            break;
+          case 'dd-safe':
+            children
+              ..add(Positioned(bottom: h * 0.12, right: w * 0.10, child: Text('🏡', style: TextStyle(fontSize: h * 0.30))))
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.12, child: const StoryKid(size: 120)))
+              ..add(Positioned(bottom: h * 0.12, left: w * 0.30, child: const StoryKid(size: 120, girl: true)));
             break;
 
           default:

@@ -89,24 +89,28 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   Veggies"). Pools are distinct-emoji only (~17 fruits, ~19 veggies) so a child
   can tell them apart — well under 100 by design. Somali names are best-effort
   re-recordable defaults (same convention as animals).
-- **Story Time** (7th island, 📖, **1.6.0+13**): an in-app **animated Somali
-  storybook**. Tapping the island → `screens/story_library.dart` (the folktale
-  list) → `screens/story_player.dart` (scene-by-scene player). Data in
-  `models/story.dart` (`Story`/`StoryScene`/`StoryQuestion`, `kStories`,
-  `storyVoId`). Each scene = an original animated scene (`widgets/story_art.dart`
-  — hand-drawn CustomPaint, App-Store-safe) + **bilingual narration** (Somali +
-  English, tap-to-hear, **recordable in the Voiceover Studio** so elders can voice
-  real Somali — registered via the new "📖 …" VO group), an optional character
-  speech bubble, scene dots + Back/Next; at the end, interactive questions then a
-  **moral screen**. Auto-plays Somali narration if a recording exists, else
-  English. **3 stories fully built (1.7.0+14):** `fox-lion` (Dawaco iyo Libaax),
-  `lion-mouse` (Libaax iyo Jiir, ages 3-5), `proud-camel` (Geelkii Faanka Badnaa).
-  Cast so far: **LibaaxLion** (golden mane + BIG teeth when roaring), **DawacoFox**
-  (orange fur + big bushy tail), **JiirMouse** (grey, big pink-lined ears),
-  **GeelCamel** (one hump + a dark outline so the tan body pops on sandy/mud bg).
-  The other 6 folktales (Dhegdheer w/ one giant ear, Wiil Waal w/ glasses+book,
-  etc.) are scaffolded `ready:false` ("coming soon") — each new story is then
-  mostly content + a couple of new character painters.
+- **Story Time** (7th island, 📖, **SOMALI-ONLY as of 1.8.0+15**): an in-app
+  **animated Somali storybook**. Tapping the island → `screens/story_library.dart`
+  → `screens/story_player.dart` (scene-by-scene). Data in `models/story.dart`
+  (`Story`/`StoryScene`/`StoryQuestion`, `kStories`, `storyVoId`, `storyPicId`).
+  **Model is Somali-only** — `narration`/`title`/`blurb`/`moral`/option `label`/
+  `q` are all single Somali strings (the old `*En`/`*So` split + the English
+  listen button were removed on user request: "I only want Somali"). Each scene =
+  an original animated scene (`widgets/story_art.dart`, hand-drawn CustomPaint) +
+  a **still picture panel** beside it (`storyPicId` Img slot, default an emoji
+  depiction, **tap → enlarge**, and **uploadable in the Picture Studio** so a
+  grown-up can drop in their own detailed illustration per scene — registered in
+  `buildImgRegistry`) + a **Somali narration** (one "Dhegayso" button, recordable
+  in the Voiceover Studio "📖 …" group, auto-plays so-SO on scene enter) + an
+  optional Somali speech bubble (`Speaker.left/right`). Then questions + a moral.
+  **Background music is OFF by default** (`storyMusicOn` defaults false; the
+  🎵/🔇 button turns it on). **6 of 10 stories built (1.8.0+15):** `fox-lion`,
+  `lion-mouse`, `proud-camel`, `fox-hyena`, `wiil-waal`, `dhegdheer`. Cast:
+  **LibaaxLion** (mane + BIG teeth), **DawacoFox** (orange + big tail),
+  **JiirMouse**, **GeelCamel** (outlined), **WaraabeHyena**, **WiilWaalBoy**
+  (glasses + book), **Dhegdheer** (ONE enormous ear), + **StoryKid**/**VillageElder**.
+  **Remaining 4** (`goat-hyena`, `brave-bird`, `lost-camel`, `wise-man`) are
+  `ready:false` — need Ari/Shimbir/King painters; build next.
   `AppState.openStories()/startStory(id)`, `currentStory`, screens `stories` +
   `story` (both in `kTransientScreens`); the Settings gear moves left on `story`.
 - **Story background music (1.7.0+14):** a gentle looping bed under the stories,
@@ -296,7 +300,7 @@ Locked-in identity (all permanent / must match App Store Connect):
   `DEVELOPMENT_TEAM` on the 3 Runner configs + automatic signing. ⚠️ Gotcha: the cert
   name shows "Khadar Ainashe (BLGU4D968K)" — `BLGU4D968K` is a CERT id, **not** the team;
   the team is `4696KN59VV` (confirmed by the issued provisioning profile + Xcode plist).
-- **Display name** `HNL Learning`; **version `1.7.0+14`** (1.0.0+1 was the first
+- **Display name** `HNL Learning`; **version `1.8.0+15`** (1.0.0+1 was the first
   TestFlight build; 1.1.0 added Flip the Letters + Letter Sounds; +3 moved the harakat
   Studio section; 1.3.1+8 locked **all** inline recording behind the 1-2-3-4 grown-up
   gate + gave the game shell a back arrow instead of an "X"; 1.4.0+9 added **10 themed

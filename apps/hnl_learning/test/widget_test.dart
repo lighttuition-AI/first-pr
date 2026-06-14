@@ -73,9 +73,9 @@ void main() {
     expect(find.byType(IconTile), findsNWidgets(kGames.length));
   });
 
-  test('voiceover registry: 54 groups, every line id unique', () {
+  test('voiceover registry: 57 groups, every line id unique', () {
     final groups = buildVoRegistry();
-    expect(groups.length, 54); // 44 games + 5 flow + Story music + 3 stories + rewards
+    expect(groups.length, 57); // 44 games + 5 flow + Story music + 6 stories + rewards
     // 45 original + Splash (1 bg music + 3 names) + alphabet group (1 instruction
     // + 28 letters) + trace + order + sounds instructions + flip group (1
     // instruction + its OWN 28 letters) + 2 produce instructions + 10 Flip &
@@ -83,9 +83,9 @@ void main() {
     // sort 5 + count 10 + pattern 10). (The 84 harakat sounds live in their own
     // Studio section, not the flat registry.)
     final total = groups.fold<int>(0, (sum, g) => sum + g.lines.length);
-    // + 1 Story-music line + 34 story-narration lines (Fox&Lion 12, Lion&Mouse
-    // 12, Proud Camel 10 — each scene × Somali + English).
-    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 1 + (1 + kArabicLetters.length) + 2 + 10 + 35 + 1 + 34);
+    // + 1 Story-music line + 33 Somali story-narration lines (one per scene
+    // across the 6 ready stories: 6+6+5+5+5+6).
+    expect(total, 45 + 1 + 3 + 1 + kArabicLetters.length + 1 + 1 + 1 + (1 + kArabicLetters.length) + 2 + 10 + 35 + 1 + 33);
     final ids = groups.expand((g) => g.lines.map((l) => l.id)).toList();
     expect(ids.toSet().length, ids.length);
     // the splash names are recordable
@@ -206,13 +206,13 @@ void main() {
     expect(find.text(kHarakatLetters[1].forms[2].glyph), findsOneWidget); // بُ
   });
 
-  test('image registry: 41 groups, unique slots (one upload syncs everywhere)', () {
+  test('image registry: 47 groups, unique slots (one upload syncs everywhere)', () {
     final groups = buildImgRegistry();
-    expect(groups.length, 41); // + the 20 new Logic/Galaxy games
+    expect(groups.length, 47); // + 6 ready-story picture groups
     // Shared emoji appear in multiple game groups but share ONE slot id, so one
     // upload applies everywhere.
     final uniqueIds = groups.expand((g) => g.items.map((s) => s.id)).toSet();
-    expect(uniqueIds.length, 147); // 121 + 25 game slots + the Story island emoji
+    expect(uniqueIds.length, 147 + 33); // + 33 per-scene story picture slots
   });
 
   test('planets: 9 total; 17 reward-bearing games span all 9 planets', () {
@@ -845,58 +845,47 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  test('Story library: Fox & Lion is a complete, valid story', () {
+  test('Story library: every ready story is Somali-only, complete and valid', () {
     // Storytelling island exists as the 7th world.
     expect(kWorlds.any((w) => w.id == 'story'), isTrue);
-    final fox = storyById('fox-lion');
-    expect(fox.ready, isTrue);
-    expect(fox.titleSo, 'Dawaco iyo Libaax');
-    expect(fox.scenes.length, 6);
-    expect(fox.questions.length, 2);
-    expect(fox.moralEn.isNotEmpty && fox.moralSo.isNotEmpty, isTrue);
-    // Every scene has both-language narration; each question has exactly one
-    // correct answer; both languages are present on every option.
-    for (final s in fox.scenes) {
-      expect(s.narrationEn.isNotEmpty && s.narrationSo.isNotEmpty, isTrue);
-    }
-    for (final q in fox.questions) {
-      expect(q.options.where((o) => o.correct).length, 1);
-      expect(q.options.every((o) => o.labelEn.isNotEmpty && o.labelSo.isNotEmpty), isTrue);
-    }
-    // Narration VO ids are unique + registered in the Voiceover Studio so a
-    // grown-up can record real Somali narration.
-    final voIds = [
-      for (final s in fox.scenes) ...[storyVoId(fox.id, s.id, 'so'), storyVoId(fox.id, s.id, 'en')]
-    ];
-    expect(voIds.toSet().length, voIds.length);
-    final storyGroup = buildVoRegistry().firstWhere((g) => g.group.contains('Dawaco iyo Libaax'));
-    expect(storyGroup.lines.length, 12);
-    // The recurring-cast folktales are scaffolded as "coming soon".
-    expect(kStories.where((s) => !s.ready).length, greaterThanOrEqualTo(5));
-  });
-
-  test('Story library: 3 stories are fully built and valid', () {
     final ready = kStories.where((s) => s.ready).toList();
-    expect(ready.map((s) => s.id).toSet(), {'fox-lion', 'lion-mouse', 'proud-camel'});
+    expect(ready.length, 6); // Fox&Lion, Lion&Mouse, Proud Camel, Fox&Hyena, Wiil Waal, Dhegdheer
+    expect(ready.map((s) => s.id).toSet(), {'fox-lion', 'lion-mouse', 'proud-camel', 'fox-hyena', 'wiil-waal', 'dhegdheer'});
+
     final voIds = <String>[];
+    final picIds = <String>[];
     for (final st in ready) {
+      expect(st.title.isNotEmpty && st.blurb.isNotEmpty && st.moral.isNotEmpty, isTrue);
       expect(st.scenes.length, greaterThanOrEqualTo(5));
       expect(st.questions.length, greaterThanOrEqualTo(1));
-      expect(st.moralEn.isNotEmpty && st.moralSo.isNotEmpty, isTrue);
       for (final s in st.scenes) {
-        expect(s.narrationEn.isNotEmpty && s.narrationSo.isNotEmpty, isTrue);
-        voIds..add(storyVoId(st.id, s.id, 'so'))..add(storyVoId(st.id, s.id, 'en'));
+        // Somali narration + a still picture on every scene.
+        expect(s.narration.isNotEmpty, isTrue);
+        expect(s.picture.isNotEmpty, isTrue);
+        voIds.add(storyVoId(st.id, s.id));
+        picIds.add(storyPicId(st.id, s.id));
       }
       for (final q in st.questions) {
+        expect(q.q.isNotEmpty, isTrue);
         expect(q.options.where((o) => o.correct).length, 1);
+        expect(q.options.every((o) => o.label.isNotEmpty), isTrue);
       }
     }
-    // All narration ids across every story are globally unique.
+    // Narration + picture ids are globally unique.
     expect(voIds.toSet().length, voIds.length);
-    // The background-music bed is an uploadable Studio line backed by the harp.
+    expect(picIds.toSet().length, picIds.length);
+    // Wiil Waal + Dhegdheer (the requested art-direction tales) are built.
+    expect(storyById('wiil-waal').ready && storyById('dhegdheer').ready, isTrue);
+    // The remaining folktales are scaffolded "coming soon".
+    expect(kStories.where((s) => !s.ready).length, 4);
+
+    // Background music is an uploadable, harp-backed Studio line.
     expect(kStoryMusic.id, 'story-music');
     expect(kStoryMusic.asset, 'audio/harp.wav');
     expect(buildVoRegistry().any((g) => g.lines.any((l) => l.id == 'story-music')), isTrue);
+    // Each scene's still picture is an uploadable Picture-Studio slot.
+    final imgIds = buildImgRegistry().expand((g) => g.items.map((s) => s.id)).toSet();
+    expect(picIds.every(imgIds.contains), isTrue);
   });
 
   testWidgets('Story scene art renders the fox + lion with no overflow', (tester) async {
