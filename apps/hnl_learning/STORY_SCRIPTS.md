@@ -21,7 +21,10 @@ Use this to make illustrations for each story scene, then upload them in the app
 > - **Wiil Waal (boy):** clever Somali boy, brown skin, short dark hair, **round glasses, holding a red book**.
 > - **Dhegdheer (ogre woman):** FUNNY not scary cartoon ogre, greenish skin, **ONE enormous ear** on one side, wild dark hair, big round eyes, goofy grin; child-friendly.
 > - **Carruurta (children):** a young Somali boy and girl, simple cute cartoon style.
-> - **Odayga (elder):** kind old Somali man, white beard, simple robe.
+> - **Odayga (elder) / Ninka Xikmadda (wise man):** kind old Somali man, white beard, simple robe.
+> - **Ari (goat):** cute cream/white goat, small curved horns, little beard, floppy ears.
+> - **Shimbir (bird):** tiny bright blue bird with a yellow belly and orange beak, cheerful.
+> - **Boqor (king):** friendly Somali king, brown skin, white beard, **gold crown**, maroon royal robe with a gold sash.
 
 ---
 
@@ -169,8 +172,30 @@ Use this to make illustrations for each story scene, then upload them in the app
 
 ---
 
-## Still coming (not built yet — no picture slots until then)
-- 🐐 **Ari iyo Waraabe** (The Goat & the Hyena)
-- 🐦 **Shimbirta Yar ee Geesiga Ah** (The Brave Little Bird)
-- 🔎 **Wiilkii iyo Geelkii Lumay** (The Boy & the Lost Camel)
-- 👑 **Boqorkii iyo Ninkii Xikmadda Badnaa** (The King & the Wise Man)
+# 7. 🐐 Ari iyo Waraabe (The Goat & the Hyena) — 5 pictures
+1. Ari oo nabad ah ayaa daaqaysay buurta agteeda. Maalin qurux badan ayay ahayd. — 🖼️ A cute cream goat with small horns and a little beard grazing peacefully on green grass by a hill, sunny savanna.
+2. *Waraabe:* “Maanta waan ku cunayaa, Ari!” — 🖼️ A hungry spotted hyena blocking the path of the little goat, savanna.
+3. *Ari:* “Sug! Libaax weyn ayaa gadaashaada ka soo socda!” — 🖼️ The calm clever goat pointing behind the hyena, who nervously turns to look; savanna.
+4. Waraabe wuu baqay! Si dhakhso ah ayuu u cararay. — 🖼️ The scared hyena running away with a dust trail; the goat watching calmly.
+5. Ari wuu nabad galay. — 🖼️ The little goat safe and content, gently smiling, sunny savanna.
+
+# 8. 🐦 Shimbirta Yar ee Geesiga Ah (The Brave Little Bird) — 5 pictures
+1. Xayawaanka waaweyn dhexdooda waxaa joogtay shimbir aad u yar. — 🖼️ A tiny bright blue bird among big friendly animals (a lion, a camel) on the savanna.
+2. Dab ayaa ka kacay meel u dhow. Xayawaanka waaweyn way baqeen. — 🖼️ Smoke and fire in the distance; the big animals look scared and frozen.
+3. *Shimbir:* “Aniga ayaa caawin kara!” — 🖼️ The tiny brave bird flying high up to find a safe path, looking down.
+4. Way ku celcelisay, “I raaca!” — 🖼️ The little bird leading the big animals away to safety, showing the way.
+5. Dhammaan way u mahadceliyeen shimbirta yar ee geesiga ah. — 🖼️ All the animals cheering and thanking the tiny brave bird; happy savanna.
+
+# 9. 🔎 Wiilkii iyo Geelkii Lumay (The Boy & the Lost Camel) — 5 pictures
+1. Reer ayaa ogaaday in geelkoodii lumay. Aad bay u welwelsanaayeen. — 🖼️ A worried Somali elder/family realizing their camel is missing, an empty spot where it should be.
+2. *Wiil:* “Waan idiin heli karaa — calaamadaha ayaan raacayaa.” — 🖼️ The clever boy with glasses confidently offering to help the worried elder; footprints on the ground.
+3. Wuxuu eegay raadadka cagaha iyo caleemaha jaban. — 🖼️ The boy crouching, carefully examining camel footprints and broken branches on the ground.
+4. Calaamadihii ayuu raacay ilaa uu geelkii ka helay! — 🖼️ The happy boy finding the lost camel beside a hill.
+5. Dadkii way wada yaabeen. — 🖼️ The boy with the found camel; the elders amazed and clapping.
+
+# 10. 👑 Boqorkii iyo Ninkii Xikmadda Badnaa (The King & the Wise Man) — 5 pictures
+1. *Boqor:* “Yaa xallin kara halxidhaalahan adag?” — 🖼️ A friendly Somali king with a gold crown and maroon royal robe posing a hard riddle.
+2. Saraakiisha boqorka midkoodna ma uu garan jawaabta. — 🖼️ The king's advisors looking confused and shrugging, unable to answer.
+3. *Ninka Xikmadda:* “Boqorow, anigu waan isku dayi karaa.” — 🖼️ A humble old wise man with a white beard stepping calmly forward before the king.
+4. Isagoo samir iyo caqli isticmaalaya, ayuu xalliyey. — 🖼️ The wise old man solving the riddle, a bright idea lightbulb above him, calm and clever.
+5. *Boqor:* “Xikmaddaadu waa qiimo badan tahay, ninyahow.” — 🖼️ The king warmly honoring and thanking the wise man; celebration.

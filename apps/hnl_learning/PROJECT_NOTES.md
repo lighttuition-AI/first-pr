@@ -104,15 +104,22 @@ Design handoff bundle (re-fetchable, ~10 MB gzip):
   in the Voiceover Studio "📖 …" group, auto-plays so-SO on scene enter) + an
   optional Somali speech bubble (`Speaker.left/right`). Then questions + a moral.
   **Background music is OFF by default** (`storyMusicOn` defaults false; the
-  🎵/🔇 button turns it on). **6 of 10 stories built (1.8.0+15):** `fox-lion`,
-  `lion-mouse`, `proud-camel`, `fox-hyena`, `wiil-waal`, `dhegdheer`. Cast:
-  **LibaaxLion** (mane + BIG teeth), **DawacoFox** (orange + big tail),
-  **JiirMouse**, **GeelCamel** (outlined), **WaraabeHyena**, **WiilWaalBoy**
-  (glasses + book), **Dhegdheer** (ONE enormous ear), + **StoryKid**/**VillageElder**.
-  **Remaining 4** (`goat-hyena`, `brave-bird`, `lost-camel`, `wise-man`) are
-  `ready:false` — need Ari/Shimbir/King painters; build next.
+  🎵/🔇 button turns it on). **ALL 10 stories built (1.9.0+17):** fox-lion,
+  lion-mouse, proud-camel, fox-hyena, wiil-waal, dhegdheer, goat-hyena,
+  brave-bird, lost-camel, wise-man. Cast: **LibaaxLion** (mane + BIG teeth),
+  **DawacoFox** (orange + big tail), **JiirMouse**, **GeelCamel** (outlined),
+  **WaraabeHyena**, **WiilWaalBoy** (glasses + book), **Dhegdheer** (ONE enormous
+  ear), **AriGoat**, **ShimbirBird**, **KingChar** (gold crown), +
+  **StoryKid**/**VillageElder**.
   `AppState.openStories()/startStory(id)`, `currentStory`, screens `stories` +
   `story` (both in `kTransientScreens`); the Settings gear moves left on `story`.
+  **Picture art:** Fox&Lion/Lion&Mouse/Proud Camel/Fox&Hyena/Wiil Waal/Dhegdheer
+  have real bundled illustrations (`assets/stories/`); the last 4 still show emoji
+  placeholders until the grown-up generates art (see `STORY_SCRIPTS.md`).
+- **`IMAGE_PROMPTS.md`** — ordered, numbered prompts (style block + batch
+  workflow) to generate real pictures replacing the emoji placeholders for the
+  17 fruits, 19 veggies, and 371 animals (by continent). Generated from
+  `produce.dart`/`animals.dart`; same slice-and-bundle workflow as the stories.
 - **Story background music (1.7.0+14):** a gentle looping bed under the stories,
   reusing the splash harp (`audio/harp.wav`) as the default. A separate looping
   `_bgm` player in `VoService` (`startStoryMusic`/`stopStoryMusic`), persisted
@@ -300,7 +307,7 @@ Locked-in identity (all permanent / must match App Store Connect):
   `DEVELOPMENT_TEAM` on the 3 Runner configs + automatic signing. ⚠️ Gotcha: the cert
   name shows "Khadar Ainashe (BLGU4D968K)" — `BLGU4D968K` is a CERT id, **not** the team;
   the team is `4696KN59VV` (confirmed by the issued provisioning profile + Xcode plist).
-- **Display name** `HNL Learning`; **version `1.8.1+16`** (1.0.0+1 was the first
+- **Display name** `HNL Learning`; **version `1.9.0+17`** (1.0.0+1 was the first
   TestFlight build; 1.1.0 added Flip the Letters + Letter Sounds; +3 moved the harakat
   Studio section; 1.3.1+8 locked **all** inline recording behind the 1-2-3-4 grown-up
   gate + gave the game shell a back arrow instead of an "X"; 1.4.0+9 added **10 themed
