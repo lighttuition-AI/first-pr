@@ -1,7 +1,7 @@
 name: hnl_learning
 description: "HNL Learning — an audio-first, touch-first educational app for kids ages 2–8."
 publish_to: 'none'
-version: 1.4.2+11
+version: 1.5.0+12
 
 environment:
   sdk: ^3.12.1

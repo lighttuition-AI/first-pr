@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/animals.dart';
 import '../models/content.dart';
 import '../services/analytics.dart';
 import '../services/vo_service.dart';
@@ -149,7 +148,6 @@ class _HomeScreenState extends State<HomeScreen> {
       top: h * ty,
       child: _Island(
         world: world,
-        count: world.id == 'animals' ? kContinents.length : gamesInWorld(world.id).length + 1,
         onTap: world.id == 'animals'
             ? () {
                 Analytics.worldOpen('animals');
@@ -211,9 +209,8 @@ class _HomeHeader extends StatelessWidget {
 
 class _Island extends StatefulWidget {
   final World world;
-  final int count;
   final VoidCallback onTap;
-  const _Island({required this.world, required this.count, required this.onTap});
+  const _Island({required this.world, required this.onTap});
 
   @override
   State<_Island> createState() => _IslandState();
@@ -232,9 +229,7 @@ class _IslandState extends State<_Island> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final pal = context.watch<AppState>().pal;
-    final wc = pal.world(widget.world.id);
-    final wd = pal.worldDeep(widget.world.id);
+    final s = _islandScheme(widget.world.id);
     return Pressable(
       onTap: widget.onTap,
       child: AnimatedBuilder(
@@ -243,68 +238,217 @@ class _IslandState extends State<_Island> with SingleTickerProviderStateMixin {
           offset: Offset(0, -8 * Curves.easeInOut.transform(_bob.value)),
           child: child,
         ),
-        child: Container(
+        child: SizedBox(
           width: 210,
           height: 210,
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(92),
-            gradient: RadialGradient(
-              center: const Alignment(-0.3, -0.4),
-              colors: [Color.lerp(wc, Colors.white, .35)!, wc, wd],
-              stops: const [0, .55, 1],
-            ),
-            boxShadow: [
-              BoxShadow(color: wd, offset: const Offset(0, 12)),
-              BoxShadow(color: wd.withValues(alpha: .4), offset: const Offset(0, 22), blurRadius: 34),
-            ],
-            border: activeSkin.cardBorder,
-          ),
-          child: Center(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: SizedBox(
-                width: 178,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Img(widget.world.emoji, size: 58),
-                    const SizedBox(height: 4),
-                    Text(widget.world.name,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        style: AppText.display(size: 26, weight: FontWeight.w800, color: Colors.white)),
-                    Text(widget.world.tagline,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppText.body(size: 16, weight: FontWeight.w700, color: Colors.white.withValues(alpha: .92))),
-                    const SizedBox(height: 6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(widget.count, (i) {
-                        final locked = i == widget.count - 1;
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          width: 11,
-                          height: 11,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: locked ? Colors.white.withValues(alpha: .35) : Colors.white,
-                          ),
-                        );
-                      }),
-                    ),
-                  ],
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // A real little tropical island — sky, sun, sea, sand & palms —
+              // in funky popping colours, clipped to a rounded "porthole".
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(48),
+                    boxShadow: [
+                      BoxShadow(color: s.seaDeep, offset: const Offset(0, 10)),
+                      BoxShadow(color: s.seaDeep.withValues(alpha: .4), offset: const Offset(0, 20), blurRadius: 30),
+                    ],
+                    border: activeSkin.cardBorder,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(48),
+                    child: CustomPaint(painter: _IslandPainter(s)),
+                  ),
                 ),
               ),
-            ),
+              // The world's emoji, sitting on the island between the palms.
+              Positioned(
+                top: 84,
+                child: Container(
+                  width: 76,
+                  height: 76,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: .85),
+                    shape: BoxShape.circle,
+                    boxShadow: Sh.sm,
+                  ),
+                  child: Img(widget.world.emoji, size: 46),
+                ),
+              ),
+              // The world name on a bright pill at the bottom.
+              Positioned(
+                bottom: 14,
+                left: 12,
+                right: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: .94),
+                    borderRadius: BorderRadius.circular(R.pill),
+                    boxShadow: Sh.sm,
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      widget.world.name,
+                      maxLines: 1,
+                      style: AppText.display(size: 22, weight: FontWeight.w800, color: const Color(0xFF15324A)),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
+}
+
+// ---------------- Island scene art (per-world, funky popping colours) -------
+class _IslandScheme {
+  final Color skyTop, skyBottom, sea, seaDeep;
+  const _IslandScheme(this.skyTop, this.skyBottom, this.sea, this.seaDeep);
+}
+
+const _kSand = Color(0xFFFFD25A);
+const _kSandDark = Color(0xFFEFA73A);
+const _kFrond = Color(0xFF2FD27E);
+const _kFrondDark = Color(0xFF12A35B);
+const _kTrunk = Color(0xFFBE7E4F);
+const _kCoco = Color(0xFF7B4B2A);
+const _kSun = Color(0xFFFFE45C);
+
+_IslandScheme _islandScheme(String world) {
+  switch (world) {
+    case 'logic':
+      return const _IslandScheme(Color(0xFFCDBBFF), Color(0xFF8A5BFF), Color(0xFF2BD4E8), Color(0xFF0E9BC4));
+    case 'galaxy':
+      return const _IslandScheme(Color(0xFF96A2FF), Color(0xFF5B5BE0), Color(0xFF7A5CF0), Color(0xFF5331C4));
+    case 'discovery':
+      return const _IslandScheme(Color(0xFFAEECFF), Color(0xFF34C6E0), Color(0xFF12B5C9), Color(0xFF0A8194));
+    case 'arabic':
+      return const _IslandScheme(Color(0xFFA9D6FF), Color(0xFF4C9CF0), Color(0xFF2E7DE0), Color(0xFF1858B8));
+    case 'animals':
+      return const _IslandScheme(Color(0xFFFFDDA0), Color(0xFFFFB04D), Color(0xFF36C98E), Color(0xFF17A06A));
+    case 'produce':
+      return const _IslandScheme(Color(0xFFFFC6AC), Color(0xFFFF7E54), Color(0xFF24B5A6), Color(0xFF0E8A7E));
+    default:
+      return const _IslandScheme(Color(0xFFCDBBFF), Color(0xFF8A5BFF), Color(0xFF2BD4E8), Color(0xFF0E9BC4));
+  }
+}
+
+class _IslandPainter extends CustomPainter {
+  final _IslandScheme s;
+  const _IslandPainter(this.s);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width, h = size.height;
+    double x(double f) => f * w;
+    double y(double f) => f * h;
+
+    // Sky
+    final skyRect = Rect.fromLTWH(0, 0, w, y(0.66));
+    canvas.drawRect(
+      skyRect,
+      Paint()
+        ..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [s.skyTop, s.skyBottom]).createShader(skyRect),
+    );
+
+    // Sun + soft glow (top-right)
+    final sun = Offset(x(0.80), y(0.22));
+    canvas.drawCircle(sun, w * 0.16, Paint()..color = _kSun.withValues(alpha: .35));
+    canvas.drawCircle(sun, w * 0.092, Paint()..color = _kSun);
+
+    // Two little birds in the sky
+    final birdPaint = Paint()
+      ..color = Colors.white.withValues(alpha: .9)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.013
+      ..strokeCap = StrokeCap.round;
+    void bird(double bx, double by, double sc) {
+      final p = Path()
+        ..moveTo(x(bx) - w * 0.032 * sc, y(by))
+        ..quadraticBezierTo(x(bx) - w * 0.012 * sc, y(by) - h * 0.022 * sc, x(bx), y(by))
+        ..quadraticBezierTo(x(bx) + w * 0.012 * sc, y(by) - h * 0.022 * sc, x(bx) + w * 0.032 * sc, y(by));
+      canvas.drawPath(p, birdPaint);
+    }
+
+    bird(0.24, 0.15, 1.0);
+    bird(0.36, 0.22, 0.8);
+
+    // Sea (wavy top edge) over the lower portion
+    final seaTop = y(0.58);
+    final sea = Path()
+      ..moveTo(0, seaTop)
+      ..cubicTo(x(0.25), seaTop - h * 0.03, x(0.5), seaTop + h * 0.03, x(0.74), seaTop - h * 0.02)
+      ..cubicTo(x(0.9), seaTop - h * 0.035, w, seaTop - h * 0.01, w, seaTop)
+      ..lineTo(w, h)
+      ..lineTo(0, h)
+      ..close();
+    final seaRect = Rect.fromLTWH(0, seaTop - h * 0.06, w, h - seaTop + h * 0.06);
+    canvas.drawPath(
+      sea,
+      Paint()..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [s.sea, s.seaDeep]).createShader(seaRect),
+    );
+
+    // Wave glints
+    final glint = Paint()
+      ..color = Colors.white.withValues(alpha: .5)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.018
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(Offset(x(0.12), y(0.82)), Offset(x(0.30), y(0.82)), glint);
+    canvas.drawLine(Offset(x(0.66), y(0.90)), Offset(x(0.86), y(0.90)), glint);
+
+    // Sand island mound (sits in the water)
+    final mound = Rect.fromCenter(center: Offset(x(0.5), y(0.80)), width: w * 0.74, height: h * 0.36);
+    canvas.drawOval(
+      mound,
+      Paint()..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [_kSand, _kSandDark]).createShader(mound),
+    );
+
+    // Palm trees framing the centre (left big, right small)
+    _palm(canvas, Offset(x(0.24), y(0.70)), h * 0.44, -w * 0.05);
+    _palm(canvas, Offset(x(0.78), y(0.72)), h * 0.30, w * 0.04);
+  }
+
+  void _palm(Canvas canvas, Offset base, double height, double lean) {
+    final crown = base.translate(lean, -height);
+    final tw = height * 0.06;
+    // Trunk (slightly curved, tapered)
+    final trunk = Path()
+      ..moveTo(base.dx - tw, base.dy)
+      ..quadraticBezierTo(base.dx - tw * 0.3 + lean * 0.5, base.dy - height * 0.5, crown.dx - tw * 0.6, crown.dy)
+      ..lineTo(crown.dx + tw * 0.6, crown.dy)
+      ..quadraticBezierTo(base.dx + tw * 0.3 + lean * 0.5, base.dy - height * 0.5, base.dx + tw, base.dy)
+      ..close();
+    canvas.drawPath(trunk, Paint()..color = _kTrunk);
+
+    // Coconuts at the crown
+    canvas.drawCircle(crown.translate(-tw * 0.9, tw), tw * 0.85, Paint()..color = _kCoco);
+    canvas.drawCircle(crown.translate(tw * 0.6, tw * 1.2), tw * 0.85, Paint()..color = _kCoco);
+
+    // Fronds — oval leaves fanning up & out from the crown
+    final fr = height * 0.52;
+    final fw = height * 0.22;
+    const angles = [-2.7, -2.05, -1.4, -0.75, -0.1];
+    for (final a in angles) {
+      canvas.save();
+      canvas.translate(crown.dx, crown.dy);
+      canvas.rotate(a.toDouble());
+      canvas.drawOval(Rect.fromLTWH(0, -fw / 2, fr, fw), Paint()..color = _kFrond);
+      canvas.restore();
+    }
+    // A darker tuft over the crown centre
+    canvas.drawCircle(crown, fw * 0.42, Paint()..color = _kFrondDark);
+  }
+
+  @override
+  bool shouldRepaint(covariant _IslandPainter oldDelegate) => false;
 }
 
 class _MissionCard extends StatelessWidget {

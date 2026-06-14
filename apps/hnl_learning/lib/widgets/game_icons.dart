@@ -45,6 +45,34 @@ Widget? customGameIcon(String gameId, {double size = 52}) {
       return SortIcon(size: size);
     case 'science-fact':
       return ScienceIcon(size: size);
+    // Logic Lab · 5 more "Which one?" games (share the WhichOne icon).
+    case 'pick-odd':
+    case 'pick-size':
+    case 'pick-eat':
+    case 'pick-home':
+    case 'pick-match':
+      return WhichOneIcon(size: size);
+    // Logic Lab · 5 more "Sort it out" games (share the Sort icon).
+    case 'sort-landwater':
+    case 'sort-fruitveg':
+    case 'sort-hotcold':
+    case 'sort-daynight':
+    case 'sort-bigsmall':
+      return SortIcon(size: size);
+    // Number Galaxy · 5 more "Count & drop" games (share the CountDrop icon).
+    case 'count-fish':
+    case 'count-stars':
+    case 'count-treats':
+    case 'count-flowers':
+    case 'count-fruit':
+      return CountDropIcon(size: size);
+    // Number Galaxy · 5 more "Finish the pattern" games (share the Pattern icon).
+    case 'pattern-colour':
+    case 'pattern-sky':
+    case 'pattern-shape':
+    case 'pattern-fruit':
+    case 'pattern-twoone':
+      return PatternIcon(size: size);
     // Discovery World · the 10 themed Flip & Match games — a themed glyph on a
     // colour tile so each is recognisable at a glance.
     case 'mem-arabic':
