@@ -13,6 +13,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:record/record.dart';
 
+import '../models/produce.dart';
 import '../services/vo_service.dart';
 import '../state/app_state.dart';
 import '../theme/tokens.dart';
@@ -143,7 +144,7 @@ class _ProduceQuizState extends State<ProduceQuiz> {
                     border: activeSkin.cardBorder,
                   ),
                   alignment: Alignment.center,
-                  child: Img(item.emoji, id: item.id, size: 230, fill: true, radius: R.xl),
+                  child: Img(item.emoji, id: item.id, asset: produceAsset(item.id), size: 230, fill: true, radius: R.xl),
                 ),
                 const SizedBox(height: 12),
                 Text(item.en, style: AppText.display(size: 42, weight: FontWeight.w800)),
